@@ -25,13 +25,16 @@ public class UIController : MonoBehaviour
     #region private Attrabutes
     private List<CharacterInformation> _enemies;
     private List<CharacterInformation> _players;
-    private CharacterInformation _character ;
+    private CharacterInformation _character;
     #endregion
-    
+
+    #region Funktion
     [SerializeField] private delegate void TestDelegate(CharacterInformation enemy);
 
     [SerializeField] private TestDelegate currentFunc;
+    #endregion
 
+    #region Start
     private void Start()
     {
         
@@ -39,35 +42,41 @@ public class UIController : MonoBehaviour
         _players = system.getPlayers();
         _character = system.getCurrentPlayer();
         currentFunc = _character.Attack;
-        UpdateList();
-        
-        
-    }
 
+
+    }
+    #endregion
+    
     public void UpdateList()
     {
         DeleteAllButtons();
-        UpdateToNextChar();
-        switch (type)
+        if (system.getState() == BattleState.PlayerTurn)
         {
-            case buttonType.Menu:
-                UpdateNormalList();
-                break;
-            case buttonType.Skill: 
-                UpdateSkillList();
-                break;
-            case buttonType.Enemy:
-                UpdateEnemyList(_enemies);
-                break;
-            case buttonType.items:
-                UpdateItemList(_character.getItemList());
-                break;
-            case buttonType.Players:
-                UpdatePlayerList(_players);
-                break;
-            default:
-                Debug.Log("something is wrong");
-                break;
+            switch (type)
+            {
+                case buttonType.Menu:
+                    UpdateNormalList();
+                    break;
+                case buttonType.Skill:
+                    UpdateSkillList();
+                    break;
+                case buttonType.Enemy:
+                    UpdateEnemyList(_enemies);
+                    break;
+                case buttonType.items:
+                    UpdateItemList(_character.getItemList());
+                    break;
+                case buttonType.Players:
+                    UpdatePlayerList(_players);
+                    break;
+                default:
+                    Debug.Log("something is wrong");
+                    break;
+            }
+        }
+        else
+        {
+            //do something like a current hp list
         }
     }
 
@@ -109,6 +118,7 @@ public class UIController : MonoBehaviour
         {
             _character.Block();
             //add animations
+            UpdateToNextChar();
             UpdateList();
         });
 
@@ -139,13 +149,14 @@ public class UIController : MonoBehaviour
             skill.onClick.AddListener(() =>
             {
                 currentFunc = currentSkill.Execute;
-                if (currentSkill.GetSkillType() == SkillType.Heal || currentSkill.GetSkillType() == SkillType.Buff) 
+                if (currentSkill.GetSkillType() == SkillType.Heal || currentSkill.GetSkillType() == SkillType.Buff)
                     type = buttonType.Players;
-                else 
+                else
                     type = buttonType.Enemy;
                 UpdateList();
 
             });
+            //add button hover animation to show how much SP gonna get used
         }
         
     }
@@ -162,6 +173,7 @@ public class UIController : MonoBehaviour
             {
                 currentFunc(enemychar);
                 type = buttonType.Menu;
+                UpdateToNextChar();
                 UpdateList();
 
             });
@@ -180,6 +192,7 @@ public class UIController : MonoBehaviour
             {
                 currentFunc(currentPlayers.ElementAt(i1));
                 type = buttonType.Menu;
+                UpdateToNextChar();
                 UpdateList();
             });
         }

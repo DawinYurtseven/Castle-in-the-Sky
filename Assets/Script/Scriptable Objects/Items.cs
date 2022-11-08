@@ -18,6 +18,8 @@ public class Items : ScriptableObject
     private int effectAmount;
     private int roundTimer;
 
+    [Header("Animations")] [SerializeField]
+    private Animation useAnimation;
     public ItemType GetType()
     {
         return type;
@@ -30,6 +32,7 @@ public class Items : ScriptableObject
 
     public void UseItem(CharacterInformation target)
     {
+        useAnimation.PlayQueued("");
         switch (item)
         {
             case Item.HPpotion:
@@ -46,10 +49,10 @@ public class Items : ScriptableObject
                 target.Revive();
                 break;
             case Item.Bombs:
-                //bombing the shit out of ya
+                target.GetAttacked(effectAmount, "bomb");
                 break;
             case Item.Poison:
-                // I aint no bitchpussy
+                target.SetEffect(Effect.Poisoned);
                 break;
         }
     }

@@ -6,6 +6,7 @@ using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
 public enum Status {NONE ,AtkUP, AtkDOWN , DefUP, DefDOWN , AgiUP , AgiDOWN, ALLUP, ALLDOWN}
+public enum Effect {NONE, Poisoned, Paralysed, Confusion }
 public class CharacterInformation : MonoBehaviour
 {
     
@@ -35,7 +36,9 @@ public class CharacterInformation : MonoBehaviour
 
     [Header("Character State")] 
     [SerializeField] private Status currentStatus;
-    [SerializeField] private int roundTimer;
+    [SerializeField] private int statusRoundTimer;
+    [SerializeField] private Effect currentEffect;
+    [SerializeField] private int effectRoundTimer;
 
     [Header("Character Skills")] [SerializeField]
     private List<Skills> skillList;
@@ -58,6 +61,9 @@ public class CharacterInformation : MonoBehaviour
         {
             skill.SetOwner(this);
         }
+
+        currentEffect = Effect.NONE;
+        currentStatus = Status.NONE;
     }
     /*
      * now there will be a list of special attacks and one Ultimate attack depending on what was chosen at the menu
@@ -74,12 +80,36 @@ public class CharacterInformation : MonoBehaviour
     public void NextTurn()
     {
         blockState = false;
-        if (roundTimer > 0) roundTimer -= 1;
-        else
+        if (currentStatus != Status.NONE)
         {
-            currentStatus = Status.NONE;
-            ResetStats(this);
-            roundTimer = 0;
+            if (statusRoundTimer > 0) statusRoundTimer--;
+            else
+            {
+                currentStatus = Status.NONE;
+                ResetStats(this);
+            }
+        }
+
+        if (currentEffect != Effect.NONE)
+        {
+            switch (currentEffect)
+            {
+                case Effect.Poisoned:
+                    GetAttacked(5 + characterLevel*5,"poison");
+                    break;
+                case Effect.Confusion:
+                    //Will do random act 
+                    break;
+                case Effect.Paralysed:
+                    //Will have to leave out from the fight for the round
+                    break;
+            }
+            if (effectRoundTimer > 0) effectRoundTimer--;
+            else
+            {
+                currentEffect = Effect.NONE;
+                ResetStats(this);
+            }
         }
 
     }
@@ -122,7 +152,13 @@ public class CharacterInformation : MonoBehaviour
                 break;
         }
 
-        roundTimer = 3;
+        statusRoundTimer = 3;
+    }
+
+    public void SetEffect(Effect effect)
+    {
+        currentEffect = effect;
+        effectRoundTimer = 2;
     }
 
     public void ResetStats(CharacterInformation target)
@@ -143,11 +179,11 @@ public class CharacterInformation : MonoBehaviour
             if (enemy.blockState)
             { 
                 int blockedDamage = (2 * ATK) / 10; 
-                enemy.TakeDamage(blockedDamage);
+                enemy.GetAttacked(blockedDamage, "physical");
             }
             else
             { 
-                enemy.TakeDamage(ATK);
+                enemy.GetAttacked(ATK, "physical");
             }
             Debug.Log("this motherfucker can take some shit");
         }
@@ -195,6 +231,15 @@ public class CharacterInformation : MonoBehaviour
             default:
                 return randomValue <= 45;
         }
+    }
+
+    public void GetAttacked(int damage, string type)
+    {
+        //Some pain animations.
+        
+        //some other pain animations.
+        
+        TakeDamage(damage);
     }
 
     /*public void UseUltimate()
