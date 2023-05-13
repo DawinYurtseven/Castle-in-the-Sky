@@ -43,6 +43,10 @@ ExportedObj/
 *.opendb
 *.VC.db
 
+# remove unnecessary stuff
+.vsconfig
+/.idea
+
 # Unity3D generated meta files
 *.pidb.meta
 *.pdb.meta
