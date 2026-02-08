@@ -1,19 +1,7 @@
-# Welcome to the repository of: Castle in the Sky! 
-## My first turn-based game for android
+# Old Passion project: Castle in the Sky
+## my attempt to make a TBC-RogueLike
 
-This is the Repository I'll use to switch between computers far more easily and work more efficently.
+This "game" is a passion project of something I am doing only to play myself. If it becomes good to show, maybe then will I build it and put on itch.
 
-## To do for the next alpha update:
-
-- [ ] finish scriptible object: Items.cs
-- [ ] make BattleSystem.cs more refined and start turnbased action
-
-## possible ideas for the list
-
-- Enemy Ai with logic building
-- animations and characters for the game
-- main menu with level access
-- levels and xp after fight get saved
-- winning/losing screen after fight
-- weapons and their integration in stats
-- dialog box and before-after fight dialogs
+## To do:
+- [ ] finish the base of the battleSystem and that every action properly returns. 
