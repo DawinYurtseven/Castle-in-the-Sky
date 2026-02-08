@@ -40,7 +40,7 @@ public class BattleSystem : MonoBehaviour
         currentActiveUnit = queue[0];
         if (currentActiveUnit != null && currentActiveUnit is PlayerUnit player) seeSituationDEBUG(player);
         queue.RemoveAt(0);
-        currentActiveUnit.BeginningOfTurn();
+        StartCoroutine(currentActiveUnit.BeginningOfTurn());
     }
 
     void EndOfTurn(Unit currentUnit, float timeValue)
@@ -54,8 +54,8 @@ public class BattleSystem : MonoBehaviour
         //maybe animations or something.
         currentActiveUnit = queue[0];
         queue.RemoveAt(0);
+        StartCoroutine(currentActiveUnit.BeginningOfTurn());
         if (currentActiveUnit != null && currentActiveUnit is PlayerUnit player) {seeSituationDEBUG(player);}
-        currentActiveUnit.BeginningOfTurn();
     }
 
 
@@ -66,7 +66,7 @@ public class BattleSystem : MonoBehaviour
         if (currentActiveUnit != null && currentActiveUnit is PlayerUnit player)
         {
             player.Submit();
-            seeSituationDEBUG(player);
+            if(player.currentState != PlayerUnit.combatState.root)seeSituationDEBUG(player);
         }
     }
     

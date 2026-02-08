@@ -203,8 +203,10 @@ public class Unit : MonoBehaviour
         EndOfTurnSystemEvent = e;
     }
 
-    public virtual void BeginningOfTurn()
+    public virtual IEnumerator BeginningOfTurn()
     {
+        timeValue = 0;
+        yield return null;
         BeginningOfTurnTrigger?.Invoke();
     }
 

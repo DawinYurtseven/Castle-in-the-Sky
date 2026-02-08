@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -14,10 +15,11 @@ public class PlayerUnit : Unit
         base.BeginningOfCombat(e);
     }
 
-    public override void BeginningOfTurn()
+    public override IEnumerator BeginningOfTurn()
     {
+        yield return null;
         currentState = combatState.root;
-        base.BeginningOfTurn();
+        yield return base.BeginningOfTurn();
     }
 
     public override void SkillUsage(SkillTypes type)
