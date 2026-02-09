@@ -62,7 +62,8 @@ public class Unit : MonoBehaviour
     /// </summary>
     private int maxHP, currentHP, maxSP, currentSP;
 
-    private float timeValue, constantReduction = 0.3f; //this stat is the bread and butter of this combat system. 
+    private float timeValue; //this stat is the bread and butter of this combat system. 
+    private readonly float constantReduction = 0.3f; //this stat is the bread and butter of this combat system. 
 
     public float TimeValue => timeValue;
 
@@ -78,10 +79,10 @@ public class Unit : MonoBehaviour
 
     public enum SkillTypes
     {
-        damage,
-        buff,
-        debuff,
-        heal
+        Damage,
+        Buff,
+        Debuff,
+        Heal
     }
     
     public Dictionary<string,SkillTypes> skills = new Dictionary<string,SkillTypes>();
@@ -91,14 +92,7 @@ public class Unit : MonoBehaviour
     #endregion
 
     #region Components
-
-    /// <summary>
-    /// 0- standard camera angle for when it is players turn
-    /// 1- view towards the enemies
-    /// maybe I'll need later more so this is an array now
-    /// </summary>
-    [SerializeField] private Transform[] cameraTargets; // this is for the camera to move to depending on the situation.
-
+    
     /// <summary>
     /// 0- base target for other units to go to when performing a 1-1 action
     /// </summary>
@@ -112,30 +106,28 @@ public class Unit : MonoBehaviour
 
     #region Combat
 
-    public UnityEvent BasicAttackTrigger,
-        BeginningOfCombatTrigger,
-        BeginningOfTurnTrigger,
-        EndOfTurnTrigger,
-        EndOfCombatTrigger,
-        ActionTakenTrigger,
-        ReactionDoneTrigger,
-        CriticalTrigger;
+    public UnityEvent basicAttackTrigger,
+        beginningOfCombatTrigger,
+        beginningOfTurnTrigger,
+        endOfTurnTrigger,
+        endOfCombatTrigger,
+        actionTakenTrigger,
+        reactionDoneTrigger,
+        criticalTrigger;
 
-    public UnityEvent<object> SkillUsagTrigger;
-
-    private UnityEvent<Unit, float> EndOfTurnSystemEvent;
+    public UnityEvent<object> skillUsagTrigger;
 
     private void OnEnable()
     {
         //TODO: change with when the need for the event is there to be created if null, otherwise keep empty
-        BasicAttackTrigger ??= new UnityEvent();
-        BeginningOfCombatTrigger ??= new UnityEvent();
-        BeginningOfTurnTrigger ??= new UnityEvent();
-        EndOfTurnTrigger ??= new UnityEvent();
-        EndOfCombatTrigger ??= new UnityEvent();
-        ActionTakenTrigger ??= new UnityEvent();
-        ReactionDoneTrigger ??= new UnityEvent();
-        CriticalTrigger ??= new UnityEvent();
+        basicAttackTrigger ??= new UnityEvent();
+        beginningOfCombatTrigger ??= new UnityEvent();
+        beginningOfTurnTrigger ??= new UnityEvent();
+        endOfTurnTrigger ??= new UnityEvent();
+        endOfCombatTrigger ??= new UnityEvent();
+        actionTakenTrigger ??= new UnityEvent();
+        reactionDoneTrigger ??= new UnityEvent();
+        criticalTrigger ??= new UnityEvent();
     }
 
     private void Start()
@@ -158,7 +150,7 @@ public class Unit : MonoBehaviour
         }
         else
         {
-            float percentHP = currentHP / maxHP;
+            var percentHP = (float)currentHP / maxHP;
             maxHP = constitution * 10;
             currentHP = Mathf.CeilToInt(percentHP * maxHP);
         }
@@ -169,7 +161,7 @@ public class Unit : MonoBehaviour
         }
         else
         {
-            float percentSP = currentSP / maxSP;
+            var percentSP = (float)currentSP / maxSP;
             maxSP = intelligence * 5;
             currentSP = Mathf.CeilToInt(percentSP * maxSP);
         }
@@ -187,33 +179,32 @@ public class Unit : MonoBehaviour
 
     public virtual void BasicAttack()
     {
-        BasicAttackTrigger?.Invoke();
+        basicAttackTrigger?.Invoke();
         EndTurn();
     }
 
     public virtual void SkillUsage(SkillTypes type) //change this later
     {
-        SkillUsagTrigger?.Invoke(type);
+        skillUsagTrigger?.Invoke(type);
     }
 
-    public virtual void BeginningOfCombat(UnityEvent<Unit, float> e)
+    public virtual void BeginningOfCombat()
     {
         //prep shit here, maybe take this out later when battlesystem can call these.
-        BeginningOfCombatTrigger?.Invoke();
-        EndOfTurnSystemEvent = e;
+        beginningOfCombatTrigger?.Invoke();
     }
 
     public virtual IEnumerator BeginningOfTurn()
     {
         timeValue = 0;
         yield return null;
-        BeginningOfTurnTrigger?.Invoke();
+        beginningOfTurnTrigger?.Invoke();
     }
 
     public void EndTurn()
     {
-        EndOfTurnTrigger?.Invoke();
-        EndOfTurnSystemEvent.Invoke(this, timeValue);
+        endOfTurnTrigger?.Invoke();
+        BattleSystem.system.endOfTurnTrigger.Invoke(this, timeValue);
     }
 
     #endregion

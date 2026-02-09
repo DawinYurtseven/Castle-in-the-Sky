@@ -1,44 +1,49 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Events;
 
 public class PlayerUnit : Unit
 {
+    #region Components
+
+    /// <summary>
+    /// 0- standard camera angle for when it is players turn
+    /// 1- view towards the enemies
+    /// maybe I'll need later more so this is an array now
+    /// </summary>
+    [SerializeField] private Transform[] cameraTargets; // this is for the camera to move to depending on the situation.
+
+    [SerializeField] private BattleUIPanel rootPanel;
+    
+    #endregion
+
     public override void BasicAttack()
     {
         CalculateTimeValue(1f);
         base.BasicAttack();
     }
 
-    public override void BeginningOfCombat(UnityEvent<Unit, float> e)
-    {
-        base.BeginningOfCombat(e);
-    }
 
     public override IEnumerator BeginningOfTurn()
     {
         yield return null;
-        currentState = combatState.root;
+        currentState = CombatState.Root;
+        StartCoroutine(BattleSystem.system.MoveCamera(cameraTargets[0]));
         yield return base.BeginningOfTurn();
     }
 
-    public override void SkillUsage(SkillTypes type)
-    {
-        base.SkillUsage(type);
-    }
 
     #region UI and Camera
 
-    public enum combatState
+    public enum CombatState
     {
-        root,
-        skill,
-        inspect,
-        targetEnemy,
-        targetAlly,
+        Root,
+        Skill,
+        Inspect,
+        TargetEnemy,
+        TargetAlly,
     }
 
-    public combatState currentState,preState;
+    public CombatState currentState,preState;
 
     public void Submit()
     {
@@ -47,26 +52,26 @@ public class PlayerUnit : Unit
         
         switch (currentState)
         {
-            case combatState.root:
-                currentState = combatState.targetEnemy;
-                preState = combatState.root;
+            case CombatState.Root:
+                currentState = CombatState.TargetEnemy;
+                preState = CombatState.Root;
                 break;
-            case combatState.skill:
-                SkillUsage(SkillTypes.damage);
+            case CombatState.Skill:
+                SkillUsage(SkillTypes.Damage);
                 break;
-            case combatState.inspect:
+            case CombatState.Inspect:
 
                 break;
-            case combatState.targetEnemy:
+            case CombatState.TargetEnemy:
                 switch (preState)
                 {
-                    case combatState.root:
+                    case CombatState.Root:
                         BasicAttack();
                         break;
                 }
-                currentState = combatState.root;
+                currentState = CombatState.Root;
                 break;
-            case combatState.targetAlly:
+            case CombatState.TargetAlly:
                 break;
         }
     }
