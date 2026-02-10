@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class PlayerUnit : Unit
@@ -11,29 +13,38 @@ public class PlayerUnit : Unit
     /// maybe I'll need later more so this is an array now
     /// </summary>
     [SerializeField] private Transform[] cameraTargets; // this is for the camera to move to depending on the situation.
-
-    [SerializeField] private BattleUIPanel rootPanel;
     
+    [SerializeField] private Canvas playerActionCanvas;
+    private TextMeshProUGUI HUDvalues;
+
+    private new void Awake()
+    {
+        base.Awake();
+        HUDvalues = hudCanvas.gameObject.GetComponentInChildren<TextMeshProUGUI>(true);
+    }
+
     #endregion
 
-    public override void BasicAttack()
+    protected override IEnumerator BasicAttack(Unit enemy)
     {
         CalculateTimeValue(1f);
-        base.BasicAttack();
+        yield return base.BasicAttack(enemy);
     }
 
 
     public override IEnumerator BeginningOfTurn()
-    {
-        yield return null;
-        currentState = CombatState.Root;
+    { 
+        stateStack.Push(CombatState.Root);
+        hudCanvas?.gameObject.SetActive(true);
+        HUDvalues.text = $"{name}:  HP: {CurrentHP}/{MaxHP}   SP: {CurrentSP}/{MaxSP}";
+        playerActionCanvas?.gameObject.SetActive(true);
         StartCoroutine(BattleSystem.system.MoveCamera(cameraTargets[0]));
         yield return base.BeginningOfTurn();
     }
 
 
-    #region UI and Camera
-
+    #region UI, Camera and Input
+    
     public enum CombatState
     {
         Root,
@@ -43,33 +54,40 @@ public class PlayerUnit : Unit
         TargetAlly,
     }
 
-    public CombatState currentState,preState;
+    public Stack<CombatState> stateStack = new ();
 
-    public void Submit()
+    public void Submit(Unit targetUnit)
     {
-        
         //this will simulate the ui for now until I have actually implemented ui
         
-        switch (currentState)
+        switch (stateStack.Peek())
         {
             case CombatState.Root:
-                currentState = CombatState.TargetEnemy;
-                preState = CombatState.Root;
+                stateStack.Push(CombatState.TargetEnemy);
+                BattleSystem.system.MoveCameraToIndex(1);
                 break;
             case CombatState.Skill:
                 SkillUsage(SkillTypes.Damage);
                 break;
             case CombatState.Inspect:
-
                 break;
             case CombatState.TargetEnemy:
-                switch (preState)
+                stateStack.Pop();
+                switch (stateStack.Peek())
                 {
                     case CombatState.Root:
-                        BasicAttack();
+                        StartCoroutine(BasicAttack(targetUnit));
+                        
+                        stateStack.Clear();
+                        break;
+                    case CombatState.Skill:
+                        stateStack.Clear();
+                        break;
+                    case CombatState.Inspect:
+                        
+                        //inspect logic here for enemies
                         break;
                 }
-                currentState = CombatState.Root;
                 break;
             case CombatState.TargetAlly:
                 break;

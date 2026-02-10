@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 public class BattleSystem : MonoBehaviour
 {
@@ -14,10 +15,15 @@ public class BattleSystem : MonoBehaviour
     [SerializeField] private PlayerUnit[] playerUnits;
     [SerializeField] private EnemyUnit[] enemyUnits;
     
+    public Unit targetUnit;
     
     [SerializeField] public Camera battleCamera;
-    private Vector3 basePosition;
-    private Quaternion baseRotation;
+    /// <summary>
+    /// 0- standard camera angle for when the camera should show all
+    /// 1 - view towards the enemies
+    /// 2 - view towards the player
+    /// </summary>
+    [SerializeField] private Transform[] cameraTargets;
 
     public UnityEvent<Unit, float> endOfTurnTrigger = new UnityEvent<Unit, float>();
 
@@ -27,12 +33,11 @@ public class BattleSystem : MonoBehaviour
     {
         if(system == null) system = this;
         else Destroy(gameObject);
+            
     }
 
     void Start()
     {
-        basePosition = battleCamera.transform.position;
-        baseRotation = battleCamera.transform.rotation;
         StartOfCombat();
     }
 
@@ -45,7 +50,7 @@ public class BattleSystem : MonoBehaviour
 
         queue.AddRange(playerUnits);
         queue.AddRange(enemyUnits);
-        queue.Sort((unit, unit1) => (int)(unit.TimeValue - unit1.TimeValue));
+        queue.Sort((unit, unit1) => (int)(unit.QueueTimeValue - unit1.QueueTimeValue));
 
 
         //trigger their Beginning Of Combat
@@ -55,37 +60,45 @@ public class BattleSystem : MonoBehaviour
         }
 
         currentActiveUnit = queue[0];
-        if (currentActiveUnit != null && currentActiveUnit is PlayerUnit player) SeeSituationDebug(player);
         queue.RemoveAt(0);
         StartCoroutine(currentActiveUnit.BeginningOfTurn());
     }
 
     void EndOfTurn(Unit currentUnit, float timeValue)
     {
+        MoveCameraToIndex(0);
         foreach (var unit in queue)
         {
             unit.PassTimeValue(timeValue);
         }
         queue.Add(currentUnit);
-        queue.Sort((unit, unit1) => (int)(unit.TimeValue - unit1.TimeValue));
+        queue.Sort((unit, unit1) => (int)(unit.QueueTimeValue - unit1.QueueTimeValue));
         //maybe animations or something.
         currentActiveUnit = queue[0];
         queue.RemoveAt(0);
         StartCoroutine(currentActiveUnit.BeginningOfTurn());
-        if (currentActiveUnit != null && currentActiveUnit is PlayerUnit player) {SeeSituationDebug(player);}
     }
 
 
-    #region Camera, UI
+    #region Camera, UI and Input
+    
+    [SerializeField] private Button currentSelectButton;
+    
+    /// <summary>
+    /// Outside the normal set positions,
+    /// this is for when the camera needs to move to a specific position with set angles.
+    /// </summary>
+    /// <param name="target"></param>
+    /// <returns></returns>
 
     public IEnumerator MoveCamera(Transform target)
     {
         var startPos = battleCamera.gameObject.transform.position;
         var startRot = battleCamera.gameObject.transform.rotation;
         float timer = 0f;
-        while (timer < 1.5f)
+        while (timer < 1f)
         {
-            timer += Time.unscaledDeltaTime;
+            timer += Time.unscaledDeltaTime * 5f;
             battleCamera.gameObject.transform.position = Vector3.Lerp(startPos, target.position, timer);
             battleCamera.gameObject.transform.rotation = Quaternion.Lerp(startRot, target.rotation, timer);
             yield return null;
@@ -94,52 +107,66 @@ public class BattleSystem : MonoBehaviour
         battleCamera.gameObject.transform.rotation = target.rotation;
     }
 
-    public IEnumerator MoveCameraBack()
+    
+    /// <summary>
+    /// this interpolates the camera to one of the predetermined positions and applies ui/input changes
+    /// depending on the position
+    ///
+    /// 0 for standard
+    /// 1 for enemy view
+    /// 2 for player view
+    /// </summary>
+    /// <param name="targetIndex"></param>
+    /// <returns></returns>
+    private IEnumerator MoveCameraToIndexTransform(int targetIndex)
     {
         var startPos = battleCamera.gameObject.transform.position;
         var startRot = battleCamera.gameObject.transform.rotation;
-        float timer = 0f;
-        while (timer < 1.5f)
+        
+        switch (targetIndex)
         {
-            timer += Time.unscaledDeltaTime;
-            battleCamera.gameObject.transform.position = Vector3.Lerp(startPos, basePosition, timer);
-            battleCamera.gameObject.transform.rotation = Quaternion.Lerp(startRot, baseRotation, timer);
+            case 0:
+                currentSelectButton = null;
+                targetUnit?.SelectHUD(false);
+                targetUnit = null;
+                break;
+            case 1:
+                for(int i = 0; i < enemyUnits.Length; i++)
+                {
+                    Button left = null, right = null;
+                    if (i != 0)
+                    {
+                        left = enemyUnits[i - 1].selected;
+                    }
+                    else if (i != enemyUnits.Length - 1)
+                    {
+                        right = enemyUnits[i + 1].selected;
+                    }
+                    enemyUnits[i].CalculateHUDValues(left,right);
+                }
+                targetUnit = enemyUnits[0];
+                currentSelectButton = enemyUnits[0].selected;
+                targetUnit.SelectHUD(true);
+                cameraTargets[1].LookAt(targetUnit.transform.position);
+                break;
+        }
+        float timer = 0f;
+        while (timer < 1f)
+        {
+            timer += Time.unscaledDeltaTime * 5f;
+            battleCamera.gameObject.transform.position = Vector3.Lerp(startPos, cameraTargets[targetIndex].position, timer);
+            battleCamera.gameObject.transform.rotation = Quaternion.Lerp(startRot, cameraTargets[targetIndex].rotation, timer);
             yield return null;
         }
-        battleCamera.gameObject.transform.position = basePosition;
-        battleCamera.gameObject.transform.rotation = baseRotation;
+        battleCamera.gameObject.transform.position = cameraTargets[targetIndex].position;
+        battleCamera.gameObject.transform.rotation = cameraTargets[targetIndex].rotation;
+        
+        
     }
-
-    private void SeeSituationDebug(PlayerUnit player)
+    
+    public void MoveCameraToIndex(int targetIndex)
     {
-        switch (player.currentState)
-        {
-            case PlayerUnit.CombatState.Root:
-                Debug.Log($"options: \nX for attack\nSquare for skill\nR1 for inspect");
-                break;
-            case PlayerUnit.CombatState.Skill:
-                string skills = "";
-                foreach (var skill in player.skills )
-                {
-                    skills += $"{skill.Key} is of type {skill.Value.ToString()}\n";
-                }
-                Debug.Log(skills);
-                break;
-            case PlayerUnit.CombatState.Inspect:
-                break;
-            case PlayerUnit.CombatState.TargetEnemy:
-                foreach (var enemy in enemyUnits)
-                {
-                    Debug.Log(enemy.name);
-                }
-                break;
-            case PlayerUnit.CombatState.TargetAlly:
-                foreach (var playerUnit in playerUnits)
-                {
-                    Debug.Log(playerUnit.name);
-                }
-                break;
-        }
+        StartCoroutine(MoveCameraToIndexTransform(targetIndex));
     }
 
     #endregion
@@ -148,29 +175,65 @@ public class BattleSystem : MonoBehaviour
 
     public void Submit()
     {
-        if (currentActiveUnit != null && currentActiveUnit is PlayerUnit player)
+        if (currentActiveUnit != null && currentActiveUnit is PlayerUnit playerUnit)
         {
-            player.Submit();
-            if(player.currentState != PlayerUnit.CombatState.Root)SeeSituationDebug(player);
+            playerUnit.Submit(targetUnit);
         }
     }
 
     public void Cancel()
     {
-        
     }
 
     public void SkillTab()
     {
-        
+        //do on player something something instead next time
     }
     
     public void InspectTab()
     {
         
     }
-    
-    
 
+    public void Navigate(Vector2 normalizedInput)
+    {
+        if(currentSelectButton == null) return;
+        if (normalizedInput != Vector2.zero)
+        {
+            bool isVertical = Mathf.Abs(normalizedInput.y) > Mathf.Abs(normalizedInput.x);
+            Selectable selectable;
+            if (isVertical)
+            {
+                selectable = normalizedInput.y > 0 ? currentSelectButton.navigation.selectOnUp : currentSelectButton.navigation.selectOnDown;
+                
+            }
+            else
+            {
+                selectable = normalizedInput.x > 0 ? currentSelectButton.navigation.selectOnRight : currentSelectButton.navigation.selectOnLeft;
+            }
+            if (selectable != null)
+            {
+                if (selectable.gameObject.transform.parent.parent.TryGetComponent(typeof(Unit), out var unitComponent))
+                {
+                    Unit unit = (Unit)unitComponent;
+                    targetUnit?.SelectHUD(false);
+                    targetUnit = unit;
+                    targetUnit.SelectHUD(true);
+                    cameraTargets[1].LookAt(targetUnit.transform.position);
+                    StartCoroutine(MoveCamera(cameraTargets[1]));
+                }
+                currentSelectButton = (Button)selectable;
+                if (selectable.transform.parent.parent.TryGetComponent(typeof(Unit), out var button))
+                {
+                    var unitButton = (Unit)button;
+                    if (unitButton != null)
+                    {
+                        targetUnit = unitButton;
+                    }
+                }
+            }
+        }
+    }
+    
     #endregion
 }

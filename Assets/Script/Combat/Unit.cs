@@ -17,7 +17,7 @@ public class Unit : MonoBehaviour
     ///     Healing effects are also scaled with this stat.
     /// -   Speed: dictate the Time value and dodge possibility. The higher the speed, the faster the unit can act and
     ///     the more likely it is to dodge an attack or have the enemy not dodge its attack.
-    /// -   Intelligence: this stats calculates the usage of skills. The higher the intelligence,
+    /// -   Intelligence: this stat calculates the usage of skills. The higher the intelligence,
     ///     the more skills a unit can use until end of combat. the deeper idea is that intelligence increases
     ///     the amount of Skill Points a unit has and the regeneration of said Points
     /// -   Luck: there will be a lot of chance triggers and special item effects as well.
@@ -25,7 +25,7 @@ public class Unit : MonoBehaviour
     ///     But unlike the other ones, this one should be treated as a late-bloomer stat
     ///     and should show its effects later in a run.
     /// </summary>
-    [SerializeField] private int strength = 1, constitution = 1, speed = 1, intelligence = 1, luck = 1;
+    [SerializeField] protected int strength = 1, constitution = 1, speed = 1, intelligence = 1, luck = 1;
 
     public int Strength
     {
@@ -60,12 +60,14 @@ public class Unit : MonoBehaviour
     /// <summary>
     /// These are the stats that are calculated from the base stats and can not be influence directly from outside.
     /// </summary>
-    private int maxHP, currentHP, maxSP, currentSP;
+    protected int MaxHP, CurrentHP, MaxSP, CurrentSP;
+
+    [SerializeField] protected float critAmount, critChance, damageAddition, damageMultiplier; //these are for the damage calculation and critical hits.
 
     private float timeValue; //this stat is the bread and butter of this combat system. 
-    private readonly float constantReduction = 0.3f; //this stat is the bread and butter of this combat system. 
+    private const float ConstantReduction = 0.3f; //this stat is the bread and butter of this combat system. 
 
-    public float TimeValue => timeValue;
+    public float QueueTimeValue => timeValue;
 
     #endregion
 
@@ -85,7 +87,7 @@ public class Unit : MonoBehaviour
         Heal
     }
     
-    public Dictionary<string,SkillTypes> skills = new Dictionary<string,SkillTypes>();
+    public Dictionary<string,SkillTypes> Skills = new();
 
     //TODO: Same for skills.
 
@@ -96,9 +98,10 @@ public class Unit : MonoBehaviour
     /// <summary>
     /// 0- base target for other units to go to when performing a 1-1 action
     /// </summary>
-    [SerializeField] private Transform[] positionTargets;
+    [SerializeField] protected Transform[] positionTargets;
 
     [SerializeField] internal Animator animator;
+    [SerializeField] internal Canvas hudCanvas;
 
     private Vector3 startPosition;
 
@@ -115,7 +118,7 @@ public class Unit : MonoBehaviour
         reactionDoneTrigger,
         criticalTrigger;
 
-    public UnityEvent<object> skillUsagTrigger;
+    public UnityEvent<object> skillUsageTrigger;
 
     private void OnEnable()
     {
@@ -130,7 +133,7 @@ public class Unit : MonoBehaviour
         criticalTrigger ??= new UnityEvent();
     }
 
-    private void Start()
+    protected void Awake()
     {
         CalculateStats();
 
@@ -144,32 +147,34 @@ public class Unit : MonoBehaviour
     private void CalculateStats()
     {
         //TODO: Balance this shit after playing
-        if (maxHP == 0)
+        if (MaxHP == 0)
         {
-            maxHP = currentHP = constitution * 10;
+            MaxHP = CurrentHP = constitution * 10;
         }
         else
         {
-            var percentHP = (float)currentHP / maxHP;
-            maxHP = constitution * 10;
-            currentHP = Mathf.CeilToInt(percentHP * maxHP);
+            var percentHP = (float)CurrentHP / MaxHP;
+            MaxHP = constitution * 10;
+            CurrentHP = Mathf.CeilToInt(percentHP * MaxHP);
         }
 
-        if (maxSP == 0)
+        if (MaxSP == 0)
         {
-            maxSP = currentSP = intelligence * 5;
+            MaxSP = CurrentSP = intelligence * 5;
         }
         else
         {
-            var percentSP = (float)currentSP / maxSP;
-            maxSP = intelligence * 5;
-            currentSP = Mathf.CeilToInt(percentSP * maxSP);
+            var percentSP = (float)CurrentSP / MaxSP;
+            MaxSP = intelligence * 5;
+            CurrentSP = Mathf.CeilToInt(percentSP * MaxSP);
         }
+
+        damageMultiplier = 1;
     }
 
     internal void CalculateTimeValue(float newTimeValue)
     {
-        timeValue += newTimeValue - constantReduction * Mathf.Log(speed, 99);
+        timeValue += newTimeValue - ConstantReduction * Mathf.Log(speed, 99);
     }
 
     public void PassTimeValue(float passedTime)
@@ -177,20 +182,38 @@ public class Unit : MonoBehaviour
         timeValue -= passedTime;
     }
 
-    public virtual void BasicAttack()
+    //TODO: Think about hwhat can be done to affect the damage on unit
+    
+    protected virtual IEnumerator BasicAttack(Unit targetUnit)
     {
         basicAttackTrigger?.Invoke();
+
+        var baseDamage = (strength + damageAddition) * damageMultiplier;
+        var totalDamage = Random.Range(0,100) < critChance?  baseDamage * critAmount/100: baseDamage;
+        targetUnit.TakeDamage(totalDamage);
+        //move object towards target
+        BattleSystem.system.MoveCameraToIndex(0);
+        yield return StartCoroutine(MoveTowardsPosition(targetUnit.positionTargets[0].position));
+        
+        //TODO: Do some anime shit 
+        var timer = 0.0f;
+        while (timer < 1f)
+        {
+            timer += Time.unscaledDeltaTime * 3f;
+            yield return null;
+        }
+        
         EndTurn();
     }
 
-    public virtual void SkillUsage(SkillTypes type) //change this later
+    protected virtual void SkillUsage(SkillTypes type) //change this later
     {
-        skillUsagTrigger?.Invoke(type);
+        skillUsageTrigger?.Invoke(type);
     }
 
     public virtual void BeginningOfCombat()
     {
-        //prep shit here, maybe take this out later when battlesystem can call these.
+        //prep shit here, maybe take this out later when battle system can call these.
         beginningOfCombatTrigger?.Invoke();
     }
 
@@ -201,11 +224,36 @@ public class Unit : MonoBehaviour
         beginningOfTurnTrigger?.Invoke();
     }
 
-    public void EndTurn()
+    protected void EndTurn()
     {
+        StartCoroutine(MoveTowardsPosition(startPosition));
         endOfTurnTrigger?.Invoke();
         BattleSystem.system.endOfTurnTrigger.Invoke(this, timeValue);
     }
+
+    private void TakeDamage(float damage)
+    {
+        CurrentHP -= (int)damage;
+        //TODO: maybe an event here as well?
+    }
+
+    private IEnumerator MoveTowardsPosition(Vector3 target)
+    {
+        var timer = 0.0f;
+        while (timer < 1f)
+        {
+            timer += Time.unscaledDeltaTime *5f;
+            transform.position = Vector3.Lerp(startPosition, target, timer);
+            yield return null;
+        }
+        transform.position = target;
+    }
+    
+    public void SelectHUD(bool active)
+    {
+        hudCanvas.gameObject.SetActive(active);
+    }
+    
 
     #endregion
 }

@@ -26,4 +26,17 @@ public class InputSystemWrapper : MonoBehaviour
             }
         }
     }
+
+    public void navigate(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            switch (state)
+            {
+                case State.Combat:
+                    battleSystem.Navigate(context.ReadValue<Vector2>());
+                    break;
+            }
+        }
+    }
 }
