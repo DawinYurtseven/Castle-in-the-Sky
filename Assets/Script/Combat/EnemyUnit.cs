@@ -7,14 +7,14 @@ public class EnemyUnit : Unit
 {
 
 
-    public TextMeshProUGUI HUDvalues;
-    public Button selected;
+    public TextMeshProUGUI HUDValues;
+    
 
 
     private new void Awake()
     {
         base.Awake();
-        HUDvalues = GetComponentInChildren<TextMeshProUGUI>(true);
+        HUDValues = GetComponentInChildren<TextMeshProUGUI>(true);
         selected = GetComponentInChildren<Button>(true);
     }
 
@@ -23,13 +23,29 @@ public class EnemyUnit : Unit
         yield return null;
         yield return base.BeginningOfTurn();
         Debug.Log("Beginning of turn of enemy");
+        yield return MakeDecision();
+        yield return EndTurn();
+    }
+    
+    private enum EnemyState
+    {
+        Prep,
+        BasicAttack,
+        Skill,
+        Defend,
+    }
+
+    private IEnumerator MakeDecision()
+    {
+        //make actual decisions
+        var random = Random.Range(0, BattleSystem.system.playerUnits.Length);
+        yield return StartCoroutine(BasicAttack(BattleSystem.system.playerUnits[random]));
         CalculateTimeValue(1f);
-        EndTurn();
     }
 
     public void CalculateHUDValues(Button left = null,Button right = null)
     {
-        HUDvalues.text = $"{name}\nHP: {CurrentHP}/{MaxHP}\nSP: {CurrentSP}/{MaxSP}";
+        HUDValues.text = $"{name}\nHP: {CurrentHP}/{MaxHP}\nSP: {CurrentSP}/{MaxSP}";
         hudCanvas.gameObject.transform.LookAt(BattleSystem.system.battleCamera.gameObject.transform.position);
         var navigation = selected.navigation;
         if(left != null)

@@ -27,6 +27,19 @@ public class InputSystemWrapper : MonoBehaviour
         }
     }
 
+    public void Cancel(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            switch (state)
+            {
+                case State.Combat:
+                    battleSystem.Cancel();
+                    break;
+            }
+        }
+    }
+
     public void navigate(InputAction.CallbackContext context)
     {
         if (context.performed)

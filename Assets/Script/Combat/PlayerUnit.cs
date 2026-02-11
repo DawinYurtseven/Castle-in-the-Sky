@@ -29,6 +29,13 @@ public class PlayerUnit : Unit
     {
         CalculateTimeValue(1f);
         yield return base.BasicAttack(enemy);
+        yield return EndTurn();
+    }
+
+    protected override void TakeDamage(float damage)
+    {
+        base.TakeDamage(damage);
+        HUDvalues.text = $"{name}:  HP: {CurrentHP}/{MaxHP}   SP: {CurrentSP}/{MaxSP}";
     }
 
 
@@ -37,15 +44,15 @@ public class PlayerUnit : Unit
         stateStack.Push(CombatState.Root);
         hudCanvas?.gameObject.SetActive(true);
         HUDvalues.text = $"{name}:  HP: {CurrentHP}/{MaxHP}   SP: {CurrentSP}/{MaxSP}";
-        playerActionCanvas?.gameObject.SetActive(true);
-        StartCoroutine(BattleSystem.system.MoveCamera(cameraTargets[0]));
+        SetActionUI(true);
+        yield return BattleSystem.system.MoveCamera(cameraTargets[0]);
         yield return base.BeginningOfTurn();
     }
 
 
     #region UI, Camera and Input
     
-    public enum CombatState
+    private enum CombatState
     {
         Root,
         Skill,
@@ -54,7 +61,12 @@ public class PlayerUnit : Unit
         TargetAlly,
     }
 
-    public Stack<CombatState> stateStack = new ();
+    /// <summary>
+    /// TODO: make a visualization of how deep the stack can go
+    /// so you don't have to fight the urge to punch the current me
+    /// 
+    /// </summary>
+    private Stack<CombatState> stateStack = new ();
 
     public void Submit(Unit targetUnit)
     {
@@ -64,6 +76,7 @@ public class PlayerUnit : Unit
         {
             case CombatState.Root:
                 stateStack.Push(CombatState.TargetEnemy);
+                SetActionUI(false);
                 BattleSystem.system.MoveCameraToIndex(1);
                 break;
             case CombatState.Skill:
@@ -92,6 +105,31 @@ public class PlayerUnit : Unit
             case CombatState.TargetAlly:
                 break;
         }
+    }
+
+    public void Cancel()
+    {
+        if(stateStack.Count <2) return;
+        stateStack.Pop();
+        switch (stateStack.Peek())
+        {
+            case CombatState.Root:
+                SetActionUI(true);
+                StartCoroutine(BattleSystem.system.MoveCamera(cameraTargets[0]));
+                break;
+            case CombatState.Skill:
+                break;
+            case CombatState.TargetEnemy:
+                break;
+            case CombatState.TargetAlly:
+                break;
+        }
+    }
+    
+    
+    public void SetActionUI(bool active)
+    {
+        playerActionCanvas?.gameObject.SetActive(active);
     }
 
     #endregion

@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 public class Unit : MonoBehaviour
 {
@@ -102,6 +104,8 @@ public class Unit : MonoBehaviour
 
     [SerializeField] internal Animator animator;
     [SerializeField] internal Canvas hudCanvas;
+    
+    public Button selected;
 
     private Vector3 startPosition;
 
@@ -193,17 +197,10 @@ public class Unit : MonoBehaviour
         targetUnit.TakeDamage(totalDamage);
         //move object towards target
         BattleSystem.system.MoveCameraToIndex(0);
-        yield return StartCoroutine(MoveTowardsPosition(targetUnit.positionTargets[0].position));
+        yield return transform.DOMove(targetUnit.positionTargets[0].position, 0.2f).SetEase(Ease.InExpo).WaitForCompletion();
         
         //TODO: Do some anime shit 
-        var timer = 0.0f;
-        while (timer < 1f)
-        {
-            timer += Time.unscaledDeltaTime * 3f;
-            yield return null;
-        }
-        
-        EndTurn();
+        yield return new WaitForSeconds(0.3f);
     }
 
     protected virtual void SkillUsage(SkillTypes type) //change this later
@@ -224,29 +221,21 @@ public class Unit : MonoBehaviour
         beginningOfTurnTrigger?.Invoke();
     }
 
-    protected void EndTurn()
+    protected IEnumerator EndTurn()
     {
-        StartCoroutine(MoveTowardsPosition(startPosition));
+        yield return transform.DOMove(startPosition, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
         endOfTurnTrigger?.Invoke();
         BattleSystem.system.endOfTurnTrigger.Invoke(this, timeValue);
     }
 
-    private void TakeDamage(float damage)
+    protected virtual void TakeDamage(float damage)
     {
         CurrentHP -= (int)damage;
         //TODO: maybe an event here as well?
-    }
-
-    private IEnumerator MoveTowardsPosition(Vector3 target)
-    {
-        var timer = 0.0f;
-        while (timer < 1f)
+        if (CurrentHP <= 0)
         {
-            timer += Time.unscaledDeltaTime *5f;
-            transform.position = Vector3.Lerp(startPosition, target, timer);
-            yield return null;
+            BattleSystem.system.DeathOfUnit(this);
         }
-        transform.position = target;
     }
     
     public void SelectHUD(bool active)
