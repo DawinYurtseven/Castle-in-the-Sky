@@ -9,6 +9,8 @@ public class EnemyUnit : Unit
 
     public TextMeshProUGUI HUDValues;
     
+    
+    
 
 
     private new void Awake()
@@ -20,14 +22,12 @@ public class EnemyUnit : Unit
 
     public override IEnumerator BeginningOfTurn()
     {
-        yield return null;
         yield return base.BeginningOfTurn();
-        Debug.Log("Beginning of turn of enemy");
         yield return MakeDecision();
         yield return EndTurn();
     }
     
-    private enum EnemyState
+    private enum EnemyActions
     {
         Prep,
         BasicAttack,
@@ -60,5 +60,9 @@ public class EnemyUnit : Unit
         selected.navigation = navigation;
     }
 
-    
+    protected override IEnumerator BasicAttack(Unit targetUnit)
+    {
+        Debug.Log($"Attacking {targetUnit.name}");
+        yield return base.BasicAttack(targetUnit);
+    }
 }

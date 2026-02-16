@@ -1,8 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class BattleSystem : MonoBehaviour
@@ -28,6 +31,7 @@ public class BattleSystem : MonoBehaviour
     /// </summary>
     [SerializeField] private Transform[] cameraTargets;
     [SerializeField] private Canvas winCanvas, loseCanvas;
+    [SerializeField] private GameObject gameGUI, playerValuePrefab;
 
     public UnityEvent<Unit, float> endOfTurnTrigger = new UnityEvent<Unit, float>();
 
@@ -37,6 +41,8 @@ public class BattleSystem : MonoBehaviour
     {
         if(system == null) system = this;
         else Destroy(gameObject);
+        //TODO: instantiate the GUI here
+        gameGUI.SetActive(true);
     }
 
     void Start()
@@ -83,6 +89,11 @@ public class BattleSystem : MonoBehaviour
         currentActiveUnit = queue[0];
         queue.RemoveAt(0);
         StartCoroutine(currentActiveUnit.BeginningOfTurn());
+        if (currentActiveUnit is PlayerUnit playerUnit)
+        {
+            var index = playerUnits.ToList().IndexOf(playerUnit);
+            
+        }
     }
     
     public void DeathOfUnit(Unit unit)
@@ -175,8 +186,9 @@ public class BattleSystem : MonoBehaviour
                     targetUnit = enemyUnits[0];
                 currentSelectButton = targetUnit.selected;
                 targetUnit.SelectHUD(true);
-                //TODO: change the LookAt to an interpolation between all with weights depending on the distance.
-                cameraTargets[1].LookAt(targetUnit.transform.position);
+                var index = enemyUnits.ToList().IndexOf((EnemyUnit)targetUnit) + 1;
+                Vector3 interpolatedPosition = Vector3.Lerp(enemyUnits[0].transform.position, enemyUnits[^1].transform.position, index/((float)enemyUnits.Length+1));
+                cameraTargets[1].LookAt(interpolatedPosition);
                 break;
         }
         
@@ -207,7 +219,6 @@ public class BattleSystem : MonoBehaviour
         if (currentActiveUnit != null && currentActiveUnit is PlayerUnit playerUnit)
         {
             playerUnit.Cancel();
-            targetUnit?.SelectHUD(false);
         }
     }
 
@@ -218,7 +229,16 @@ public class BattleSystem : MonoBehaviour
     
     public void InspectTab()
     {
-        
+        if (currentActiveUnit != null && currentActiveUnit is PlayerUnit playerUnit)
+        {
+            playerUnit.Inspect();
+        }
+    }
+
+    public void clearSelection()
+    {
+        targetUnit?.SelectHUD(false);
+        currentSelectButton = null;
     }
 
     public void Navigate(Vector2 normalizedInput)
@@ -245,7 +265,19 @@ public class BattleSystem : MonoBehaviour
                     targetUnit?.SelectHUD(false);
                     targetUnit = unit;
                     targetUnit.SelectHUD(true);
-                    cameraTargets[1].LookAt(targetUnit.transform.position);
+                    int index = 1;
+                    Vector3 interpolatedPosition = targetUnit.transform.position;
+                    if(unit is EnemyUnit enemy)
+                    {
+                        index = enemyUnits.ToList().IndexOf(enemy) +1 ;
+                        interpolatedPosition = Vector3.Lerp(enemyUnits[0].transform.position, enemyUnits[^1].transform.position, index/((float)enemyUnits.Length+1));
+                    }
+                    else
+                    {
+                        index = playerUnits.ToList().IndexOf((PlayerUnit)unit) +1;
+                        interpolatedPosition = Vector3.Lerp(playerUnits[0].transform.position, playerUnits[^1].transform.position, index/((float)playerUnits.Length+1));
+                    }
+                    cameraTargets[1].LookAt(interpolatedPosition);
                     StartCoroutine(MoveCamera(cameraTargets[1]));
                 }
                 currentSelectButton = (Button)selectable;

@@ -35,7 +35,7 @@ public class PlayerUnit : Unit
     protected override void TakeDamage(float damage)
     {
         base.TakeDamage(damage);
-        HUDvalues.text = $"{name}:  HP: {CurrentHP}/{MaxHP}   SP: {CurrentSP}/{MaxSP}";
+        HUDvalues.text = $"{name}\nHP: {CurrentHP}/{MaxHP}\nSP: {CurrentSP}/{MaxSP}";
     }
 
 
@@ -43,7 +43,7 @@ public class PlayerUnit : Unit
     { 
         stateStack.Push(CombatState.Root);
         hudCanvas?.gameObject.SetActive(true);
-        HUDvalues.text = $"{name}:  HP: {CurrentHP}/{MaxHP}   SP: {CurrentSP}/{MaxSP}";
+        HUDvalues.text = $"{name}\nHP: {CurrentHP}/{MaxHP}\nSP: {CurrentSP}/{MaxSP}";
         SetActionUI(true);
         yield return BattleSystem.system.MoveCamera(cameraTargets[0]);
         yield return base.BeginningOfTurn();
@@ -71,6 +71,7 @@ public class PlayerUnit : Unit
     public void Submit(Unit targetUnit)
     {
         //this will simulate the ui for now until I have actually implemented ui
+        if (stateStack.Count == 0) return; 
         
         switch (stateStack.Peek())
         {
@@ -116,6 +117,7 @@ public class PlayerUnit : Unit
             case CombatState.Root:
                 SetActionUI(true);
                 StartCoroutine(BattleSystem.system.MoveCamera(cameraTargets[0]));
+                BattleSystem.system.clearSelection();
                 break;
             case CombatState.Skill:
                 break;
@@ -124,6 +126,12 @@ public class PlayerUnit : Unit
             case CombatState.TargetAlly:
                 break;
         }
+    }
+
+    public void Inspect()
+    {
+        stateStack.Push(CombatState.Inspect);
+        stateStack.Push(CombatState.TargetEnemy);
     }
     
     

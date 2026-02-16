@@ -108,6 +108,9 @@ public class Unit : MonoBehaviour
     public Button selected;
 
     private Vector3 startPosition;
+    
+    //image for Queue and player values
+    public Image HUDImage;
 
     #endregion
 
