@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 public class PlayerUnit : Unit
@@ -22,11 +23,27 @@ public class PlayerUnit : Unit
 
     #endregion
 
-    protected override IEnumerator BasicAttack(Unit enemy)
+    protected override IEnumerator BasicAttack()
     {
-        CalculateTimeValue(1f);
-        yield return base.BasicAttack(enemy);
-        yield return EndTurn();
+        yield return base.BasicAttack();
+        BattleSystem.system.AcceptNewQueuePosition(this, TimeValue);
+    }
+
+    protected override IEnumerator SkillUsage()
+    {
+        yield return BattleSystem.system.MoveCameraToIndexTransform(0);
+        if (!selectedSkill.targetOne)
+        {
+            var list = new List<Unit>();
+            list.AddRange(BattleSystem.system.enemyUnits);
+            SetCurrentTarget(list);
+            yield return transform.DOMove(BattleSystem.system.inFrontOfEnemies.position, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
+        }
+        
+        
+        //call animation with selectedSkill.animationName here but idk
+        yield return new WaitForSeconds(0.3f);
+        yield return base.SkillUsage();
     }
 
     protected override void TakeDamage(float damage)
@@ -74,10 +91,21 @@ public class PlayerUnit : Unit
                 stateStack.Push(CombatState.TargetEnemy);
                 BattleSystem.system.ShowNewQueuePosition(this, CalculateTimeValue(1f));
                 SetActionUI(false);
-                BattleSystem.system.MoveCameraToIndex(1);
+                yield return BattleSystem.system.MoveCameraToIndexTransform(1);
                 break;
             case CombatState.Skill:
-                SkillUsage(SkillTypes.Damage);
+                BattleSystem.system.SkillTabVisibility(false);
+                if (selectedSkill.type == SkillTypes.Damage || selectedSkill.type == SkillTypes.Debuff)
+                {
+                    stateStack.Push(CombatState.TargetEnemy);
+                    yield return BattleSystem.system.MoveCameraToIndexTransform(3);
+                }
+                else
+                {
+                    stateStack.Push(CombatState.TargetAlly);
+                    yield return BattleSystem.system.MoveCameraToIndexTransform(4);
+                }
+                BattleSystem.system.ShowNewQueuePosition(this, CalculateTimeValue(selectedSkill.timeValue));
                 break;
             case CombatState.Inspect:
                 break;
@@ -86,11 +114,12 @@ public class PlayerUnit : Unit
                 switch (stateStack.Peek())
                 {
                     case CombatState.Root:
-                        StartCoroutine(BasicAttack(targetUnit));
                         stateStack.Clear();
+                        yield return BasicAttack();
                         break;
                     case CombatState.Skill:
                         stateStack.Clear();
+                        yield return SkillUsage();
                         break;
                     case CombatState.Inspect:
                         
@@ -112,6 +141,8 @@ public class PlayerUnit : Unit
             case CombatState.Root:
                 BattleSystem.system.ClearSelection();
                 BattleSystem.system.FreeNewQueuePosition();
+                BattleSystem.system.SkillTabVisibility(false);
+                selectedSkill = null;
                 yield return BattleSystem.system.MoveCamera(cameraTargets[0]);
                 SetActionUI(true);
                 break;
@@ -138,9 +169,9 @@ public class PlayerUnit : Unit
     {
         if (stateStack.Peek() != CombatState.Root) yield break;
         stateStack.Push(CombatState.Skill);
+        BattleSystem.system.SkillTabVisibility(true, skills, this);
         SetActionUI(false);
         yield return BattleSystem.system.MoveCamera(cameraTargets[1]);
-        Debug.Log("SkillTab");
     }
 
     public IEnumerator Inspect()
@@ -149,8 +180,7 @@ public class PlayerUnit : Unit
         stateStack.Push(CombatState.Inspect);
         stateStack.Push(CombatState.TargetEnemy);
         SetActionUI(false);
-        BattleSystem.system.MoveCameraToIndex(1);
-        yield return null;
+        yield return BattleSystem.system.MoveCameraToIndexTransform(1);
     }
 
 

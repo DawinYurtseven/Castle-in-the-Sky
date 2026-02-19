@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 804581b27c33b974284e06241b6da8cc, type: 3}
+  m_Name: Grand Slash
+  m_EditorClassIdentifier: Assembly-CSharp::Skill
+  skillName: Grand Slash
+  skillDescription: damage all enemies with a wide attack
+  skillCost: 5
+  timeValue: 1.5
+  type: 0
+  targetOne: 0
+  affectValue: 1.8
+  animationName: 
+  userTargetPoint: 1
+  turnEffect: 0
+  additionalCritChance: 0
+  additionalCritAddition: 0

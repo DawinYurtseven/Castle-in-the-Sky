@@ -20,7 +20,6 @@ public class BattleSystem : MonoBehaviour
     public List<GameObject> playerValues;
 
     private int playerDeaths, enemyDeaths;
-    
     private Unit targetUnit;
     
     [SerializeField] public Camera battleCamera;
@@ -30,6 +29,8 @@ public class BattleSystem : MonoBehaviour
     /// 2 - view towards the player
     /// </summary>
     [SerializeField] private Transform[] cameraTargets;
+
+    public Transform inFrontOfEnemies, inFrontOfPlayers;
     [SerializeField] private Canvas winCanvas, loseCanvas;
 
     public UnityEvent<Unit, float> endOfTurnTrigger = new UnityEvent<Unit, float>();
@@ -42,6 +43,9 @@ public class BattleSystem : MonoBehaviour
     {
         if(system == null) system = this;
         else Destroy(gameObject);
+        
+        battleCamera ??= Camera.main;
+        
         //TODO: instantiate the GUI here
         gameGUI.SetActive(true);
         playerValueHorizontalGameObject = gameGUI.transform.Find("Player value horizontal").gameObject;
@@ -90,6 +94,10 @@ public class BattleSystem : MonoBehaviour
         }
         queue.Add(currentUnit);
         OrderQueue();
+        foreach (var unit in queue)
+        {
+            Debug.Log(unit.name);
+        }
         //maybe animations or something.
         currentActiveUnit = queue[0];
         PopQueue();
@@ -113,6 +121,8 @@ public class BattleSystem : MonoBehaviour
         }
         else
         {
+            queue.Remove(unit);
+            OrderQueue();
             enemyDeaths++;
             if (enemyDeaths == enemyUnits.Count)
             {
@@ -140,7 +150,8 @@ public class BattleSystem : MonoBehaviour
 
     [SerializeField] private Button currentSelectButton;
 
-    [SerializeField] private GameObject gameGUI, playerValuePrefab,queueImagePrefab, temporaryImageGameObject;
+    [SerializeField] private GameObject gameGUI, playerValuePrefab, queueImagePrefab, skillTabPrefab;
+    private GameObject temporaryImageGameObject;
 
     /// <summary>
     /// Outside the normal set positions,
@@ -163,7 +174,7 @@ public class BattleSystem : MonoBehaviour
 
     public void ShowNewQueuePosition(Unit unit, float timeValue)
     {
-        var index = 0;
+        var index = -1;
         for (int i = 0; i < queue.Count; i++)
         {
             if (queue[i].QueueTimeValue - timeValue > timeValue)
@@ -172,26 +183,59 @@ public class BattleSystem : MonoBehaviour
                 break;
             }
         }
-        if (index == 0) index = queue.Count - 1;
+        if (index == -1) index = queue.Count;
         
         temporaryImageGameObject = Instantiate(queueImagePrefab, queueHorizontalGameObject.transform);
-        temporaryImageGameObject.GetComponent<RectTransform>().localPosition = new(-335, -60, 0);
-        temporaryImageGameObject.GetComponent<RectTransform>().DOLocalMove(new (-335 + index*115,-60, 0), 0.2f).SetEase(Ease.OutExpo);
+        temporaryImageGameObject.GetComponent<RectTransform>().localPosition = new(-1000, -60, 0);
+        temporaryImageGameObject.GetComponent<RectTransform>().DOLocalMove(new (-435 + index*115,-60, 0), 0.2f).SetEase(Ease.OutExpo);
         temporaryImageGameObject.GetComponent<Image>().sprite = unit.hudImage;
+    }
+
+    public void AcceptNewQueuePosition(Unit unit, float timeValue)
+    {
+        var index = -1;
+        for (int i = 0; i < queue.Count; i++)
+        {
+            if (queue[i].QueueTimeValue - timeValue > timeValue)
+            {
+                index = i;
+                break;
+            }
+        }
+        if (index == -1) index = queue.Count;
+        for (int i = 0; i < queueHorizontalGameObject.transform.childCount; i++)
+        {
+            var child = queueHorizontalGameObject.transform.GetChild(i);
+            if (child.localPosition.x >= -385 + index * 115)
+            {
+                child.DOLocalMove(child.localPosition + new Vector3(115, 0, 0), 0.2f).SetEase(Ease.OutExpo);
+            }
+        }
+
+        if(temporaryImageGameObject != null)
+            temporaryImageGameObject?.GetComponent<RectTransform>().DOLocalMove(new(-385 + index * 115, 0, 0), 0.2f)
+            .SetEase(Ease.OutExpo).OnComplete(() => temporaryImageGameObject = null);
     }
 
     public void FreeNewQueuePosition()
     {
-        if(temporaryImageGameObject != null) DestroyImmediate(temporaryImageGameObject);
+        if(temporaryImageGameObject != null) temporaryImageGameObject.transform.DOLocalMove(new(-1000,temporaryImageGameObject.transform.localPosition.y,0), 0.2f).SetEase(Ease.OutExpo).OnComplete(() => DestroyImmediate(temporaryImageGameObject));
     }
 
     private void PopQueue()
     {
         queue.RemoveAt(0);
-        DestroyImmediate(queueHorizontalGameObject.transform.GetChild(0).gameObject);
-        for (int i = queueHorizontalGameObject.transform.childCount -1; i >= 0; i--)
+        for (int i = 0; i <queueHorizontalGameObject.transform.childCount; i++)
         {
-            queueHorizontalGameObject.transform.GetChild(i).GetComponent<RectTransform>().localPosition = new (-385  + i*115, 0, 0);
+            if (i == 0)
+            {
+                var child = queueHorizontalGameObject.transform.GetChild(0);
+                queueHorizontalGameObject.transform.GetChild(0).DOLocalMove(new(-5000,0,0), 0.2f).SetEase(Ease.OutExpo).OnComplete(()=> DestroyImmediate(child.gameObject));
+            }
+            else
+            {
+                queueHorizontalGameObject.transform.GetChild(i).GetComponent<RectTransform>().DOLocalMove( new (-385  + (i-1)*115, 0, 0), 0.2f).SetEase(Ease.OutExpo);
+            }
         }
     }
 
@@ -201,7 +245,7 @@ public class BattleSystem : MonoBehaviour
         {
             DestroyImmediate(queueHorizontalGameObject.transform.GetChild(i).gameObject);
         }
-        queue.Sort((unit, unit1) => (int)(unit.QueueTimeValue - unit1.QueueTimeValue));
+        queue.Sort((unit, unit1) => unit.QueueTimeValue <= unit1.QueueTimeValue ? -1 : 1);
         for (int i = 0; i < queue.Count; i++)
         {
             var temp = Instantiate(queueImagePrefab, queueHorizontalGameObject.transform);
@@ -234,10 +278,12 @@ public class BattleSystem : MonoBehaviour
     /// 0 for standard
     /// 1 for enemy view
     /// 2 for player view
+    /// 3 for all enemies
+    /// 4 for all players
     /// </summary>
     /// <param name="targetIndex"></param>
     /// <returns></returns>
-    private IEnumerator MoveCameraToIndexTransform(int targetIndex)
+    public IEnumerator MoveCameraToIndexTransform(int targetIndex)
     {
         switch (targetIndex)
         {
@@ -246,7 +292,7 @@ public class BattleSystem : MonoBehaviour
                 targetUnit?.SelectHUD(false);
                 targetUnit = null;
                 break;
-            case 1:
+            case 1: //individual enemies
                 for(int i = 0; i < enemyUnits.Count; i++)
                 {
                     Button left = null, right = null;
@@ -263,10 +309,32 @@ public class BattleSystem : MonoBehaviour
                 if(targetUnit == null || targetUnit is not EnemyUnit)
                     targetUnit = enemyUnits[0];
                 currentSelectButton = targetUnit.selected;
+                currentSelectButton.Select();
                 targetUnit.SelectHUD(true, battleCamera.transform);
                 var index = enemyUnits.IndexOf((EnemyUnit)targetUnit) + 1;
                 Vector3 interpolatedPosition = Vector3.Lerp(enemyUnits[0].transform.position, enemyUnits[^1].transform.position, index/((float)enemyUnits.Count+1));
                 cameraTargets[1].LookAt(interpolatedPosition);
+                break;
+            case 2: //individual players
+                break;
+            case 3: // all enemies;
+                Vector3 middlePointEnemy = Vector3.zero;
+                foreach (var t in enemyUnits)
+                {
+                    middlePointEnemy += t.transform.position;
+                    t.CalculateHUDValues();
+                    t.SelectHUD(true, battleCamera.transform);
+                }
+                enemyUnits[0].selected.onClick.AddListener(() =>
+                {
+                    currentActiveUnit.SetCurrentTarget(new List<Unit>(enemyUnits));
+                });
+                middlePointEnemy /= enemyUnits.Count;
+                cameraTargets[1].LookAt(middlePointEnemy);
+                targetIndex = 1;
+                break;
+            case 4: // all players
+                targetIndex = 2;
                 break;
         }
         
@@ -288,6 +356,7 @@ public class BattleSystem : MonoBehaviour
     {
         if (currentActiveUnit != null && currentActiveUnit is PlayerUnit playerUnit)
         {
+            currentSelectButton?.onClick.Invoke();
             StartCoroutine(playerUnit.Submit(targetUnit));
         }
     }
@@ -307,6 +376,66 @@ public class BattleSystem : MonoBehaviour
         {
             StartCoroutine(playerUnit.SkillTab());
         }
+    }
+
+    public void SkillTabVisibility(bool isVisible, List<Skill> skills = null, PlayerUnit playerUnit = null)
+    {
+        var skillTab = gameGUI.transform.Find("Skill Tab");
+        var queueTab = gameGUI.transform.Find("Queue");
+        if (isVisible && skills is { Count: > 0 } && playerUnit != null)
+        {
+            skillTab.localPosition = new Vector3(1452, 0, 0);
+            skillTab.gameObject.SetActive(true);
+            skillTab.DOLocalMove(new(468,0,0), 0.2f).SetEase(Ease.OutExpo);
+            for (int i = 0; i < skills.Count; i++)
+            {
+                var skillObj = Instantiate(skillTabPrefab, skillTab);
+                
+                skillObj.transform.Find("Skill Name").GetComponent<TextMeshProUGUI>().text = skills[i].name;
+                skillObj.transform.Find("Skill Description").GetComponent<TextMeshProUGUI>().text =
+                    skills[i].skillDescription;
+                skillObj.transform.Find("Skill Cost").GetComponent<TextMeshProUGUI>().text = skills[i].skillCost.ToString();
+                
+                skillObj.GetComponent<RectTransform>().localPosition = new(0, -2000, 0);
+                skillObj.GetComponent<RectTransform>().DOLocalMove(new(0, 0  - 100 * i, 0), 0.1f + 0.05f*i).SetEase(Ease.OutExpo);
+            }
+
+            for (int i = 0; i < skills.Count; i++)
+            {
+                var skillObj = skillTab.GetChild(i).GetComponent<Button>();
+                if (skillObj == null) continue;
+
+                Skill skill = skills[i];
+                skillObj.onClick.AddListener(() => playerUnit.selectedSkill = skill);
+                
+                if (i != 0)
+                {
+                    var nav = skillObj.navigation;
+                    nav.selectOnUp = skillTab.GetChild(i-1).GetComponent<Button>();
+                    skillObj.navigation = nav;
+                }
+
+                if (i != skills.Count - 1)
+                {
+                    var nav = skillObj.navigation;
+                    nav.selectOnDown = skillTab.GetChild(i+1).GetComponent<Button>();
+                    skillObj.navigation = nav;
+                }
+            }
+
+            currentSelectButton = skillTab.GetChild(0).GetComponent<Button>();
+        }
+        else
+        {
+            for (int i = skillTab.childCount -1 ; i >=0; i--)
+            {
+                DestroyImmediate(skillTab.GetChild(i).gameObject);
+            }
+            skillTab.DOLocalMove(new (1452, 0, 0), 0.2f).SetEase(Ease.OutExpo).OnComplete(() => skillTab.gameObject.SetActive(false));
+        }
+        
+        //TODO: make actual animation for the queue tab to be enabled
+        queueTab.gameObject.SetActive(!isVisible);
     }
 
     public void InspectTab()
@@ -371,6 +500,7 @@ public class BattleSystem : MonoBehaviour
                         targetUnit = unitButton;
                     }
                 }
+                
             }
         }
     }

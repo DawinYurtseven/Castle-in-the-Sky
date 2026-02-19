@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,7 +20,6 @@ public class EnemyUnit : Unit
     {
         yield return base.BeginningOfTurn();
         yield return MakeDecision();
-        yield return EndTurn();
     }
     
     private enum EnemyActions
@@ -34,15 +34,15 @@ public class EnemyUnit : Unit
     {
         //make actual decisions
         var random = Random.Range(0, BattleSystem.system.playerUnits.Count);
-        yield return StartCoroutine(BasicAttack(BattleSystem.system.playerUnits[random]));
-        CalculateTimeValue(1f);
+        SetCurrentTarget( new List<Unit>{BattleSystem.system.playerUnits[random]});
+        yield return BasicAttack();
     }
 
     public void CalculateHUDValues(Button left = null,Button right = null)
     {
         hudValues.text = $"{name}\nHP: {CurrentHP}/{MaxHP}\nSP: {CurrentSP}/{MaxSP}";
         hudCanvas.gameObject.transform.LookAt(BattleSystem.system.battleCamera.gameObject.transform.position);
-        var navigation = selected.navigation;
+        var navigation = new Navigation();
         if(left != null)
         {
             navigation.selectOnLeft = left;
@@ -50,14 +50,15 @@ public class EnemyUnit : Unit
         if(right != null)
         {
             navigation.selectOnRight = right;
-            
         }
         selected.navigation = navigation;
     }
 
-    protected override IEnumerator BasicAttack(Unit targetUnit)
+    protected override IEnumerator BasicAttack()
     {
-        Debug.Log($"Attacking {targetUnit.name}");
-        yield return base.BasicAttack(targetUnit);
+        BattleSystem.system.ShowNewQueuePosition(this, CalculateTimeValue(1f));
+        yield return new WaitForSeconds(0.2f);
+        yield return base.BasicAttack();
+        BattleSystem.system.AcceptNewQueuePosition(this, CalculateTimeValue(1f));
     }
 }

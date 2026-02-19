@@ -160,6 +160,8 @@ MonoBehaviour:
   critChance: 0
   damageAddition: 0
   damageMultiplier: 0
+  currentTarget: []
+  skills: []
   positionTargets:
   - {fileID: 1069731124}
   animator: {fileID: 0}
@@ -281,7 +283,7 @@ Transform:
   m_GameObject: {fileID: 27088893}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 11.44, y: 0.5, z: -10.2}
+  m_LocalPosition: {x: 12.89, y: 0.5, z: -10.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -833,15 +835,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff0055c5b11116947960f2778bb117cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerUnit
-  strength: 1
-  constitution: 1
-  speed: 1
-  intelligence: 1
-  luck: 1
+  strength: 2
+  constitution: 2
+  speed: 2
+  intelligence: 2
+  luck: 2
   critAmount: 0
   critChance: 0
   damageAddition: 0
   damageMultiplier: 0
+  currentTarget: []
+  skills:
+  - {fileID: 11400000, guid: 7c769bfc35d944148b0fbe556c03fb00, type: 2}
   positionTargets:
   - {fileID: 575168532}
   animator: {fileID: 0}
@@ -966,7 +971,7 @@ Transform:
   m_GameObject: {fileID: 391377130}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.56, y: 0.5, z: -6.58}
+  m_LocalPosition: {x: -4.68, y: 0.5, z: -6.58}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1708,13 +1713,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.042518504, y: 0.22303757, z: -0.009738035, w: 0.9738335}
-  m_LocalPosition: {x: -1.2799412, y: 5.481974, z: -19.785995}
+  m_LocalRotation: {x: 0.040877905, y: 0.048059862, z: -0.001968512, w: 0.9980057}
+  m_LocalPosition: {x: 3.99, y: 3.79, z: -21.88}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 5, y: 25.8, z: 0}
+  m_LocalEulerAnglesHint: {x: 4.691, y: 5.514, z: 0}
 --- !u!1 &984769178
 GameObject:
   m_ObjectHideFlags: 0
@@ -2214,6 +2219,8 @@ MonoBehaviour:
   critChance: 0
   damageAddition: 0
   damageMultiplier: 0
+  currentTarget: []
+  skills: []
   positionTargets:
   - {fileID: 739294682}
   animator: {fileID: 0}
@@ -2335,7 +2342,7 @@ Transform:
   m_GameObject: {fileID: 1441743921}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 10.09, y: 0.5, z: -2.98}
+  m_LocalPosition: {x: 13.61, y: 0.5, z: -2.98}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3294,6 +3301,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2152526590745546824, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5330264591963996716, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -3362,30 +3373,6 @@ PrefabInstance:
       propertyPath: 'playerUnits.Array.data[0]'
       value: 
       objectReference: {fileID: 391377131}
-    - target: {fileID: 7083632416270067869, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -1.27994
-      objectReference: {fileID: 0}
-    - target: {fileID: 7083632416270067869, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -19.785995
-      objectReference: {fileID: 0}
-    - target: {fileID: 7612345400426154662, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 1.7385
-      objectReference: {fileID: 0}
-    - target: {fileID: 7612345400426154662, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -6.8483
-      objectReference: {fileID: 0}
-    - target: {fileID: 7904981863880879093, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 6.7785
-      objectReference: {fileID: 0}
-    - target: {fileID: 7904981863880879093, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -10.9683
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
