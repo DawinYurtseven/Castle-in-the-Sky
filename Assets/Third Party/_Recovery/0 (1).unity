@@ -909,7 +909,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 271161169}
         m_TargetAssemblyTypeName: InputSystemWrapper, Assembly-CSharp
-        m_MethodName: navigate
+        m_MethodName: Navigate
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

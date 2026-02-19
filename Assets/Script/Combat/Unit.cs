@@ -64,6 +64,9 @@ public class Unit : MonoBehaviour
     /// </summary>
     protected int MaxHP, CurrentHP, MaxSP, CurrentSP;
 
+    public int HP => CurrentHP;
+    public int SP => CurrentSP;
+
     [SerializeField] protected float critAmount, critChance, damageAddition, damageMultiplier; //these are for the damage calculation and critical hits.
 
     private float timeValue; //this stat is the bread and butter of this combat system. 
@@ -110,7 +113,7 @@ public class Unit : MonoBehaviour
     private Vector3 startPosition;
     
     //image for Queue and player values
-    public Image HUDImage;
+    public Sprite hudImage;
 
     #endregion
 
@@ -179,9 +182,10 @@ public class Unit : MonoBehaviour
         damageMultiplier = 1;
     }
 
-    internal void CalculateTimeValue(float newTimeValue)
+    internal float CalculateTimeValue(float newTimeValue)
     {
         timeValue += newTimeValue - ConstantReduction * Mathf.Log(speed, 99);
+        return timeValue;
     }
 
     public void PassTimeValue(float passedTime)
@@ -241,9 +245,10 @@ public class Unit : MonoBehaviour
         }
     }
     
-    public void SelectHUD(bool active)
+    public void SelectHUD(bool active, Transform toLookAt = null)
     {
         hudCanvas.gameObject.SetActive(active);
+        hudCanvas.transform.LookAt(toLookAt);
     }
     
 

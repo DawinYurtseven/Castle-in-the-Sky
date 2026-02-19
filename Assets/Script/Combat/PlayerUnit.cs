@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 
 public class PlayerUnit : Unit
@@ -15,12 +14,10 @@ public class PlayerUnit : Unit
     [SerializeField] private Transform[] cameraTargets; // this is for the camera to move to depending on the situation.
     
     [SerializeField] private Canvas playerActionCanvas;
-    private TextMeshProUGUI HUDvalues;
 
     private new void Awake()
     {
         base.Awake();
-        HUDvalues = hudCanvas.gameObject.GetComponentInChildren<TextMeshProUGUI>(true);
     }
 
     #endregion
@@ -35,15 +32,13 @@ public class PlayerUnit : Unit
     protected override void TakeDamage(float damage)
     {
         base.TakeDamage(damage);
-        HUDvalues.text = $"{name}\nHP: {CurrentHP}/{MaxHP}\nSP: {CurrentSP}/{MaxSP}";
+        BattleSystem.system.UpdatePlayerValues(this);
     }
 
 
     public override IEnumerator BeginningOfTurn()
     { 
         stateStack.Push(CombatState.Root);
-        hudCanvas?.gameObject.SetActive(true);
-        HUDvalues.text = $"{name}\nHP: {CurrentHP}/{MaxHP}\nSP: {CurrentSP}/{MaxSP}";
         SetActionUI(true);
         yield return BattleSystem.system.MoveCamera(cameraTargets[0]);
         yield return base.BeginningOfTurn();
@@ -66,17 +61,18 @@ public class PlayerUnit : Unit
     /// so you don't have to fight the urge to punch the current me
     /// 
     /// </summary>
-    private Stack<CombatState> stateStack = new ();
+    private readonly Stack<CombatState> stateStack = new ();
 
-    public void Submit(Unit targetUnit)
+    public IEnumerator Submit(Unit targetUnit)
     {
         //this will simulate the ui for now until I have actually implemented ui
-        if (stateStack.Count == 0) return; 
+        if (stateStack.Count == 0) yield break; 
         
         switch (stateStack.Peek())
         {
             case CombatState.Root:
                 stateStack.Push(CombatState.TargetEnemy);
+                BattleSystem.system.ShowNewQueuePosition(this, CalculateTimeValue(1f));
                 SetActionUI(false);
                 BattleSystem.system.MoveCameraToIndex(1);
                 break;
@@ -91,7 +87,6 @@ public class PlayerUnit : Unit
                 {
                     case CombatState.Root:
                         StartCoroutine(BasicAttack(targetUnit));
-                        
                         stateStack.Clear();
                         break;
                     case CombatState.Skill:
@@ -108,18 +103,29 @@ public class PlayerUnit : Unit
         }
     }
 
-    public void Cancel()
+    public IEnumerator Cancel()
     {
-        if(stateStack.Count <2) return;
+        if (stateStack.Count < 2) yield break;
         stateStack.Pop();
         switch (stateStack.Peek())
         {
             case CombatState.Root:
+                BattleSystem.system.ClearSelection();
+                BattleSystem.system.FreeNewQueuePosition();
+                yield return BattleSystem.system.MoveCamera(cameraTargets[0]);
                 SetActionUI(true);
-                StartCoroutine(BattleSystem.system.MoveCamera(cameraTargets[0]));
-                BattleSystem.system.clearSelection();
                 break;
             case CombatState.Skill:
+                BattleSystem.system.ClearSelection();
+                BattleSystem.system.FreeNewQueuePosition();
+                stateStack.Pop();
+                yield return SkillTab();
+                break;
+            case CombatState.Inspect:
+                BattleSystem.system.ClearSelection();
+                yield return BattleSystem.system.MoveCamera(cameraTargets[0]);
+                SetActionUI(true);
+                stateStack.Pop();
                 break;
             case CombatState.TargetEnemy:
                 break;
@@ -128,14 +134,27 @@ public class PlayerUnit : Unit
         }
     }
 
-    public void Inspect()
+    public IEnumerator SkillTab()
     {
+        if (stateStack.Peek() != CombatState.Root) yield break;
+        stateStack.Push(CombatState.Skill);
+        SetActionUI(false);
+        yield return BattleSystem.system.MoveCamera(cameraTargets[1]);
+        Debug.Log("SkillTab");
+    }
+
+    public IEnumerator Inspect()
+    {
+        if (stateStack.Count > 1) yield break;
         stateStack.Push(CombatState.Inspect);
         stateStack.Push(CombatState.TargetEnemy);
+        SetActionUI(false);
+        BattleSystem.system.MoveCameraToIndex(1);
+        yield return null;
     }
-    
-    
-    public void SetActionUI(bool active)
+
+
+    private void SetActionUI(bool active)
     {
         playerActionCanvas?.gameObject.SetActive(active);
     }
