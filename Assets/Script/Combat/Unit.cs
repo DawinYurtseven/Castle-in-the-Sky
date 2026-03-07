@@ -114,7 +114,7 @@ public class Unit : MonoBehaviour
 
     #region Combat
 
-    public UnityEvent basicAttackTrigger,
+    public UnityEvent<Unit> basicAttackTrigger,
         beginningOfCombatTrigger,
         beginningOfTurnTrigger,
         endOfTurnTrigger,
@@ -128,14 +128,14 @@ public class Unit : MonoBehaviour
     private void OnEnable()
     {
         //TODO: change with when the need for the event is there to be created if null, otherwise keep empty
-        basicAttackTrigger ??= new UnityEvent();
-        beginningOfCombatTrigger ??= new UnityEvent();
-        beginningOfTurnTrigger ??= new UnityEvent();
-        endOfTurnTrigger ??= new UnityEvent();
-        endOfCombatTrigger ??= new UnityEvent();
-        actionTakenTrigger ??= new UnityEvent();
-        reactionDoneTrigger ??= new UnityEvent();
-        criticalTrigger ??= new UnityEvent();
+        basicAttackTrigger ??= new UnityEvent<Unit>();
+        beginningOfCombatTrigger ??= new UnityEvent<Unit>();
+        beginningOfTurnTrigger ??= new UnityEvent<Unit>();
+        endOfTurnTrigger ??= new UnityEvent<Unit>();
+        endOfCombatTrigger ??= new UnityEvent<Unit>();
+        actionTakenTrigger ??= new UnityEvent<Unit>();
+        reactionDoneTrigger ??= new UnityEvent<Unit>();
+        criticalTrigger ??= new UnityEvent<Unit>();
     }
 
     protected void Awake()
@@ -192,7 +192,7 @@ public class Unit : MonoBehaviour
     protected virtual IEnumerator BasicAttack()
     {
         TimeValue += CalculateTimeValue(1f);
-        basicAttackTrigger?.Invoke();
+        basicAttackTrigger?.Invoke(this);
 
         var baseDamage = (strength + damageAddition) * damageMultiplier;
         var totalDamage = Random.Range(0,100) < critChance?  baseDamage * critAmount/100: baseDamage;
@@ -243,20 +243,20 @@ public class Unit : MonoBehaviour
     public virtual void BeginningOfCombat()
     {
         //prep shit here, maybe take this out later when battle system can call these.
-        beginningOfCombatTrigger?.Invoke();
+        beginningOfCombatTrigger?.Invoke(this);
     }
 
     public virtual IEnumerator BeginningOfTurn()
     {
         TimeValue = 0;
         yield return null;
-        beginningOfTurnTrigger?.Invoke();
+        beginningOfTurnTrigger?.Invoke(this);
     }
 
     protected IEnumerator EndTurn()
     {
         yield return transform.DOMove(startPosition, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
-        endOfTurnTrigger?.Invoke();
+        endOfTurnTrigger?.Invoke(this);
         BattleSystem.system.endOfTurnTrigger.Invoke(this, TimeValue);
     }
 

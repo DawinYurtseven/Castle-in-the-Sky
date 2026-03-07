@@ -25,8 +25,8 @@ public class PlayerUnit : Unit
 
     protected override IEnumerator BasicAttack()
     {
-        yield return base.BasicAttack();
         BattleSystem.system.AcceptNewQueuePosition(this, TimeValue);
+        yield return base.BasicAttack();
     }
 
     protected override IEnumerator SkillUsage()
@@ -55,10 +55,10 @@ public class PlayerUnit : Unit
 
     public override IEnumerator BeginningOfTurn()
     { 
+        yield return base.BeginningOfTurn();
         stateStack.Push(CombatState.Root);
         SetActionUI(true);
         yield return BattleSystem.system.MoveCamera(cameraTargets[0]);
-        yield return base.BeginningOfTurn();
     }
 
 
@@ -84,7 +84,10 @@ public class PlayerUnit : Unit
     {
         //this will simulate the ui for now until I have actually implemented ui
         if (stateStack.Count == 0) yield break; 
-        
+        if (targetUnit != null)
+        {
+            SetCurrentTarget(new List<Unit>{targetUnit});
+        }
         switch (stateStack.Peek())
         {
             case CombatState.Root:

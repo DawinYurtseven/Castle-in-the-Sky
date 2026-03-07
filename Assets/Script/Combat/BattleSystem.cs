@@ -17,6 +17,8 @@ public class BattleSystem : MonoBehaviour
     public List<PlayerUnit> playerUnits;
     public List<EnemyUnit> enemyUnits;
     
+    //have dicts for the items for enemies and players
+    
     public List<GameObject> playerValues;
 
     private int playerDeaths, enemyDeaths;
@@ -94,10 +96,6 @@ public class BattleSystem : MonoBehaviour
         }
         queue.Add(currentUnit);
         OrderQueue();
-        foreach (var unit in queue)
-        {
-            Debug.Log(unit.name);
-        }
         //maybe animations or something.
         currentActiveUnit = queue[0];
         PopQueue();
@@ -111,6 +109,7 @@ public class BattleSystem : MonoBehaviour
 
     public void DeathOfUnit(Unit unit)
     {
+        RemoveUnitFromQueue(unit);
         if (unit is PlayerUnit)
         {
             playerDeaths++;
@@ -187,7 +186,7 @@ public class BattleSystem : MonoBehaviour
         
         temporaryImageGameObject = Instantiate(queueImagePrefab, queueHorizontalGameObject.transform);
         temporaryImageGameObject.GetComponent<RectTransform>().localPosition = new(-1000, -60, 0);
-        temporaryImageGameObject.GetComponent<RectTransform>().DOLocalMove(new (-435 + index*115,-60, 0), 0.2f).SetEase(Ease.OutExpo);
+        temporaryImageGameObject.GetComponent<RectTransform>()?.DOLocalMove(new (-435 + index*115,-60, 0), 0.2f).SetEase(Ease.OutExpo);
         temporaryImageGameObject.GetComponent<Image>().sprite = unit.hudImage;
     }
 
@@ -203,17 +202,20 @@ public class BattleSystem : MonoBehaviour
             }
         }
         if (index == -1) index = queue.Count;
-        for (int i = 0; i < queueHorizontalGameObject.transform.childCount; i++)
+        else
         {
-            var child = queueHorizontalGameObject.transform.GetChild(i);
-            if (child.localPosition.x >= -385 + index * 115)
-            {
-                child.DOLocalMove(child.localPosition + new Vector3(115, 0, 0), 0.2f).SetEase(Ease.OutExpo);
+            for (int i = 0; i < queueHorizontalGameObject.transform.childCount; i++)
+            { 
+                var child = queueHorizontalGameObject.transform.GetChild(i);
+                if (child.localPosition.x >= -385 + index * 115)
+                {
+                    child.DOLocalMove(child.localPosition + new Vector3(115, 0, 0), 0.2f).SetEase(Ease.OutExpo);
+                }
             }
         }
 
         if(temporaryImageGameObject != null)
-            temporaryImageGameObject?.GetComponent<RectTransform>().DOLocalMove(new(-385 + index * 115, 0, 0), 0.2f)
+            temporaryImageGameObject?.GetComponent<RectTransform>()?.DOLocalMove(new(-385 + index * 115, 0, 0), 0.2f)
             .SetEase(Ease.OutExpo).OnComplete(() => temporaryImageGameObject = null);
     }
 
@@ -230,11 +232,11 @@ public class BattleSystem : MonoBehaviour
             if (i == 0)
             {
                 var child = queueHorizontalGameObject.transform.GetChild(0);
-                queueHorizontalGameObject.transform.GetChild(0).DOLocalMove(new(-5000,0,0), 0.2f).SetEase(Ease.OutExpo).OnComplete(()=> DestroyImmediate(child.gameObject));
+                queueHorizontalGameObject.transform.GetChild(0)?.DOLocalMove(new(-5000,0,0), 0.2f).SetEase(Ease.OutExpo).OnComplete(()=> DestroyImmediate(child.gameObject));
             }
             else
             {
-                queueHorizontalGameObject.transform.GetChild(i).GetComponent<RectTransform>().DOLocalMove( new (-385  + (i-1)*115, 0, 0), 0.2f).SetEase(Ease.OutExpo);
+                queueHorizontalGameObject.transform.GetChild(i).GetComponent<RectTransform>()?.DOLocalMove( new (-385  + (i-1)*115, 0, 0), 0.2f).SetEase(Ease.OutExpo);
             }
         }
     }
@@ -251,6 +253,15 @@ public class BattleSystem : MonoBehaviour
             var temp = Instantiate(queueImagePrefab, queueHorizontalGameObject.transform);
             temp.GetComponent<RectTransform>().localPosition = new (-385  + i*115, 0, 0);
             temp.GetComponent<Image>().sprite = queue[i].hudImage;
+        }
+    }
+
+    private void RemoveUnitFromQueue(Unit unit)
+    {
+        if (queue.Contains(unit))
+        {
+            queue.Remove(unit);
+            OrderQueue();
         }
     }
 
@@ -306,8 +317,18 @@ public class BattleSystem : MonoBehaviour
                     }
                     enemyUnits[i].CalculateHUDValues(left,right);
                 }
-                if(targetUnit == null || targetUnit is not EnemyUnit)
-                    targetUnit = enemyUnits[0];
+
+                if (targetUnit == null || targetUnit is not EnemyUnit)
+                {
+                    for (int i = 0; i < enemyUnits.Count; i++)
+                    {
+                        if (enemyUnits[i].HP > 0)
+                        {
+                            targetUnit = enemyUnits[i];
+                            break;
+                        }
+                    }
+                }
                 currentSelectButton = targetUnit.selected;
                 currentSelectButton.Select();
                 targetUnit.SelectHUD(true, battleCamera.transform);
@@ -397,7 +418,7 @@ public class BattleSystem : MonoBehaviour
                 skillObj.transform.Find("Skill Cost").GetComponent<TextMeshProUGUI>().text = skills[i].skillCost.ToString();
                 
                 skillObj.GetComponent<RectTransform>().localPosition = new(0, -2000, 0);
-                skillObj.GetComponent<RectTransform>().DOLocalMove(new(0, 0  - 100 * i, 0), 0.1f + 0.05f*i).SetEase(Ease.OutExpo);
+                skillObj.GetComponent<RectTransform>()?.DOLocalMove(new(0, 0  - 100 * i, 0), 0.1f + 0.05f*i).SetEase(Ease.OutExpo);
             }
 
             for (int i = 0; i < skills.Count; i++)
@@ -470,6 +491,7 @@ public class BattleSystem : MonoBehaviour
             }
             if (selectable != null)
             {
+                selectable.Select();
                 if (selectable.gameObject.transform.parent.parent.TryGetComponent(typeof(Unit), out var unitComponent))
                 {
                     Unit unit = (Unit)unitComponent;
@@ -500,7 +522,6 @@ public class BattleSystem : MonoBehaviour
                         targetUnit = unitButton;
                     }
                 }
-                
             }
         }
     }

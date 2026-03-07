@@ -19,6 +19,7 @@ public class EnemyUnit : Unit
     public override IEnumerator BeginningOfTurn()
     {
         yield return base.BeginningOfTurn();
+        yield return new WaitForSeconds(1f);
         yield return MakeDecision();
     }
     
