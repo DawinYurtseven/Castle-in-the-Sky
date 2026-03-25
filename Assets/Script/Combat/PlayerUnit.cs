@@ -13,7 +13,7 @@ public class PlayerUnit : Unit
     /// maybe I'll need later more so this is an array now
     /// </summary>
     [SerializeField] private Transform[] cameraTargets; // this is for the camera to move to depending on the situation.
-    
+
     [SerializeField] private Canvas playerActionCanvas;
 
     private new void Awake()
@@ -25,19 +25,20 @@ public class PlayerUnit : Unit
 
     protected override IEnumerator BasicAttack()
     {
-        BattleSystem.system.AcceptNewQueuePosition(this, TimeValue);
         yield return base.BasicAttack();
     }
 
     protected override IEnumerator SkillUsage()
     {
         yield return BattleSystem.system.MoveCameraToIndexTransform(0);
-        if (!selectedSkill.targetOne)
+        BattleSystem.system.ClearSelection(true);
+        if (!SelectedSkill.targetOne)
         {
             var list = new List<Unit>();
             list.AddRange(BattleSystem.system.enemyUnits);
             SetCurrentTarget(list);
-            yield return transform.DOMove(BattleSystem.system.inFrontOfEnemies.position, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
+            yield return transform.DOMove(BattleSystem.system.inFrontOfEnemies.position, 0.2f).SetEase(Ease.OutExpo)
+                .WaitForCompletion();
         }
         
         
@@ -54,7 +55,7 @@ public class PlayerUnit : Unit
 
 
     public override IEnumerator BeginningOfTurn()
-    { 
+    {
         yield return base.BeginningOfTurn();
         stateStack.Push(CombatState.Root);
         SetActionUI(true);
@@ -63,7 +64,7 @@ public class PlayerUnit : Unit
 
 
     #region UI, Camera and Input
-    
+
     private enum CombatState
     {
         Root,
@@ -78,16 +79,17 @@ public class PlayerUnit : Unit
     /// so you don't have to fight the urge to punch the current me
     /// 
     /// </summary>
-    private readonly Stack<CombatState> stateStack = new ();
+    private readonly Stack<CombatState> stateStack = new();
 
     public IEnumerator Submit(Unit targetUnit)
     {
         //this will simulate the ui for now until I have actually implemented ui
-        if (stateStack.Count == 0) yield break; 
+        if (stateStack.Count == 0) yield break;
         if (targetUnit != null)
         {
-            SetCurrentTarget(new List<Unit>{targetUnit});
+            SetCurrentTarget(new List<Unit> { targetUnit });
         }
+
         switch (stateStack.Peek())
         {
             case CombatState.Root:
@@ -98,17 +100,21 @@ public class PlayerUnit : Unit
                 break;
             case CombatState.Skill:
                 BattleSystem.system.SkillTabVisibility(false);
-                if (selectedSkill.type == SkillTypes.Damage || selectedSkill.type == SkillTypes.Debuff)
+                if (SelectedSkill.type == SkillTypes.Damage || SelectedSkill.type == SkillTypes.Debuff)
                 {
                     stateStack.Push(CombatState.TargetEnemy);
-                    yield return BattleSystem.system.MoveCameraToIndexTransform(3);
+                    if (!SelectedSkill.targetOne)
+                        yield return BattleSystem.system.MoveCameraToIndexTransform(3);
+                    else
+                        yield return BattleSystem.system.MoveCameraToIndexTransform(1);
                 }
                 else
                 {
                     stateStack.Push(CombatState.TargetAlly);
                     yield return BattleSystem.system.MoveCameraToIndexTransform(4);
                 }
-                BattleSystem.system.ShowNewQueuePosition(this, CalculateTimeValue(selectedSkill.timeValue));
+
+                BattleSystem.system.ShowNewQueuePosition(this, CalculateTimeValue(SelectedSkill.timeValue));
                 break;
             case CombatState.Inspect:
                 break;
@@ -125,10 +131,11 @@ public class PlayerUnit : Unit
                         yield return SkillUsage();
                         break;
                     case CombatState.Inspect:
-                        
+
                         //inspect logic here for enemies
                         break;
                 }
+
                 break;
             case CombatState.TargetAlly:
                 break;
@@ -145,12 +152,15 @@ public class PlayerUnit : Unit
                 BattleSystem.system.ClearSelection();
                 BattleSystem.system.FreeNewQueuePosition();
                 BattleSystem.system.SkillTabVisibility(false);
-                selectedSkill = null;
+                SelectedSkill = null;
                 yield return BattleSystem.system.MoveCamera(cameraTargets[0]);
                 SetActionUI(true);
                 break;
             case CombatState.Skill:
-                BattleSystem.system.ClearSelection();
+                if (SelectedSkill.targetOne)
+                    BattleSystem.system.ClearSelection();
+                else
+                    BattleSystem.system.ClearSelection(true);
                 BattleSystem.system.FreeNewQueuePosition();
                 stateStack.Pop();
                 yield return SkillTab();

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class Unit : MonoBehaviour
 {
@@ -68,7 +68,11 @@ public class Unit : MonoBehaviour
     public int HP => CurrentHP;
     public int SP => CurrentSP;
 
-    [SerializeField] protected float critAmount, critChance, damageAddition, damageMultiplier; //these are for the damage calculation and critical hits.
+    [SerializeField] public float
+        critAmount,
+        critChance,
+        damageAddition,
+        damageMultiplier; //these are for the damage calculation and critical hits.
 
     internal float TimeValue; //this stat is the bread and butter of this combat system. 
     private const float ConstantReduction = 0.3f; //this stat is the bread and butter of this combat system. 
@@ -82,19 +86,22 @@ public class Unit : MonoBehaviour
 
     //TODO: Look at after implementing items. For now, think of it as a dictionary of <items,int> where the int is the amount of that item the unit has. 
 
+    public bool repeated, blocked;
+    public float bufferedDamage;
+
     #endregion
 
     #region Skills
-    
+
     public List<Skill> skills = new();
-    internal Skill selectedSkill; 
+    internal Skill SelectedSkill;
 
     //TODO: Same for skills.
 
     #endregion
 
     #region Components
-    
+
     /// <summary>
     /// 0- base target for other units to go to when performing a 1-1 action
     /// </summary>
@@ -102,11 +109,11 @@ public class Unit : MonoBehaviour
 
     [SerializeField] internal Animator animator;
     [SerializeField] internal Canvas hudCanvas;
-    
+
     public Button selected;
 
     private Vector3 startPosition;
-    
+
     //image for Queue and player values
     public Sprite hudImage;
 
@@ -114,29 +121,17 @@ public class Unit : MonoBehaviour
 
     #region Combat
 
-    public UnityEvent<Unit> basicAttackTrigger,
-        beginningOfCombatTrigger,
-        beginningOfTurnTrigger,
-        endOfTurnTrigger,
-        endOfCombatTrigger,
-        actionTakenTrigger,
-        reactionDoneTrigger,
-        criticalTrigger;
+    public UnityAction<Unit> BasicAttackTrigger,
+        BeginningOfCombatTrigger,
+        BeginningOfTurnTrigger,
+        EndOfTurnTrigger,
+        EndOfCombatTrigger,
+        ActionTakenTrigger,
+        ReactionDoneTrigger,
+        CriticalTrigger;
 
-    public UnityEvent<object> skillUsageTrigger;
+    public UnityAction<Unit,object> SkillUsageTrigger;
 
-    private void OnEnable()
-    {
-        //TODO: change with when the need for the event is there to be created if null, otherwise keep empty
-        basicAttackTrigger ??= new UnityEvent<Unit>();
-        beginningOfCombatTrigger ??= new UnityEvent<Unit>();
-        beginningOfTurnTrigger ??= new UnityEvent<Unit>();
-        endOfTurnTrigger ??= new UnityEvent<Unit>();
-        endOfCombatTrigger ??= new UnityEvent<Unit>();
-        actionTakenTrigger ??= new UnityEvent<Unit>();
-        reactionDoneTrigger ??= new UnityEvent<Unit>();
-        criticalTrigger ??= new UnityEvent<Unit>();
-    }
 
     protected void Awake()
     {
@@ -144,7 +139,7 @@ public class Unit : MonoBehaviour
 
         //Something to instantiate the mesh at the position.
         startPosition = transform.position;
-        
+
         //calculate time value at the beginning of combat
         TimeValue = CalculateTimeValue(2f);
     }
@@ -188,80 +183,116 @@ public class Unit : MonoBehaviour
     }
 
     //TODO: Think about hwhat can be done to affect the damage on unit
-    
+
     protected virtual IEnumerator BasicAttack()
     {
         TimeValue += CalculateTimeValue(1f);
-        basicAttackTrigger?.Invoke(this);
+        BattleSystem.system.AcceptNewQueuePosition(this, TimeValue);
 
-        var baseDamage = (strength + damageAddition) * damageMultiplier;
-        var totalDamage = Random.Range(0,100) < critChance?  baseDamage * critAmount/100: baseDamage;
-        
-        //move object towards target
         yield return BattleSystem.system.MoveCameraToIndexTransform(0);
-        yield return transform.DOMove(currentTarget[0].positionTargets[0].position, 0.2f).SetEase(Ease.InExpo).WaitForCompletion();
-        //TODO: Do some anime shit 
-        yield return new WaitForSeconds(0.3f);
         
+        do
+        {
+            yield return transform.DOMove(currentTarget[0].positionTargets[0].position, 0.2f).SetEase(Ease.InExpo)
+                     .WaitForCompletion();
+            
+            ActionTakenTrigger?.Invoke(this);
+            BasicAttackTrigger?.Invoke(this);
+
+            var baseDamage = (strength + damageAddition) * damageMultiplier;
+            var totalDamage = Random.Range(0, 100) < critChance ? baseDamage * critAmount / 100 : baseDamage;
+
+            //move object towards target
+
+            yield return transform.DOMove(currentTarget[0].positionTargets[0].position, 0.2f).SetEase(Ease.InExpo)
+                .WaitForCompletion();
+            //TODO: Do some anime shit 
+            yield return new WaitForSeconds(0.3f);
+
+            currentTarget[0].TakeDamage(totalDamage);
+            yield return transform.DOMove(startPosition, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
+        } while (repeated);
+
         yield return EndTurn();
-        currentTarget[0].TakeDamage(totalDamage);
     }
 
     protected virtual IEnumerator SkillUsage() //change this later
     {
-        TimeValue += CalculateTimeValue(selectedSkill.timeValue);
-        switch (selectedSkill.type)
+        TimeValue += CalculateTimeValue(SelectedSkill.timeValue);
+        do
         {
-            case SkillTypes.Damage:
-                var baseDamage = selectedSkill.affectValue * (strength + damageAddition) * damageMultiplier;
-                var totalDamage = Random.Range(0,100) < critChance + selectedSkill.additionalCritChance?  baseDamage * ((critAmount+ selectedSkill.additionalCritAddition)/100): baseDamage;
-                
-                
-                
-                yield return EndTurn();
-                foreach (var unit in currentTarget)
-                {
-                    unit.TakeDamage(totalDamage);
-                }
-                break;
-            case SkillTypes.Heal:
-                var baseHeal = selectedSkill.affectValue * intelligence;
-                var totalHeal = Random.Range(0,100) < critChance + selectedSkill.additionalCritChance?  baseHeal * ((critAmount+ selectedSkill.additionalCritAddition)/100): baseHeal;
-                
-                yield return new WaitForSeconds(0.3f);
-                foreach (var unit in currentTarget)
-                {
-                    unit.TakeDamage(-totalHeal);
-                }
+            ActionTakenTrigger?.Invoke(this);
+            SkillUsageTrigger?.Invoke(this,SelectedSkill.type);
+            switch (SelectedSkill.type)
+            {
+                case SkillTypes.Damage:
+                    var baseDamage = SelectedSkill.affectValue * (strength + damageAddition) * damageMultiplier;
+                    var totalDamage = Random.Range(0, 100) < critChance + SelectedSkill.additionalCritChance
+                        ? baseDamage * ((critAmount + SelectedSkill.additionalCritAddition) / 100)
+                        : baseDamage;
 
-                yield return EndTurn();
-                break;
-        }
-        skillUsageTrigger?.Invoke(selectedSkill.type);
+
+                    foreach (var unit in currentTarget)
+                    {
+                        unit.TakeDamage(totalDamage);
+                    }
+
+                    break;
+                case SkillTypes.Heal:
+                    var baseHeal = SelectedSkill.affectValue * intelligence;
+                    var totalHeal = Random.Range(0, 100) < critChance + SelectedSkill.additionalCritChance
+                        ? baseHeal * ((critAmount + SelectedSkill.additionalCritAddition) / 100)
+                        : baseHeal;
+
+                    yield return new WaitForSeconds(0.3f);
+                    foreach (var unit in currentTarget)
+                    {
+                        unit.TakeDamage(-totalHeal);
+                    }
+
+                    break;
+                
+                //THINK about how to do these. maybe not scriptable object
+                case SkillTypes.Buff:
+                    break;
+                case SkillTypes.Debuff:
+                    break;
+            }
+        } while (repeated);
+        
+        yield return EndTurn();
     }
 
     public virtual void BeginningOfCombat()
     {
         //prep shit here, maybe take this out later when battle system can call these.
-        beginningOfCombatTrigger?.Invoke(this);
+        BeginningOfCombatTrigger?.Invoke(this);
     }
 
     public virtual IEnumerator BeginningOfTurn()
     {
         TimeValue = 0;
         yield return null;
-        beginningOfTurnTrigger?.Invoke(this);
+        BeginningOfTurnTrigger?.Invoke(this);
     }
 
     protected IEnumerator EndTurn()
     {
         yield return transform.DOMove(startPosition, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
-        endOfTurnTrigger?.Invoke(this);
-        BattleSystem.system.endOfTurnTrigger.Invoke(this, TimeValue);
+        EndOfTurnTrigger?.Invoke(this);
+        BattleSystem.system.EndOfTurnTrigger.Invoke(this, TimeValue);
     }
 
     protected virtual void TakeDamage(float damage)
     {
+        bufferedDamage = damage;
+        ReactionDoneTrigger?.Invoke(this);
+        if (blocked)
+        {
+            blocked = false;
+            bufferedDamage = 0;
+            return;
+        }
         CurrentHP -= (int)damage;
         //TODO: maybe an event here as well?
         if (CurrentHP <= 0)
@@ -270,7 +301,7 @@ public class Unit : MonoBehaviour
             gameObject.SetActive(false);
         }
     }
-    
+
     public void SelectHUD(bool active, Transform toLookAt = null)
     {
         hudCanvas.gameObject.SetActive(active);
@@ -282,5 +313,6 @@ public class Unit : MonoBehaviour
     {
         currentTarget = units;
     }
+
     #endregion
 }

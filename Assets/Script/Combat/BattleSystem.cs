@@ -8,23 +8,23 @@ using UnityEngine.UI;
 
 public class BattleSystem : MonoBehaviour
 {
-    
     public static BattleSystem system;
-    
+
     private readonly List<Unit>
         queue = new(); // I will be reordering this queue whenever an action has been done, so no actual queue 
 
     public List<PlayerUnit> playerUnits;
     public List<EnemyUnit> enemyUnits;
-    
+
     //have dicts for the items for enemies and players
-    
+
     public List<GameObject> playerValues;
 
     private int playerDeaths, enemyDeaths;
     private Unit targetUnit;
-    
+
     [SerializeField] public Camera battleCamera;
+
     /// <summary>
     /// 0- standard camera angle for when the camera should show all
     /// 1 - view towards the enemies
@@ -35,19 +35,21 @@ public class BattleSystem : MonoBehaviour
     public Transform inFrontOfEnemies, inFrontOfPlayers;
     [SerializeField] private Canvas winCanvas, loseCanvas;
 
-    public UnityEvent<Unit, float> endOfTurnTrigger = new UnityEvent<Unit, float>();
+    public UnityAction<Unit, float> EndOfTurnTrigger;
 
     private Unit currentActiveUnit;
 
     private GameObject playerValueHorizontalGameObject, queueHorizontalGameObject;
 
+    private readonly List<Items> gatheredItems = new();
+
     private void Awake()
     {
-        if(system == null) system = this;
+        if (system == null) system = this;
         else Destroy(gameObject);
-        
+
         battleCamera ??= Camera.main;
-        
+
         //TODO: instantiate the GUI here
         gameGUI.SetActive(true);
         playerValueHorizontalGameObject = gameGUI.transform.Find("Player value horizontal").gameObject;
@@ -63,7 +65,12 @@ public class BattleSystem : MonoBehaviour
 
     void StartOfCombat()
     {
-        endOfTurnTrigger?.AddListener(EndOfTurn);
+        //TODO Debug only;
+        StrengthPendant strengthPendant = new StrengthPendant();
+        AddItem(strengthPendant, 100);
+        AddItem(strengthPendant, 1);
+        
+        EndOfTurnTrigger += EndOfTurn;
 
         //first, order all the units based on their 'speed' stat
         queue.Clear();
@@ -80,7 +87,6 @@ public class BattleSystem : MonoBehaviour
         currentActiveUnit = queue[0];
         PopQueue();
         StartCoroutine(currentActiveUnit.BeginningOfTurn());
-        
     }
 
 
@@ -88,12 +94,13 @@ public class BattleSystem : MonoBehaviour
 
     void EndOfTurn(Unit currentUnit, float timeValue)
     {
-        if(combatIsOver) return;
+        if (combatIsOver) return;
         MoveCameraToIndex(0);
         foreach (var unit in queue)
         {
             unit.PassTimeValue(timeValue);
         }
+
         queue.Add(currentUnit);
         OrderQueue();
         //maybe animations or something.
@@ -144,6 +151,28 @@ public class BattleSystem : MonoBehaviour
         }
     }
 
+    private void AddItem(Items item, int amount = 1)
+    {
+        List<Unit> units = new();
+        units.AddRange(playerUnits);
+        var foundItem = gatheredItems.Find(items =>
+        {
+            return items.GetType() == item.GetType();
+        });
+
+        if (foundItem == null)
+        {
+            gatheredItems.Add(item);
+            
+            item.Acquire(units, amount);
+        }
+        else
+        {
+            foundItem.Acquire(units, amount);
+        }
+            
+    }
+
 
     #region Camera, UI and Input
 
@@ -158,11 +187,11 @@ public class BattleSystem : MonoBehaviour
     /// </summary>
     /// <param name="target"></param>
     /// <returns></returns>
-
     public IEnumerator MoveCamera(Transform target)
     {
         battleCamera.transform.DOMove(target.position, 0.2f).SetEase(Ease.OutExpo);
-        yield return battleCamera.transform.DORotate(target.rotation.eulerAngles, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
+        yield return battleCamera.transform.DORotate(target.rotation.eulerAngles, 0.2f).SetEase(Ease.OutExpo)
+            .WaitForCompletion();
     }
 
     public void UpdatePlayerValues(PlayerUnit playerUnit)
@@ -182,11 +211,13 @@ public class BattleSystem : MonoBehaviour
                 break;
             }
         }
+
         if (index == -1) index = queue.Count;
-        
+
         temporaryImageGameObject = Instantiate(queueImagePrefab, queueHorizontalGameObject.transform);
         temporaryImageGameObject.GetComponent<RectTransform>().localPosition = new(-1000, -60, 0);
-        temporaryImageGameObject.GetComponent<RectTransform>()?.DOLocalMove(new (-435 + index*115,-60, 0), 0.2f).SetEase(Ease.OutExpo);
+        temporaryImageGameObject.GetComponent<RectTransform>()?.DOLocalMove(new(-435 + index * 115, -60, 0), 0.2f)
+            .SetEase(Ease.OutExpo);
         temporaryImageGameObject.GetComponent<Image>().sprite = unit.hudImage;
     }
 
@@ -201,11 +232,12 @@ public class BattleSystem : MonoBehaviour
                 break;
             }
         }
+
         if (index == -1) index = queue.Count;
         else
         {
             for (int i = 0; i < queueHorizontalGameObject.transform.childCount; i++)
-            { 
+            {
                 var child = queueHorizontalGameObject.transform.GetChild(i);
                 if (child.localPosition.x >= -385 + index * 115)
                 {
@@ -214,44 +246,50 @@ public class BattleSystem : MonoBehaviour
             }
         }
 
-        if(temporaryImageGameObject != null)
+        if (temporaryImageGameObject != null)
             temporaryImageGameObject?.GetComponent<RectTransform>()?.DOLocalMove(new(-385 + index * 115, 0, 0), 0.2f)
-            .SetEase(Ease.OutExpo).OnComplete(() => temporaryImageGameObject = null);
+                .SetEase(Ease.OutExpo).OnComplete(() => temporaryImageGameObject = null);
     }
 
     public void FreeNewQueuePosition()
     {
-        if(temporaryImageGameObject != null) temporaryImageGameObject.transform.DOLocalMove(new(-1000,temporaryImageGameObject.transform.localPosition.y,0), 0.2f).SetEase(Ease.OutExpo).OnComplete(() => DestroyImmediate(temporaryImageGameObject));
+        if (temporaryImageGameObject != null)
+            temporaryImageGameObject.transform
+                .DOLocalMove(new(-1000, temporaryImageGameObject.transform.localPosition.y, 0), 0.2f)
+                .SetEase(Ease.OutExpo).OnComplete(() => DestroyImmediate(temporaryImageGameObject));
     }
 
     private void PopQueue()
     {
         queue.RemoveAt(0);
-        for (int i = 0; i <queueHorizontalGameObject.transform.childCount; i++)
+        for (int i = 0; i < queueHorizontalGameObject.transform.childCount; i++)
         {
             if (i == 0)
             {
                 var child = queueHorizontalGameObject.transform.GetChild(0);
-                queueHorizontalGameObject.transform.GetChild(0)?.DOLocalMove(new(-5000,0,0), 0.2f).SetEase(Ease.OutExpo).OnComplete(()=> DestroyImmediate(child.gameObject));
+                queueHorizontalGameObject.transform.GetChild(0)?.DOLocalMove(new(-5000, 0, 0), 0.2f)
+                    .SetEase(Ease.OutExpo).OnComplete(() => DestroyImmediate(child.gameObject));
             }
             else
             {
-                queueHorizontalGameObject.transform.GetChild(i).GetComponent<RectTransform>()?.DOLocalMove( new (-385  + (i-1)*115, 0, 0), 0.2f).SetEase(Ease.OutExpo);
+                queueHorizontalGameObject.transform.GetChild(i).GetComponent<RectTransform>()
+                    ?.DOLocalMove(new(-385 + (i - 1) * 115, 0, 0), 0.2f).SetEase(Ease.OutExpo);
             }
         }
     }
 
     private void OrderQueue()
     {
-        for (var i = queueHorizontalGameObject.transform.childCount -1; i >= 0; i--)
+        for (var i = queueHorizontalGameObject.transform.childCount - 1; i >= 0; i--)
         {
             DestroyImmediate(queueHorizontalGameObject.transform.GetChild(i).gameObject);
         }
+
         queue.Sort((unit, unit1) => unit.QueueTimeValue <= unit1.QueueTimeValue ? -1 : 1);
         for (int i = 0; i < queue.Count; i++)
         {
             var temp = Instantiate(queueImagePrefab, queueHorizontalGameObject.transform);
-            temp.GetComponent<RectTransform>().localPosition = new (-385  + i*115, 0, 0);
+            temp.GetComponent<RectTransform>().localPosition = new(-385 + i * 115, 0, 0);
             temp.GetComponent<Image>().sprite = queue[i].hudImage;
         }
     }
@@ -271,6 +309,7 @@ public class BattleSystem : MonoBehaviour
         {
             DestroyImmediate(playerValueHorizontalGameObject.transform.GetChild(i).gameObject);
         }
+
         playerValues.Clear();
         foreach (var t in playerUnits)
         {
@@ -304,7 +343,7 @@ public class BattleSystem : MonoBehaviour
                 targetUnit = null;
                 break;
             case 1: //individual enemies
-                for(int i = 0; i < enemyUnits.Count; i++)
+                for (int i = 0; i < enemyUnits.Count; i++)
                 {
                     Button left = null, right = null;
                     if (i != 0)
@@ -315,7 +354,8 @@ public class BattleSystem : MonoBehaviour
                     {
                         right = enemyUnits[i + 1].selected;
                     }
-                    enemyUnits[i].CalculateHUDValues(left,right);
+
+                    enemyUnits[i].CalculateHUDValues(left, right);
                 }
 
                 if (targetUnit == null || targetUnit is not EnemyUnit)
@@ -329,11 +369,13 @@ public class BattleSystem : MonoBehaviour
                         }
                     }
                 }
+
                 currentSelectButton = targetUnit.selected;
                 currentSelectButton.Select();
                 targetUnit.SelectHUD(true, battleCamera.transform);
                 var index = enemyUnits.IndexOf((EnemyUnit)targetUnit) + 1;
-                Vector3 interpolatedPosition = Vector3.Lerp(enemyUnits[0].transform.position, enemyUnits[^1].transform.position, index/((float)enemyUnits.Count+1));
+                Vector3 interpolatedPosition = Vector3.Lerp(enemyUnits[0].transform.position,
+                    enemyUnits[^1].transform.position, index / ((float)enemyUnits.Count + 1));
                 cameraTargets[1].LookAt(interpolatedPosition);
                 break;
             case 2: //individual players
@@ -346,10 +388,6 @@ public class BattleSystem : MonoBehaviour
                     t.CalculateHUDValues();
                     t.SelectHUD(true, battleCamera.transform);
                 }
-                enemyUnits[0].selected.onClick.AddListener(() =>
-                {
-                    currentActiveUnit.SetCurrentTarget(new List<Unit>(enemyUnits));
-                });
                 middlePointEnemy /= enemyUnits.Count;
                 cameraTargets[1].LookAt(middlePointEnemy);
                 targetIndex = 1;
@@ -358,10 +396,10 @@ public class BattleSystem : MonoBehaviour
                 targetIndex = 2;
                 break;
         }
-        
+
         battleCamera.transform.DOMove(cameraTargets[targetIndex].position, 0.2f).SetEase(Ease.OutExpo);
-        yield return battleCamera.transform.DORotate(cameraTargets[targetIndex].rotation.eulerAngles, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
-        
+        yield return battleCamera.transform.DORotate(cameraTargets[targetIndex].rotation.eulerAngles, 0.2f)
+            .SetEase(Ease.OutExpo).WaitForCompletion();
     }
 
     public void MoveCameraToIndex(int targetIndex)
@@ -407,18 +445,20 @@ public class BattleSystem : MonoBehaviour
         {
             skillTab.localPosition = new Vector3(1452, 0, 0);
             skillTab.gameObject.SetActive(true);
-            skillTab.DOLocalMove(new(468,0,0), 0.2f).SetEase(Ease.OutExpo);
+            skillTab.DOLocalMove(new(468, 0, 0), 0.2f).SetEase(Ease.OutExpo);
             for (int i = 0; i < skills.Count; i++)
             {
                 var skillObj = Instantiate(skillTabPrefab, skillTab);
-                
+
                 skillObj.transform.Find("Skill Name").GetComponent<TextMeshProUGUI>().text = skills[i].name;
                 skillObj.transform.Find("Skill Description").GetComponent<TextMeshProUGUI>().text =
                     skills[i].skillDescription;
-                skillObj.transform.Find("Skill Cost").GetComponent<TextMeshProUGUI>().text = skills[i].skillCost.ToString();
-                
+                skillObj.transform.Find("Skill Cost").GetComponent<TextMeshProUGUI>().text =
+                    skills[i].skillCost.ToString();
+
                 skillObj.GetComponent<RectTransform>().localPosition = new(0, -2000, 0);
-                skillObj.GetComponent<RectTransform>()?.DOLocalMove(new(0, 0  - 100 * i, 0), 0.1f + 0.05f*i).SetEase(Ease.OutExpo);
+                skillObj.GetComponent<RectTransform>()?.DOLocalMove(new(0, 0 - 100 * i, 0), 0.1f + 0.05f * i)
+                    .SetEase(Ease.OutExpo);
             }
 
             for (int i = 0; i < skills.Count; i++)
@@ -427,19 +467,19 @@ public class BattleSystem : MonoBehaviour
                 if (skillObj == null) continue;
 
                 Skill skill = skills[i];
-                skillObj.onClick.AddListener(() => playerUnit.selectedSkill = skill);
-                
+                skillObj.onClick.AddListener(() => playerUnit.SelectedSkill = skill);
+
                 if (i != 0)
                 {
                     var nav = skillObj.navigation;
-                    nav.selectOnUp = skillTab.GetChild(i-1).GetComponent<Button>();
+                    nav.selectOnUp = skillTab.GetChild(i - 1).GetComponent<Button>();
                     skillObj.navigation = nav;
                 }
 
                 if (i != skills.Count - 1)
                 {
                     var nav = skillObj.navigation;
-                    nav.selectOnDown = skillTab.GetChild(i+1).GetComponent<Button>();
+                    nav.selectOnDown = skillTab.GetChild(i + 1).GetComponent<Button>();
                     skillObj.navigation = nav;
                 }
             }
@@ -448,13 +488,15 @@ public class BattleSystem : MonoBehaviour
         }
         else
         {
-            for (int i = skillTab.childCount -1 ; i >=0; i--)
+            for (int i = skillTab.childCount - 1; i >= 0; i--)
             {
                 DestroyImmediate(skillTab.GetChild(i).gameObject);
             }
-            skillTab.DOLocalMove(new (1452, 0, 0), 0.2f).SetEase(Ease.OutExpo).OnComplete(() => skillTab.gameObject.SetActive(false));
+
+            skillTab.DOLocalMove(new(1452, 0, 0), 0.2f).SetEase(Ease.OutExpo)
+                .OnComplete(() => skillTab.gameObject.SetActive(false));
         }
-        
+
         //TODO: make actual animation for the queue tab to be enabled
         queueTab.gameObject.SetActive(!isVisible);
     }
@@ -467,28 +509,43 @@ public class BattleSystem : MonoBehaviour
         }
     }
 
-    public void ClearSelection()
+    public void ClearSelection(bool all = false)
     {
-        targetUnit?.SelectHUD(false);
+        if (!all) targetUnit?.SelectHUD(false);
+        else
+        {
+            List<Unit> temp = new List<Unit>();
+            temp.AddRange(enemyUnits);
+            temp.AddRange(playerUnits);
+            for (int i = 0; i < temp.Count; i++)
+            {
+                temp[i]?.SelectHUD(false);
+            }
+        }
+
         currentSelectButton = null;
     }
 
     public void Navigate(Vector2 normalizedInput)
     {
-        if(currentSelectButton == null) return;
+        if (currentSelectButton == null) return;
         if (normalizedInput != Vector2.zero)
         {
             bool isVertical = Mathf.Abs(normalizedInput.y) > Mathf.Abs(normalizedInput.x);
             Selectable selectable;
             if (isVertical)
             {
-                selectable = normalizedInput.y > 0 ? currentSelectButton.navigation.selectOnUp : currentSelectButton.navigation.selectOnDown;
-                
+                selectable = normalizedInput.y > 0
+                    ? currentSelectButton.navigation.selectOnUp
+                    : currentSelectButton.navigation.selectOnDown;
             }
             else
             {
-                selectable = normalizedInput.x > 0 ? currentSelectButton.navigation.selectOnRight : currentSelectButton.navigation.selectOnLeft;
+                selectable = normalizedInput.x > 0
+                    ? currentSelectButton.navigation.selectOnRight
+                    : currentSelectButton.navigation.selectOnLeft;
             }
+
             if (selectable != null)
             {
                 selectable.Select();
@@ -500,19 +557,23 @@ public class BattleSystem : MonoBehaviour
                     targetUnit.SelectHUD(true);
                     int index;
                     Vector3 interpolatedPosition;
-                    if(unit is EnemyUnit enemy)
+                    if (unit is EnemyUnit enemy)
                     {
-                        index = enemyUnits.IndexOf(enemy) +1 ;
-                        interpolatedPosition = Vector3.Lerp(enemyUnits[0].transform.position, enemyUnits[^1].transform.position, index/((float)enemyUnits.Count+1));
+                        index = enemyUnits.IndexOf(enemy) + 1;
+                        interpolatedPosition = Vector3.Lerp(enemyUnits[0].transform.position,
+                            enemyUnits[^1].transform.position, index / ((float)enemyUnits.Count + 1));
                     }
                     else
                     {
-                        index = playerUnits.IndexOf((PlayerUnit)unit) +1;
-                        interpolatedPosition = Vector3.Lerp(playerUnits[0].transform.position, playerUnits[^1].transform.position, index/((float)playerUnits.Count+1));
+                        index = playerUnits.IndexOf((PlayerUnit)unit) + 1;
+                        interpolatedPosition = Vector3.Lerp(playerUnits[0].transform.position,
+                            playerUnits[^1].transform.position, index / ((float)playerUnits.Count + 1));
                     }
+
                     cameraTargets[1].LookAt(interpolatedPosition);
                     StartCoroutine(MoveCamera(cameraTargets[1]));
                 }
+
                 currentSelectButton = (Button)selectable;
                 if (selectable.transform.parent.parent.TryGetComponent(typeof(Unit), out var button))
                 {
@@ -525,6 +586,6 @@ public class BattleSystem : MonoBehaviour
             }
         }
     }
-    
+
     #endregion
 }

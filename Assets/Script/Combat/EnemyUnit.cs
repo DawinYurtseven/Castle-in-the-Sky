@@ -6,7 +6,6 @@ using UnityEngine.UI;
 
 public class EnemyUnit : Unit
 {
-
     public TextMeshProUGUI hudValues;
 
     private new void Awake()
@@ -19,10 +18,10 @@ public class EnemyUnit : Unit
     public override IEnumerator BeginningOfTurn()
     {
         yield return base.BeginningOfTurn();
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.3f);
         yield return MakeDecision();
     }
-    
+
     private enum EnemyActions
     {
         Prep,
@@ -35,23 +34,25 @@ public class EnemyUnit : Unit
     {
         //make actual decisions
         var random = Random.Range(0, BattleSystem.system.playerUnits.Count);
-        SetCurrentTarget( new List<Unit>{BattleSystem.system.playerUnits[random]});
+        SetCurrentTarget(new List<Unit> { BattleSystem.system.playerUnits[random] });
         yield return BasicAttack();
     }
 
-    public void CalculateHUDValues(Button left = null,Button right = null)
+    public void CalculateHUDValues(Button left = null, Button right = null)
     {
         hudValues.text = $"{name}\nHP: {CurrentHP}/{MaxHP}\nSP: {CurrentSP}/{MaxSP}";
         hudCanvas.gameObject.transform.LookAt(BattleSystem.system.battleCamera.gameObject.transform.position);
         var navigation = new Navigation();
-        if(left != null)
+        if (left != null)
         {
             navigation.selectOnLeft = left;
         }
-        if(right != null)
+
+        if (right != null)
         {
             navigation.selectOnRight = right;
         }
+
         selected.navigation = navigation;
     }
 
