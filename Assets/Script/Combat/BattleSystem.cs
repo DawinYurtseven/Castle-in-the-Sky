@@ -4,6 +4,7 @@ using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class BattleSystem : MonoBehaviour
@@ -65,10 +66,8 @@ public class BattleSystem : MonoBehaviour
 
     void StartOfCombat()
     {
-        //TODO Debug only;
-        StrengthPendant strengthPendant = new StrengthPendant();
-        AddItem(strengthPendant, 100);
-        AddItem(strengthPendant, 1);
+        
+        
         
         EndOfTurnTrigger += EndOfTurn;
 
@@ -180,6 +179,17 @@ public class BattleSystem : MonoBehaviour
 
     [SerializeField] private GameObject gameGUI, playerValuePrefab, queueImagePrefab, skillTabPrefab;
     private GameObject temporaryImageGameObject;
+
+    public void SetCurrentSelectButton(Button button)
+    {
+        currentSelectButton = button;
+        currentSelectButton?.Select();
+    }
+
+    public void DeselectButton()
+    {
+        EventSystem.current.SetSelectedGameObject(null);
+    }
 
     /// <summary>
     /// Outside the normal set positions,
@@ -439,66 +449,11 @@ public class BattleSystem : MonoBehaviour
 
     public void SkillTabVisibility(bool isVisible, List<Skill> skills = null, PlayerUnit playerUnit = null)
     {
-        var skillTab = gameGUI.transform.Find("Skill Tab");
-        var queueTab = gameGUI.transform.Find("Queue");
-        if (isVisible && skills is { Count: > 0 } && playerUnit != null)
-        {
-            skillTab.localPosition = new Vector3(1452, 0, 0);
-            skillTab.gameObject.SetActive(true);
-            skillTab.DOLocalMove(new(468, 0, 0), 0.2f).SetEase(Ease.OutExpo);
-            for (int i = 0; i < skills.Count; i++)
-            {
-                var skillObj = Instantiate(skillTabPrefab, skillTab);
-
-                skillObj.transform.Find("Skill Name").GetComponent<TextMeshProUGUI>().text = skills[i].name;
-                skillObj.transform.Find("Skill Description").GetComponent<TextMeshProUGUI>().text =
-                    skills[i].skillDescription;
-                skillObj.transform.Find("Skill Cost").GetComponent<TextMeshProUGUI>().text =
-                    skills[i].skillCost.ToString();
-
-                skillObj.GetComponent<RectTransform>().localPosition = new(0, -2000, 0);
-                skillObj.GetComponent<RectTransform>()?.DOLocalMove(new(0, 0 - 100 * i, 0), 0.1f + 0.05f * i)
-                    .SetEase(Ease.OutExpo);
-            }
-
-            for (int i = 0; i < skills.Count; i++)
-            {
-                var skillObj = skillTab.GetChild(i).GetComponent<Button>();
-                if (skillObj == null) continue;
-
-                Skill skill = skills[i];
-                skillObj.onClick.AddListener(() => playerUnit.SelectedSkill = skill);
-
-                if (i != 0)
-                {
-                    var nav = skillObj.navigation;
-                    nav.selectOnUp = skillTab.GetChild(i - 1).GetComponent<Button>();
-                    skillObj.navigation = nav;
-                }
-
-                if (i != skills.Count - 1)
-                {
-                    var nav = skillObj.navigation;
-                    nav.selectOnDown = skillTab.GetChild(i + 1).GetComponent<Button>();
-                    skillObj.navigation = nav;
-                }
-            }
-
-            currentSelectButton = skillTab.GetChild(0).GetComponent<Button>();
-        }
-        else
-        {
-            for (int i = skillTab.childCount - 1; i >= 0; i--)
-            {
-                DestroyImmediate(skillTab.GetChild(i).gameObject);
-            }
-
-            skillTab.DOLocalMove(new(1452, 0, 0), 0.2f).SetEase(Ease.OutExpo)
-                .OnComplete(() => skillTab.gameObject.SetActive(false));
-        }
-
         //TODO: make actual animation for the queue tab to be enabled
+        var queueTab = gameGUI.transform.Find("Queue");
         queueTab.gameObject.SetActive(!isVisible);
+        
+        
     }
 
     public void InspectTab()
@@ -548,10 +503,15 @@ public class BattleSystem : MonoBehaviour
 
             if (selectable != null)
             {
-                selectable.Select();
-                if (selectable.gameObject.transform.parent.parent.TryGetComponent(typeof(Unit), out var unitComponent))
+                SetCurrentSelectButton((Button)selectable);
+                if (selectable.TryGetComponent(typeof(PlayerCombatUiController), out var unitComponent))
                 {
-                    Unit unit = (Unit)unitComponent;
+                    Unit unit = unitComponent.gameObject.transform.parent.parent.GetComponent<Unit>();
+                    if (unit == null)
+                    {
+                        Debug.Log("Tough luck");
+                        return;
+                    }
                     targetUnit?.SelectHUD(false);
                     targetUnit = unit;
                     targetUnit.SelectHUD(true);
@@ -573,15 +533,9 @@ public class BattleSystem : MonoBehaviour
                     cameraTargets[1].LookAt(interpolatedPosition);
                     StartCoroutine(MoveCamera(cameraTargets[1]));
                 }
-
-                currentSelectButton = (Button)selectable;
-                if (selectable.transform.parent.parent.TryGetComponent(typeof(Unit), out var button))
+                else if (selectable.TryGetComponent(typeof(GameButton), out var gameButton))
                 {
-                    var unitButton = (Unit)button;
-                    if (unitButton != null)
-                    {
-                        targetUnit = unitButton;
-                    }
+                    Debug.Log("Yes!");
                 }
             }
         }

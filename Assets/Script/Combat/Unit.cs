@@ -28,7 +28,12 @@ public class Unit : MonoBehaviour
     ///     But unlike the other ones, this one should be treated as a late-bloomer stat
     ///     and should show its effects later in a run.
     /// </summary>
-    [SerializeField] protected int strength = 1, constitution = 1, speed = 1, intelligence = 1, luck = 1;
+    [Header("Stats")] 
+    [SerializeField] protected int strength = 1;
+    [SerializeField] protected int constitution = 1;
+    [SerializeField] protected int speed = 1;
+    [SerializeField] protected int intelligence = 1;
+    [SerializeField] protected int luck = 1;
 
     public int Strength
     {
@@ -63,7 +68,7 @@ public class Unit : MonoBehaviour
     /// <summary>
     /// These are the stats that are calculated from the base stats and can not be influence directly from outside.
     /// </summary>
-    protected int MaxHP, CurrentHP, MaxSP, CurrentSP;
+    public int MaxHP, CurrentHP, MaxSP, CurrentSP;
 
     public int HP => CurrentHP;
     public int SP => CurrentSP;
@@ -84,16 +89,19 @@ public class Unit : MonoBehaviour
 
     #region Items
 
+    [Header("Items")]
     //TODO: Look at after implementing items. For now, think of it as a dictionary of <items,int> where the int is the amount of that item the unit has. 
 
-    public bool repeated, blocked;
+    public bool repeated;
+    public bool blocked;
     public float bufferedDamage;
 
     #endregion
 
     #region Skills
 
-    public List<Skill> skills = new();
+    [Header("Skills")] 
+    [SerializeField] protected List<SkillNames> Skills = new();
     internal Skill SelectedSkill;
 
     //TODO: Same for skills.
@@ -105,6 +113,8 @@ public class Unit : MonoBehaviour
     /// <summary>
     /// 0- base target for other units to go to when performing a 1-1 action
     /// </summary>
+    ///
+    [Header("Components")]
     [SerializeField] protected Transform[] positionTargets;
 
     [SerializeField] internal Animator animator;
@@ -121,6 +131,7 @@ public class Unit : MonoBehaviour
 
     #region Combat
 
+    [Header("Combat")]
     public UnityAction<Unit> BasicAttackTrigger,
         BeginningOfCombatTrigger,
         BeginningOfTurnTrigger,
@@ -211,7 +222,7 @@ public class Unit : MonoBehaviour
 
             currentTarget[0].TakeDamage(totalDamage);
             yield return transform.DOMove(startPosition, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
-        } while (repeated);
+        } while (repeated && currentTarget[0].CurrentHP > 0);
 
         yield return EndTurn();
     }
@@ -219,46 +230,16 @@ public class Unit : MonoBehaviour
     protected virtual IEnumerator SkillUsage() //change this later
     {
         TimeValue += CalculateTimeValue(SelectedSkill.timeValue);
+        //TODO: make skill cost cut with a global function
+        bool validAction;
         do
         {
             ActionTakenTrigger?.Invoke(this);
             SkillUsageTrigger?.Invoke(this,SelectedSkill.type);
-            switch (SelectedSkill.type)
-            {
-                case SkillTypes.Damage:
-                    var baseDamage = SelectedSkill.affectValue * (strength + damageAddition) * damageMultiplier;
-                    var totalDamage = Random.Range(0, 100) < critChance + SelectedSkill.additionalCritChance
-                        ? baseDamage * ((critAmount + SelectedSkill.additionalCritAddition) / 100)
-                        : baseDamage;
-
-
-                    foreach (var unit in currentTarget)
-                    {
-                        unit.TakeDamage(totalDamage);
-                    }
-
-                    break;
-                case SkillTypes.Heal:
-                    var baseHeal = SelectedSkill.affectValue * intelligence;
-                    var totalHeal = Random.Range(0, 100) < critChance + SelectedSkill.additionalCritChance
-                        ? baseHeal * ((critAmount + SelectedSkill.additionalCritAddition) / 100)
-                        : baseHeal;
-
-                    yield return new WaitForSeconds(0.3f);
-                    foreach (var unit in currentTarget)
-                    {
-                        unit.TakeDamage(-totalHeal);
-                    }
-
-                    break;
-                
-                //THINK about how to do these. maybe not scriptable object
-                case SkillTypes.Buff:
-                    break;
-                case SkillTypes.Debuff:
-                    break;
-            }
-        } while (repeated);
+            validAction = SelectedSkill.Execute(this);
+            
+            yield return new WaitForSeconds(0.2f);
+        } while (repeated && validAction);
         
         yield return EndTurn();
     }
@@ -283,7 +264,7 @@ public class Unit : MonoBehaviour
         BattleSystem.system.EndOfTurnTrigger.Invoke(this, TimeValue);
     }
 
-    protected virtual void TakeDamage(float damage)
+    public virtual void TakeDamage(float damage)
     {
         bufferedDamage = damage;
         ReactionDoneTrigger?.Invoke(this);
@@ -294,6 +275,7 @@ public class Unit : MonoBehaviour
             return;
         }
         CurrentHP -= (int)damage;
+        CurrentHP = Mathf.Clamp(CurrentHP, 0, MaxHP);
         //TODO: maybe an event here as well?
         if (CurrentHP <= 0)
         {
