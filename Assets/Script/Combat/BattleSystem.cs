@@ -504,9 +504,10 @@ public class BattleSystem : MonoBehaviour
             if (selectable != null)
             {
                 SetCurrentSelectButton((Button)selectable);
-                if (selectable.TryGetComponent(typeof(PlayerCombatUiController), out var unitComponent))
+                //frendly unit
+                if (selectable.transform.parent.TryGetComponent(typeof(UnitViewComponent), out var unitComponent ))
                 {
-                    Unit unit = unitComponent.gameObject.transform.parent.parent.GetComponent<Unit>();
+                    var unit = (Unit)unitComponent.transform.parent.GetComponent(typeof(Unit));
                     if (unit == null)
                     {
                         Debug.Log("Tough luck");
@@ -533,10 +534,10 @@ public class BattleSystem : MonoBehaviour
                     cameraTargets[1].LookAt(interpolatedPosition);
                     StartCoroutine(MoveCamera(cameraTargets[1]));
                 }
-                else if (selectable.TryGetComponent(typeof(GameButton), out var gameButton))
+                /*else if (selectable.TryGetComponent(typeof(GameButton), out var gameButton))
                 {
-                    Debug.Log("Yes!");
-                }
+                    
+                }*/
             }
         }
     }

@@ -54,8 +54,8 @@ public class PlayerUnit : Unit
     {
         yield return base.BeginningOfTurn();
         stateStack.Push(CombatState.Root);
-        playerCombatUiController.SetVisibility(true);
         yield return BattleSystem.system.MoveCamera(cameraTargets[0]);
+        playerCombatUiController.SetVisibility(true);
     }
 
 
@@ -192,7 +192,6 @@ public class PlayerUnit : Unit
                 BattleSystem.system.FreeNewQueuePosition();
                 stateStack.Pop();
                 yield return SkillTab();
-                playerCombatUiController.SetVisibility(true);
                 break;
             case CombatState.Inspect:
                 BattleSystem.system.ClearSelection();
@@ -210,9 +209,11 @@ public class PlayerUnit : Unit
     public IEnumerator SkillTab()
     {
         if (stateStack.Peek() != CombatState.Root) yield break;
+        playerCombatUiController.SetVisibility(false);
         stateStack.Push(CombatState.Skill);
-        playerCombatUiController.SkillTabVisibility(true,cameraTargets[1], Skills, this);
         yield return BattleSystem.system.MoveCamera(cameraTargets[1]);
+        playerCombatUiController.SkillTabVisibility(true,cameraTargets[1], Skills, this);
+        playerCombatUiController.SetVisibility(true);
         BattleSystem.system.SetCurrentSelectButton(playerCombatUiController.PeekFirstButton());
     }
 

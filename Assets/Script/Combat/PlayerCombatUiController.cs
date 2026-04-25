@@ -14,10 +14,10 @@ public class PlayerCombatUiController : MonoBehaviour
     [SerializeField] private float horizontalDistance = 30f;
     [SerializeField] private float verticalDistance = 5;
     [Header("Skill Tab")] 
-    [SerializeField] private float skillDistance = 50f;
-    [SerializeField] private float skillAngle = 13;
-    [SerializeField] private float skillMaxOffset = 2f;
-    [SerializeField] private float skillHeightDifference = 20f;
+    [SerializeField] private float skillDistance = 65f;
+    [SerializeField] private float skillAngle = 5;
+    [SerializeField] private float skillMaxOffset = 7f;
+    [SerializeField] private float skillHeightDifference = 15f;
     [SerializeField] private GameObject skillButtonPrefab;
     [SerializeField] private List<Button> skillButtons = new();
     [SerializeField] private TMP_Text skillDescription;
