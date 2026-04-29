@@ -4,11 +4,11 @@ public class Gluttony : Items
 {
     public Gluttony()
     {
-        triggerPosition = ItemTriggerPosition.reactionDone;
+        triggerPosition = ItemTriggerPosition.ReactionDone;
     }
-    
 
-    internal override void TriggeredEvent(Unit unit)
+
+    protected override void TriggeredEvent(Unit unit)
     {
         var randomChance = Random.Range(0, 100);
         //hyperbolik stacks

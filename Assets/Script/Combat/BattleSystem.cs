@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 public class BattleSystem : MonoBehaviour
@@ -34,7 +35,7 @@ public class BattleSystem : MonoBehaviour
     [SerializeField] private Transform[] cameraTargets;
 
     public Transform inFrontOfEnemies, inFrontOfPlayers;
-    [SerializeField] private Canvas winCanvas, loseCanvas;
+    [SerializeField] private GameObject winCanvas, loseCanvas;
 
     public UnityAction<Unit, float> EndOfTurnTrigger;
 

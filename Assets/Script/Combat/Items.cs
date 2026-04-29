@@ -11,19 +11,19 @@ public abstract class Items
 
     protected enum ItemTriggerPosition
     {
-        basicAttack,
-        beginningOfCombat,
-        beginningOfTrun,
-        endofCombat,
-        endOfTrun,
-        actionTaken,
-        reactionDone,
+        BasicAttack,
+        BeginningOfCombat,
+        BeginningOfTrun,
+        EndofCombat,
+        EndOfTrun,
+        ActionTaken,
+        ReactionDone,
         criticalTrigger
     }
     
     protected ItemTriggerPosition triggerPosition;
-    
-    public int stacks;
+
+    protected int stacks;
     public void SubscribeToTeamEvents(List<Unit> teamUnits)
     {
         for (int i = 0; i < teamUnits.Count; i++)
@@ -31,25 +31,25 @@ public abstract class Items
             var unit = teamUnits[i];
             switch (triggerPosition)
             {
-                case ItemTriggerPosition.basicAttack:
+                case ItemTriggerPosition.BasicAttack:
                     unit.BasicAttackTrigger += TriggeredEvent;
                     break;
-                case ItemTriggerPosition.beginningOfCombat:
+                case ItemTriggerPosition.BeginningOfCombat:
                     unit.BeginningOfCombatTrigger += TriggeredEvent;
                     break;
-                case ItemTriggerPosition.beginningOfTrun:
+                case ItemTriggerPosition.BeginningOfTrun:
                     unit.BeginningOfTurnTrigger += TriggeredEvent;
                     break;
-                case ItemTriggerPosition.endofCombat:
+                case ItemTriggerPosition.EndofCombat:
                     unit.EndOfCombatTrigger += TriggeredEvent;
                     break;
-                case ItemTriggerPosition.endOfTrun:
+                case ItemTriggerPosition.EndOfTrun:
                     unit.EndOfTurnTrigger += TriggeredEvent;
                     break;
-                case ItemTriggerPosition.actionTaken:
+                case ItemTriggerPosition.ActionTaken:
                     unit.ActionTakenTrigger += TriggeredEvent;
                     break;
-                case ItemTriggerPosition.reactionDone:
+                case ItemTriggerPosition.ReactionDone:
                     unit.ReactionDoneTrigger += TriggeredEvent;
                     break;
                 case ItemTriggerPosition.criticalTrigger:
@@ -68,6 +68,6 @@ public abstract class Items
         stacks += stack;
     }
 
-    internal abstract void TriggeredEvent(Unit unit);
+    protected abstract void TriggeredEvent(Unit unit);
     
 }

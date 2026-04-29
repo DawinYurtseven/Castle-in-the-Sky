@@ -11,7 +11,7 @@ public class StrengthPendant : Items
         }
     }
 
-    internal override void TriggeredEvent(Unit unit)
+    protected override void TriggeredEvent(Unit unit)
     {
         Debug.Log("lmao what?");
     }
