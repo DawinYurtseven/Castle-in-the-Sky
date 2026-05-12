@@ -1,15 +1,28 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Map : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public static Map system;
+    public static List<EnemyUnit> EnemyUnitAssetList;
+    public List<PlayerUnit> PlayerUnitAssetList;
+    
+    public List<PlayerUnit> currentPlayerUnits;
+    
+    
+
+    private void Awake()
     {
-        
+        if(!system) system = this;
+        else Destroy(this);
     }
 
-    // Update is called once per frame
-    void Update()
+    public void GameStart(List<PlayerUnit> playerUnits)
+    {
+        currentPlayerUnits = playerUnits;
+    }
+
+    public void ReturnToMap()
     {
         
     }

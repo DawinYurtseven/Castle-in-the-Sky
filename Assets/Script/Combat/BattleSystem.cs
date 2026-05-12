@@ -33,6 +33,8 @@ public class BattleSystem : MonoBehaviour
     /// 2 - view towards the player
     /// </summary>
     [SerializeField] private Transform[] cameraTargets;
+    
+    [SerializeField] private Transform[] playerPositionTargets, enemyPositionTargets;
 
     public Transform inFrontOfEnemies, inFrontOfPlayers;
     [SerializeField] private GameObject winCanvas, loseCanvas;
@@ -54,22 +56,28 @@ public class BattleSystem : MonoBehaviour
 
         //TODO: instantiate the GUI here
         gameGUI.SetActive(true);
+        //TODO: better work than this search part. maybe custom script? 
         playerValueHorizontalGameObject = gameGUI.transform.Find("Player value horizontal").gameObject;
         queueHorizontalGameObject = gameGUI.transform.Find("Queue").gameObject;
     }
 
-    void Start()
+
+    public void StartOfCombat()
     {
-        StartOfCombat();
+        for(int i = 0; i < playerUnits.Count; i++)
+        {
+            playerUnits[i].transform.position = playerPositionTargets[i].position;
+            playerUnits[i].transform.rotation = playerPositionTargets[i].rotation;
+        }
+
+        for (int i = 0; i < enemyUnits.Count; i++)
+        {
+            enemyUnits[i].transform.position = enemyPositionTargets[i].position;
+            enemyUnits[i].transform.rotation = enemyPositionTargets[i].rotation;
+        }
+
         SetAllPlayerValues();
-    }
 
-
-    void StartOfCombat()
-    {
-        
-        
-        
         EndOfTurnTrigger += EndOfTurn;
 
         //first, order all the units based on their 'speed' stat
@@ -83,7 +91,6 @@ public class BattleSystem : MonoBehaviour
         {
             unit.BeginningOfCombat();
         }
-
         currentActiveUnit = queue[0];
         PopQueue();
         StartCoroutine(currentActiveUnit.BeginningOfTurn());
@@ -101,17 +108,13 @@ public class BattleSystem : MonoBehaviour
             unit.PassTimeValue(timeValue);
         }
 
+        //TODO: Maybe more animation handling instead of hard code?
         queue.Add(currentUnit);
         OrderQueue();
         //maybe animations or something.
         currentActiveUnit = queue[0];
         PopQueue();
         StartCoroutine(currentActiveUnit.BeginningOfTurn());
-        /*if (currentActiveUnit is PlayerUnit playerUnit)
-        {
-            var index = playerUnits.IndexOf(playerUnit);
-            //TODO: I forgo
-        }*/
     }
 
     public void DeathOfUnit(Unit unit)
