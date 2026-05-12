@@ -2,6 +2,11 @@ using UnityEngine;
 
 public class Medallionofecho : Items
 {
+    
+    public override string ItemName => "Medallion of echo";
+
+    //TODO: WORDING
+    public override string ItemDescription => "With a 10% chance (+2% per additional stack), repeat any action a unit takes without a cost of resources";
     public Medallionofecho()
     {
         triggerPosition = ItemTriggerPosition.ActionTaken;

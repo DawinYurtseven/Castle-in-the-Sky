@@ -50,6 +50,7 @@ public class BattleSystem : MonoBehaviour
         if (system == null) system = this;
         else Destroy(gameObject);
 
+
         battleCamera ??= Camera.main;
 
         //TODO: instantiate the GUI here
@@ -162,8 +163,6 @@ public class BattleSystem : MonoBehaviour
 
         if (foundItem == null)
         {
-            gatheredItems.Add(item);
-            
             item.Acquire(units, amount);
         }
         else

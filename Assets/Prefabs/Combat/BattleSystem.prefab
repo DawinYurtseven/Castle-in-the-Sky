@@ -811,8 +811,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2d71e680a2e3bb4db6bb2d891c09b87, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BattleSystem
-  playerUnits: []
-  enemyUnits: []
+  playerUnits:
+  - {fileID: 0}
+  enemyUnits:
+  - {fileID: 0}
+  - {fileID: 0}
   playerValues: []
   battleCamera: {fileID: 0}
   cameraTargets:
@@ -821,8 +824,8 @@ MonoBehaviour:
   - {fileID: 7904981863880879093}
   inFrontOfEnemies: {fileID: 4690570279529954959}
   inFrontOfPlayers: {fileID: 8643990080382451737}
-  winCanvas: {fileID: 0}
-  loseCanvas: {fileID: 8104231408329821145}
+  winCanvas: {fileID: 5412059372320585796}
+  loseCanvas: {fileID: 4995267806611739072}
   currentSelectButton: {fileID: 0}
   gameGUI: {fileID: 8016402395788168911}
   playerValuePrefab: {fileID: 7577604741573318892, guid: d89b691d49653a1408274a3113492495, type: 3}

@@ -10,4 +10,7 @@ public class GameButton : MonoBehaviour, ISelectHandler
     {
         OnSelectEvent?.Invoke();
     }
+    
+    //TODO: make something for animation events
+    
 }

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public abstract class Items
 {
     protected enum ItemTypes
@@ -20,6 +21,17 @@ public abstract class Items
         ReactionDone,
         criticalTrigger
     }
+
+    public abstract string ItemName
+    {
+        get;
+    }
+
+    public abstract string ItemDescription
+    {
+        get;
+    }
+    
     
     protected ItemTriggerPosition triggerPosition;
 
@@ -29,6 +41,7 @@ public abstract class Items
         for (int i = 0; i < teamUnits.Count; i++)
         {
             var unit = teamUnits[i];
+            unit.items.Add(this);
             switch (triggerPosition)
             {
                 case ItemTriggerPosition.BasicAttack:
@@ -61,6 +74,7 @@ public abstract class Items
 
     public virtual void Acquire(List<Unit> teamUnits, int stack = 1)
     {
+        
         if (stacks == 0)
         {
             SubscribeToTeamEvents(teamUnits);

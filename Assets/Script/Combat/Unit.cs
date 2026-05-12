@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -95,6 +96,8 @@ public class Unit : MonoBehaviour
     public bool repeated;
     public bool blocked;
     public float bufferedDamage;
+
+    public List<Items> items = new();
 
     #endregion
 
