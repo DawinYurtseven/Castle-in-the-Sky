@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
@@ -106,7 +107,7 @@ public class WinScreenController : MonoBehaviour
             others.Add(item3);
             otherAnimators.Add(animator2);
             otherAnimators.Add(animator3);
-            StartCoroutine(OnTimeClickEvent(i1, item1, others, animator1, otherAnimators));
+            StartCoroutine(OnTimeClickEvent(i1, item1, others, animator1, otherAnimators,() =>{}));
             
             //TODO: MoveToMap()
         });
@@ -118,7 +119,7 @@ public class WinScreenController : MonoBehaviour
             others.Add(item3);
             otherAnimators.Add(animator1);
             otherAnimators.Add(animator3);
-            StartCoroutine(OnTimeClickEvent(i2, item2, others, animator2, otherAnimators));
+            StartCoroutine(OnTimeClickEvent(i2, item2, others, animator2, otherAnimators,() =>{}));
 
             //TODO: MoveToMap()
         });
@@ -130,7 +131,7 @@ public class WinScreenController : MonoBehaviour
             others.Add(item2);
             otherAnimators.Add(animator1);
             otherAnimators.Add(animator2);
-            StartCoroutine(OnTimeClickEvent(i3, item3, others, animator3, otherAnimators));
+            StartCoroutine(OnTimeClickEvent(i3, item3, others, animator3, otherAnimators,() =>{} ));
             
             //TODO: MoveToMap()
 
@@ -144,7 +145,7 @@ public class WinScreenController : MonoBehaviour
     //TODO: make a MoveToMap() function
 
     private IEnumerator OnTimeClickEvent(Items ie, GameObject target, List<GameObject> others, Animator animator,
-        List<Animator> otherAnimators)
+        List<Animator> otherAnimators, Action method = null)
     {
         var unit = new List<Unit>(BattleSystem.system.playerUnits);
         ie.Acquire(unit);
@@ -166,6 +167,8 @@ public class WinScreenController : MonoBehaviour
         StartCoroutine(ClearTextInObject(target.transform.GetChild(0).GetComponent<TMP_Text>()));
         yield return ClearTextInObject(target.transform.GetChild(1).GetComponent<TMP_Text>());
         animator.SetTrigger(Collapse);
+        yield return new WaitForSeconds(1f);
+        method?.Invoke();
     }
 
     private IEnumerator InsertTextIntoObject(TMP_Text textObj, string text)

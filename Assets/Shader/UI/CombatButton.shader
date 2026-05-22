@@ -9,7 +9,7 @@ Shader "Combat/CombatButton"
 
     SubShader
     {
-        Tags { "RenderType" = "Opaque" "RenderPipeline" = "UniversalPipeline" "Queue" = "Overlay"}
+        Tags { "RenderType" = "Transparent" "RenderPipeline" = "UniversalPipeline" "Queue" = "Transparent-100"}
         
         ZWrite Off
         ZTest Always
