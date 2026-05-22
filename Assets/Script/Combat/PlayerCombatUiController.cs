@@ -13,6 +13,7 @@ public class PlayerCombatUiController : MonoBehaviour
     [SerializeField] private float angleInBetween = 15f;
     [SerializeField] private float horizontalDistance = 30f;
     [SerializeField] private float verticalDistance = 5;
+    [SerializeField] private Shader baseButtonShader;
     [Header("Skill Tab")] 
     [SerializeField] private float skillDistance = 65f;
     [SerializeField] private float skillAngle = 5;
@@ -28,6 +29,16 @@ public class PlayerCombatUiController : MonoBehaviour
     private void Start()
     {
         initialTransformRotation = transform.rotation;
+
+        for (int i = 0; i < rootButtons.Count; i++)
+        {
+            var mat = new Material(baseButtonShader);
+            var tex = rootButtons[i].GetComponent<Image>().sprite.texture;
+            mat.SetTexture("_BaseMap", tex);
+            mat.SetFloat("_alphaClipping", 0.174f);
+            rootButtons[i].GetComponent<Image>().material = mat;
+            
+        }
     }
 
     public void SetVisibility(bool isVisible)

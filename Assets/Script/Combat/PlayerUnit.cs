@@ -228,7 +228,7 @@ public class PlayerUnit : Unit
             stateStack.Push(CombatState.Inspect);
             stateStack.Push(CombatState.TargetEnemy);
             playerCombatUiController.SetVisibility(false);
-            yield return BattleSystem.system.MoveCameraToIndexTransform(1);
+            yield return BattleSystem.system.MoveCamera(cameraTargets[2], BattleSystem.CameraTargets.EnemyView);
         }
         else if (state == CombatState.Skill)
         {
