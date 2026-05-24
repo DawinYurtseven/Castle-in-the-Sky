@@ -1,5 +1,7 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public enum SkillTypes
 {
@@ -11,6 +13,7 @@ public enum SkillTypes
 
 public enum SkillNames
 {
+    none,
     GrandSlash,
     HealAll
 }
@@ -26,6 +29,9 @@ public abstract class Skill
     public string skillDescription;
     public int skillCost;
     public float timeValue;
+    
+    public Image skillNameImg;
+    public Image skillDescriptionImg;
 
     [Header("Skill type and action")] public SkillTypes type = SkillTypes.Damage;
     public bool targetOne;
@@ -50,4 +56,22 @@ public abstract class Skill
     }
 
     public abstract bool Execute(Unit unit);
+    
+    public static Skill GetRandomSkill(List<Skill> exclude = null)
+    {
+        List<Skill> items = new List<Skill>()
+        {
+            new GrandSlash(),
+            new HealAll(),
+        };
+        if (exclude != null)
+        {
+            foreach (var item in exclude)
+            {
+                items.Remove(item);
+            }
+        }
+        var index = Random.Range(0, items.Count);
+        return items[index] != null ? items[index] : new GrandSlash();
+    }
 }

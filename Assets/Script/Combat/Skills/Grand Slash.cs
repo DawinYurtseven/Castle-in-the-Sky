@@ -6,6 +6,7 @@ public class GrandSlash : Skill
 {
     public GrandSlash()
     {
+        name = SkillNames.GrandSlash;
         skillName = "Grand Slash";
         skillDescription = "Slash through all available enemies with Physical damage"; //TODO: physical damage?
         skillCost = 3;

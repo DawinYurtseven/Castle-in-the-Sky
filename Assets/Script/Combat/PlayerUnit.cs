@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
@@ -20,6 +21,70 @@ public class PlayerUnit : Unit
     private new void Awake()
     {
         base.Awake();
+    }
+
+    
+    public List<Tuple<string, int>> GetStats()
+    {
+        List<Tuple<string, int>> stats = new List<Tuple<string, int>>();
+        stats.Add(new Tuple<string, int>("Strength", strength));
+        stats.Add(new Tuple<string, int>("Constitution", constitution));
+        stats.Add(new Tuple<string, int>("Speed", speed));
+        stats.Add(new Tuple<string, int>("Intelligence", intelligence));
+        stats.Add(new Tuple<string, int>("Luck", luck));
+        return stats;
+    }
+
+    public void IncreaseStat(string stat, int amount)
+    {
+        switch (stat)
+        {
+            case "Strength":
+                strength += amount;
+                break;
+            case "Constitution":
+                constitution += amount;
+                break;
+            case "Speed":
+                speed += amount;
+                break;
+            case "Intelligence":
+                intelligence += amount;
+                break;
+            case "Luck":
+                luck += amount;
+                break;
+            default:
+                Debug.Log("What?");
+                break;
+        }
+    }
+
+    public int GetStat(string stat)
+    {
+        switch (stat)
+        {
+            case "Strength":
+                return strength;
+            case "Constitution":
+                return constitution;
+            case "Speed":
+                return speed;
+            case "Intelligence":
+                return intelligence;
+            case "Luck":
+                return luck;
+            default:
+                Debug.Log("What?");
+                return 0;
+        }
+    }
+
+    public void AddSkill(Skill skill)
+    {
+        var foundName = Skills.Find((e) => e.Equals(skill.name));
+        if(foundName == SkillNames.none && skill.name != SkillNames.none)
+            Skills.Add(skill.name);
     }
 
     #endregion

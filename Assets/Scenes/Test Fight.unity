@@ -851,7 +851,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff0055c5b11116947960f2778bb117cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerUnit
-  strength: 200000
+  strength: 2
   constitution: 2
   speed: 2
   intelligence: 2
@@ -868,7 +868,7 @@ MonoBehaviour:
   repeated: 0
   blocked: 0
   bufferedDamage: 0
-  Skills: 000000000100000000000000
+  Skills: 01000000
   positionTargets:
   - {fileID: 575168532}
   animator: {fileID: 0}
@@ -2306,9 +2306,6 @@ MonoBehaviour:
   - {fileID: 826804653}
   - {fileID: 1740641001}
   - {fileID: 816002551}
-  angleInBetween: 20
-  horizontalDistance: 30
-  verticalDistance: 2
   baseButtonShader: {fileID: 4800000, guid: d758702c01f13764b9ffbbd7cb5b0a16, type: 3}
   skillDistance: 30
   skillAngle: 15
@@ -3322,7 +3319,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5412059372320585796, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5726985171672694888, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
       propertyPath: m_Name
@@ -3452,9 +3449,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WinScreenController
   buttonPrefab: {fileID: 1414944789080979500, guid: 64ee1501be296914e8ed84745c696a4a, type: 3}
-  itemSelectPrefab: {fileID: 5651740015733952516, guid: 2fad7a7d4ce02e54e8ecb227eb35478f, type: 3}
-  transitionTime: 0.2
+  statSelectPrefab: {fileID: 5065350603811441467, guid: 0a7709485cc4a16488558d468cd92464, type: 3}
+  skillsSelectPrefab: {fileID: 2164327219458180897, guid: 4d8a546de1b66f944908894f84226878, type: 3}
+  itemSelectPrefab: {fileID: 1201617224625896284, guid: a8ab1ea6c3244874990f77545f6fc02b, type: 3}
   createdObjects: []
+  mainCharacter: {fileID: 391377131}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

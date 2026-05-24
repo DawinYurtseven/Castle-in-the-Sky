@@ -1,18 +1,16 @@
 using System.Collections.Generic;
-using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class PlayerCombatUiController : MonoBehaviour
 {
+    private static readonly int AlphaClipping = Shader.PropertyToID("_alphaClipping");
+    private static readonly int BaseMap = Shader.PropertyToID("_BaseMap");
     [SerializeField] private List<Button> rootButtons = new();
     
     
     [Header("Base Tab")]
-    [SerializeField] private float angleInBetween = 15f;
-    [SerializeField] private float horizontalDistance = 30f;
-    [SerializeField] private float verticalDistance = 5;
     [SerializeField] private Shader baseButtonShader;
     [Header("Skill Tab")] 
     [SerializeField] private float skillDistance = 65f;
@@ -34,8 +32,8 @@ public class PlayerCombatUiController : MonoBehaviour
         {
             var mat = new Material(baseButtonShader);
             var tex = rootButtons[i].GetComponent<Image>().sprite.texture;
-            mat.SetTexture("_BaseMap", tex);
-            mat.SetFloat("_alphaClipping", 0.174f);
+            mat.SetTexture(BaseMap, tex);
+            mat.SetFloat(AlphaClipping, 0.174f);
             rootButtons[i].GetComponent<Image>().material = mat;
             
         }
