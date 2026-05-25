@@ -6,7 +6,11 @@ public class Gluttony : Items
     {
         triggerPosition = ItemTriggerPosition.ReactionDone;
     }
+    
+    public override string ItemName => "Gluttony";
 
+    //TODO: WORDING!
+    public override string ItemDescription => "with a 1% chance (+1% per stack), incoming damage will be stored and applied to the next instance of damage from the unit.";
 
     protected override void TriggeredEvent(Unit unit)
     {

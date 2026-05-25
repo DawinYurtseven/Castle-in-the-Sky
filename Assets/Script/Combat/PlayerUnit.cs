@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
@@ -9,16 +10,81 @@ public class PlayerUnit : Unit
 
     /// <summary>
     /// 0- standard camera angle for when it is players turn
-    /// 1- view towards the enemies
+    /// 1- skill view
+    /// 2- Enemy View
     /// maybe I'll need later more so this is an array now
     /// </summary>
     [SerializeField] private Transform[] cameraTargets; // this is for the camera to move to depending on the situation.
-    
+
     [SerializeField] private PlayerCombatUiController playerCombatUiController;
 
     private new void Awake()
     {
         base.Awake();
+    }
+
+    
+    public List<Tuple<string, int>> GetStats()
+    {
+        List<Tuple<string, int>> stats = new List<Tuple<string, int>>();
+        stats.Add(new Tuple<string, int>("Strength", strength));
+        stats.Add(new Tuple<string, int>("Constitution", constitution));
+        stats.Add(new Tuple<string, int>("Speed", speed));
+        stats.Add(new Tuple<string, int>("Intelligence", intelligence));
+        stats.Add(new Tuple<string, int>("Luck", luck));
+        return stats;
+    }
+
+    public void IncreaseStat(string stat, int amount)
+    {
+        switch (stat)
+        {
+            case "Strength":
+                strength += amount;
+                break;
+            case "Constitution":
+                constitution += amount;
+                break;
+            case "Speed":
+                speed += amount;
+                break;
+            case "Intelligence":
+                intelligence += amount;
+                break;
+            case "Luck":
+                luck += amount;
+                break;
+            default:
+                Debug.Log("What?");
+                break;
+        }
+    }
+
+    public int GetStat(string stat)
+    {
+        switch (stat)
+        {
+            case "Strength":
+                return strength;
+            case "Constitution":
+                return constitution;
+            case "Speed":
+                return speed;
+            case "Intelligence":
+                return intelligence;
+            case "Luck":
+                return luck;
+            default:
+                Debug.Log("What?");
+                return 0;
+        }
+    }
+
+    public void AddSkill(Skill skill)
+    {
+        var foundName = Skills.Find((e) => e.Equals(skill.name));
+        if(foundName == SkillNames.none && skill.name != SkillNames.none)
+            Skills.Add(skill.name);
     }
 
     #endregion
@@ -34,10 +100,10 @@ public class PlayerUnit : Unit
         BattleSystem.system.ClearSelection(true);
         if (SelectedSkill.type == SkillTypes.Damage || SelectedSkill.type == SkillTypes.Debuff)
         {
-            
             yield return transform.DOMove(BattleSystem.system.inFrontOfEnemies.position, 0.2f).SetEase(Ease.OutExpo)
                 .WaitForCompletion();
         }
+
         //call animation with selectedSkill.animationName here but idk
         yield return new WaitForSeconds(0.3f);
         yield return base.SkillUsage();
@@ -54,7 +120,7 @@ public class PlayerUnit : Unit
     {
         yield return base.BeginningOfTurn();
         stateStack.Push(CombatState.Root);
-        yield return BattleSystem.system.MoveCamera(cameraTargets[0]);
+        yield return BattleSystem.system.MoveCamera(cameraTargets[0], BattleSystem.CameraTargets.Base);
         playerCombatUiController.SetVisibility(true);
     }
 
@@ -92,7 +158,7 @@ public class PlayerUnit : Unit
                 stateStack.Push(CombatState.TargetEnemy);
                 BattleSystem.system.ShowNewQueuePosition(this, CalculateTimeValue(1f));
                 playerCombatUiController.SetVisibility(false);
-                yield return BattleSystem.system.MoveCameraToIndexTransform(1);
+                yield return BattleSystem.system.MoveCamera(cameraTargets[2], BattleSystem.CameraTargets.EnemyView);
                 break;
             case CombatState.Skill:
                 playerCombatUiController.SkillTabVisibility(false);
@@ -125,9 +191,10 @@ public class PlayerUnit : Unit
                     {
                         yield return BattleSystem.system.MoveCameraToIndexTransform(2);
                     }
+
                     yield return BattleSystem.system.MoveCameraToIndexTransform(4);
                 }
-                
+
                 playerCombatUiController.SetVisibility(false);
 
                 BattleSystem.system.ShowNewQueuePosition(this, CalculateTimeValue(SelectedSkill.timeValue));
@@ -156,7 +223,7 @@ public class PlayerUnit : Unit
             case CombatState.TargetAlly:
                 switch (stateStack.Peek())
                 {
-                    case CombatState.Root: 
+                    case CombatState.Root:
                         Debug.Log("oke oke");
                         break;
                     case CombatState.Skill:
@@ -169,6 +236,7 @@ public class PlayerUnit : Unit
                         Debug.Log("How?");
                         break;
                 }
+
                 break;
         }
     }
@@ -184,7 +252,7 @@ public class PlayerUnit : Unit
                 BattleSystem.system.FreeNewQueuePosition();
                 playerCombatUiController.SkillTabVisibility(false);
                 SelectedSkill = null;
-                yield return BattleSystem.system.MoveCamera(cameraTargets[0]);
+                yield return BattleSystem.system.MoveCamera(cameraTargets[0], BattleSystem.CameraTargets.Base);
                 playerCombatUiController.SetVisibility(true);
                 break;
             case CombatState.Skill:
@@ -195,7 +263,7 @@ public class PlayerUnit : Unit
                 break;
             case CombatState.Inspect:
                 BattleSystem.system.ClearSelection();
-                yield return BattleSystem.system.MoveCamera(cameraTargets[0]);
+                yield return BattleSystem.system.MoveCamera(cameraTargets[0], BattleSystem.CameraTargets.Base);
                 playerCombatUiController.SetVisibility(true);
                 stateStack.Pop();
                 break;
@@ -211,19 +279,27 @@ public class PlayerUnit : Unit
         if (stateStack.Peek() != CombatState.Root) yield break;
         playerCombatUiController.SetVisibility(false);
         stateStack.Push(CombatState.Skill);
-        yield return BattleSystem.system.MoveCamera(cameraTargets[1]);
-        playerCombatUiController.SkillTabVisibility(true,cameraTargets[1], Skills, this);
+        yield return BattleSystem.system.MoveCamera(cameraTargets[1], BattleSystem.CameraTargets.Base);
+        playerCombatUiController.SkillTabVisibility(true, cameraTargets[1], Skills, this);
         playerCombatUiController.SetVisibility(true);
         BattleSystem.system.SetCurrentSelectButton(playerCombatUiController.PeekFirstButton());
     }
 
     public IEnumerator Inspect()
     {
-        if (stateStack.Count > 1) yield break;
-        stateStack.Push(CombatState.Inspect);
-        stateStack.Push(CombatState.TargetEnemy);
-        playerCombatUiController.SetVisibility(false);
-        yield return BattleSystem.system.MoveCameraToIndexTransform(1);
+        var state = stateStack.Peek();
+        if (state == CombatState.Root)
+        {
+            stateStack.Push(CombatState.Inspect);
+            stateStack.Push(CombatState.TargetEnemy);
+            playerCombatUiController.SetVisibility(false);
+            yield return BattleSystem.system.MoveCamera(cameraTargets[2], BattleSystem.CameraTargets.EnemyView);
+        }
+        else if (state == CombatState.Skill)
+        {
+            playerCombatUiController.ShowSkillDetails();
+        }
     }
+
     #endregion
 }

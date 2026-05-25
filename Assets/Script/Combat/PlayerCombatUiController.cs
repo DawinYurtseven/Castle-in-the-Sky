@@ -1,39 +1,41 @@
 using System.Collections.Generic;
-using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class PlayerCombatUiController : MonoBehaviour
 {
+    private static readonly int AlphaClipping = Shader.PropertyToID("_alphaClipping");
+    private static readonly int BaseMap = Shader.PropertyToID("_BaseMap");
     [SerializeField] private List<Button> rootButtons = new();
     
     
     [Header("Base Tab")]
-    [SerializeField] private float angleInBetween = 15f;
-    [SerializeField] private float horizontalDistance = 30f;
-    [SerializeField] private float verticalDistance = 5;
+    [SerializeField] private Shader baseButtonShader;
     [Header("Skill Tab")] 
     [SerializeField] private float skillDistance = 65f;
     [SerializeField] private float skillAngle = 5;
     [SerializeField] private float skillMaxOffset = 7f;
     [SerializeField] private float skillHeightDifference = 15f;
-    [SerializeField] private GameObject skillButtonPrefab;
+    [SerializeField] private List<GameObject> skillButtonPrefab;
     [SerializeField] private List<Button> skillButtons = new();
-    [SerializeField] private TMP_Text skillDescription;
     
     private Quaternion initialTransformRotation;
+    private Skill currentSelectedSkill;
+    private Button currentSelectedSkillButton;
     
     private void Start()
     {
         initialTransformRotation = transform.rotation;
-        
-        var halfAngle = angleInBetween * (rootButtons.Count-1) / 2;
+
         for (int i = 0; i < rootButtons.Count; i++)
         {
-            var desiredRot = Quaternion.Euler(0, 0, -angleInBetween * i + halfAngle);
-            rootButtons[i].gameObject.transform.localPosition = desiredRot  * new Vector3(horizontalDistance,-verticalDistance * i,0);
-            rootButtons[i].gameObject.transform.localRotation = desiredRot ;
+            var mat = new Material(baseButtonShader);
+            var tex = rootButtons[i].GetComponent<Image>().sprite.texture;
+            mat.SetTexture(BaseMap, tex);
+            mat.SetFloat(AlphaClipping, 0.174f);
+            rootButtons[i].GetComponent<Image>().material = mat;
+            
         }
     }
 
@@ -50,6 +52,8 @@ public class PlayerCombatUiController : MonoBehaviour
     }
     
     
+    //TODO: skills scrolling with dots showing the ones that are not rendered 
+    
     public void SkillTabVisibility(bool isVisible, Transform cameraTarget = null, List<SkillNames> skills = null, PlayerUnit playerUnit = null)
     {
         if (isVisible && skills is { Count: > 0 } && playerUnit && cameraTarget)
@@ -61,16 +65,19 @@ public class PlayerCombatUiController : MonoBehaviour
             
             transform.rotation = cameraTarget.rotation;
 
+            //TODO: replace creating with enable/disable since you won't be using new generated buttons
             var halfHeight = skillHeightDifference * (skills.Count -1) / 2 ;
             var halfAngle = skillAngle * (skills.Count-1) / 2;
-            for (int i = 0; i < skills.Count; i++)
+            for (int i = 0; i < 3; i++)
             {
-                var skillObj = Instantiate(skillButtonPrefab, transform);
+                if (skills.Count == i) break;
+                var skillObj = Instantiate(skillButtonPrefab[i], transform);
                 Skill skill = Skill.GetSkill(skills[i]);
 
                 skillObj.transform.Find("Skill Name").GetComponent<TextMeshProUGUI>().text = skill.skillName;
-                skillObj.transform.Find("Skill Cost").GetComponent<TextMeshProUGUI>().text =
+                skillObj.transform.Find("CostImage/Skill Cost").GetComponent<TextMeshProUGUI>().text =
                     skill.skillCost.ToString();
+                skillObj.transform.Find("Skill Description").GetComponent<TextMeshProUGUI>().text = skill.skillDescription;
                 
                 
                 var desiredRot = Quaternion.Euler(0, 0, -skillAngle * i + halfAngle);
@@ -80,12 +87,12 @@ public class PlayerCombatUiController : MonoBehaviour
                 var skillButton = skillObj.GetComponent<Button>();
                 skillButton.onClick.AddListener(() =>
                 {
-                    skillDescription.text = "";
                     playerUnit.SelectedSkill = skill;
                 });
                 skillButton.GetComponent<GameButton>().OnSelectEvent += () =>
                 {
-                    skillDescription.text = skill.skillDescription;
+                    currentSelectedSkill = skill;
+                    currentSelectedSkillButton = skillButton;
                 };
                 if(playerUnit.CurrentSP < skill.skillCost)
                     skillButton.interactable = false;
@@ -130,10 +137,26 @@ public class PlayerCombatUiController : MonoBehaviour
             {
                 t.gameObject.SetActive(true);
             }
-            skillDescription.text = "";
             BattleSystem.system.DeselectButton();
 
             transform.rotation = initialTransformRotation;
+        }
+    }
+
+    public void ShowSkillDetails()
+    {
+        var description = currentSelectedSkillButton.transform.Find("Skill Description");
+        if (description.gameObject.activeSelf)
+        {
+            currentSelectedSkillButton.transform.Find("Skill Name").gameObject.SetActive(true);
+            currentSelectedSkillButton.transform.Find("Skill Cost").gameObject.SetActive(true);
+            description.gameObject.SetActive(false);
+        }
+        else
+        {
+            currentSelectedSkillButton.transform.Find("Skill Name").gameObject.SetActive(false);
+            currentSelectedSkillButton.transform.Find("Skill Cost").gameObject.SetActive(false);
+            description.gameObject.SetActive(true);
         }
     }
 }
