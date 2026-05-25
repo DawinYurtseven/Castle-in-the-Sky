@@ -448,7 +448,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff0055c5b11116947960f2778bb117cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerUnit
-  strength: 200000
+  strength: 2
   constitution: 2
   speed: 2
   intelligence: 2
@@ -1597,13 +1597,13 @@ MonoBehaviour:
   - {fileID: 5966344462515643370}
   - {fileID: 6097844119587268933}
   - {fileID: 8250658484135557833}
-  angleInBetween: 20
-  horizontalDistance: 30
-  verticalDistance: 2
+  baseButtonShader: {fileID: 0}
   skillDistance: 65
   skillAngle: 5
   skillMaxOffset: 7
   skillHeightDifference: 3
-  skillButtonPrefab: {fileID: 5794203137438285747, guid: abf859f2b18c25b4eabe9d03564d4c14, type: 3}
+  skillButtonPrefab:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   skillButtons: []
-  skillDescription: {fileID: 0}
