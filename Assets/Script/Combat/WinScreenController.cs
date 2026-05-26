@@ -18,15 +18,20 @@ public class WinScreenController : MonoBehaviour
     
     private RectTransform rectTransform;
 
+    //TODO: do a proper cleanup of the scene with all game objects that got instantiated deleted and the progress of the characters saved.
+    //make sure to not save it to the prefab tho
+    
     //called when the game is won
     private void OnEnable()
     {
         rectTransform = GetComponent<RectTransform>();
         
         //replace with animations
+        var screenHeight = Screen.height;
+        var screenWidth = Screen.width;
         
         var stats = Instantiate(buttonPrefab,transform);
-        stats.transform.localPosition = new Vector3(rectTransform.rect.width * 1.5f,rectTransform.rect.height * 0.25f );
+        stats.transform.localPosition = new Vector3(screenWidth * 1.5f,screenHeight * 0.5f );
         stats.name = "Stats";
         stats.GetComponentInChildren<TMP_Text>().text = "STATS";
         stats.GetComponent<Animator>().SetTrigger(Enter);
@@ -34,7 +39,7 @@ public class WinScreenController : MonoBehaviour
         createdObjects.Add(stats);
         
         var skills = Instantiate(buttonPrefab,transform);
-        skills.transform.localPosition = new Vector3(rectTransform.rect.width * 1.5f, 0);
+        skills.transform.localPosition = new Vector3(screenWidth * 1.5f, 0);
         skills.name = "Skills";
         skills.GetComponentInChildren<TMP_Text>().text = "SKILLS";
         skills.GetComponent<Animator>().SetTrigger(Enter);
@@ -42,7 +47,7 @@ public class WinScreenController : MonoBehaviour
         createdObjects.Add(skills);
         
         var items = Instantiate(buttonPrefab,transform);
-        items.transform.localPosition = new Vector3(rectTransform.rect.width * 1.5f, rectTransform.rect.height * -0.25f);
+        items.transform.localPosition = new Vector3(screenWidth * 1.5f, screenHeight * -0.5f);
         items.name = "Items";
         items.GetComponentInChildren<TMP_Text>().text = "ITEMS";
         items.GetComponent<Animator>().SetTrigger(Enter);
@@ -111,8 +116,9 @@ public class WinScreenController : MonoBehaviour
         {
             if (allocatable == 0) 
             {
+                Map.System.ReturnToMap();
                 //TODO: end the screen and go to menu
-                Debug.Log("YEeeees");
+                gameObject.SetActive(false);
             }
            
         });
@@ -193,6 +199,8 @@ public class WinScreenController : MonoBehaviour
             StartCoroutine(OnTimeClickEvent( skill1, others, animator1, otherAnimators,() =>{}));
             
             //TODO: MoveToMap()
+            Map.System.ReturnToMap();
+            gameObject.SetActive(false);
         });
         skill2.GetComponent<Button>().onClick.AddListener(() =>
         {
@@ -214,6 +222,8 @@ public class WinScreenController : MonoBehaviour
             StartCoroutine(OnTimeClickEvent( skill2, others, animator2, otherAnimators,() =>{}));
 
             //TODO: MoveToMap()
+            Map.System.ReturnToMap();
+            gameObject.SetActive(false);
         });
         skill3.GetComponent<Button>().onClick.AddListener(() =>
         {
@@ -237,7 +247,8 @@ public class WinScreenController : MonoBehaviour
             StartCoroutine(OnTimeClickEvent( skill3, others, animator3, otherAnimators,() =>{} ));
             
             //TODO: MoveToMap()
-
+            Map.System.ReturnToMap();
+            gameObject.SetActive(false);
         });
         
     }
@@ -300,6 +311,8 @@ public class WinScreenController : MonoBehaviour
             StartCoroutine(OnTimeClickEvent( item1, others, animator1, otherAnimators,() =>{}));
             
             //TODO: MoveToMap()
+            Map.System.ReturnToMap();
+            gameObject.SetActive(false);
         });
         item2.GetComponent<Button>().onClick.AddListener(() =>
         {
@@ -320,6 +333,8 @@ public class WinScreenController : MonoBehaviour
             StartCoroutine(OnTimeClickEvent( item2, others, animator2, otherAnimators,() =>{}));
 
             //TODO: MoveToMap()
+            Map.System.ReturnToMap();
+            gameObject.SetActive(false);
         });
         item3.GetComponent<Button>().onClick.AddListener(() =>
         {
@@ -340,15 +355,14 @@ public class WinScreenController : MonoBehaviour
             StartCoroutine(OnTimeClickEvent(item3, others, animator3, otherAnimators,() =>{} ));
             
             //TODO: MoveToMap()
-
+            Map.System.ReturnToMap();
+            gameObject.SetActive(false);
         });
 
         //await animations type shit.
 
         //make new 3 buttons for each item
     }
-    
-    //TODO: make a MoveToMap() function
 
     private IEnumerator OnTimeClickEvent(GameObject target, List<GameObject> others, Animator animator,
         List<Animator> otherAnimators, Action method = null)

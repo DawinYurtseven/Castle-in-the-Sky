@@ -12,8 +12,12 @@ public class Node : MonoBehaviour
         Story,
     }
     
+    public List<Node> previousNodes = new List<Node>();
+    public List<Node> nextNodes = new List<Node>();
     public NodeType type;
-    public int level;
+    public int level, width;
+    
+    public GameObject lineRendererPrefab;
     
     public void CreateNode()
     {
@@ -25,6 +29,8 @@ public class Node : MonoBehaviour
                 //I WANNA FIIIIIIIGHT~!!! WITH MY LIFE ON THE LIIIIINE!!!
                 button.onClick.AddListener(() =>
                 {
+                    Map.System.gameObject.SetActive(false);
+                    BattleSystem.system.gameObject.SetActive(true);
                     BattleSystem.system.enemyUnits.Clear();
                     BattleSystem.system.playerUnits.Clear();
                     List<EnemyUnit> range = new ();
@@ -33,10 +39,10 @@ public class Node : MonoBehaviour
                     for (int i = 0; i < numRange; i++)
                     {
                         //Get a better method for this depending on the level.
-                        var random = Random.Range(0, Map.EnemyUnitAssetList.Count);
-                        range.Add(Map.EnemyUnitAssetList[random]);
+                        var random = Random.Range(0, Map.System.enemyUnitAssetList.Count);
+                        range.Add(Map.System.enemyUnitAssetList[random]);
                     }
-                    BattleSystem.system.playerUnits.AddRange(Map.system.currentPlayerUnits);
+                    BattleSystem.system.playerUnits.AddRange(Map.System.currentPlayerUnits);
                     BattleSystem.system.enemyUnits.AddRange(range);
                     
                     BattleSystem.system.StartOfCombat();
@@ -50,5 +56,15 @@ public class Node : MonoBehaviour
                 break;
         }
         
+    }
+
+    public void ConnectLine(Vector3 position)
+    {
+        var temp = Instantiate(lineRendererPrefab, transform);
+        var linerend = temp.GetComponent<LineRenderer>();
+        linerend.useWorldSpace = true;
+        linerend.SetPositions(new []{transform.position,position});
+        linerend.startColor = Color.blue;
+        linerend.endColor = Color.blue;
     }
 }

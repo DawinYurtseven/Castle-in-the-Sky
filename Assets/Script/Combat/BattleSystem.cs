@@ -1,11 +1,14 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using TMPro;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.Rendering;
+using UnityEngine.Splines;
 using UnityEngine.UI;
 
 public class BattleSystem : MonoBehaviour
@@ -34,7 +37,7 @@ public class BattleSystem : MonoBehaviour
     /// </summary>
     [SerializeField] private Transform[] cameraTargets;
     
-    [SerializeField] private Transform[] playerPositionTargets, enemyPositionTargets;
+    [SerializeField] private SplineContainer playerPositionTargets, enemyPositionTargets;
 
     public Transform inFrontOfEnemies, inFrontOfPlayers;
     [SerializeField] private GameObject winCanvas, loseCanvas;
@@ -55,7 +58,7 @@ public class BattleSystem : MonoBehaviour
 
         battleCamera ??= Camera.main;
 
-        //TODO: instantiate the GUI here
+        //TODO: make a smarter way to enable gui. animations on enable would work
         gameGUI.SetActive(true);
         //TODO: better work than this search part. maybe custom script? 
         playerValueHorizontalGameObject = gameGUI.transform.Find("Player value horizontal").gameObject;
@@ -65,16 +68,24 @@ public class BattleSystem : MonoBehaviour
 
     public void StartOfCombat()
     {
+        
         for(int i = 0; i < playerUnits.Count; i++)
         {
-            playerUnits[i].transform.position = playerPositionTargets[i].position;
-            playerUnits[i].transform.rotation = playerPositionTargets[i].rotation;
+            var vec = playerPositionTargets.EvaluatePosition(1f / (playerUnits.Count + 1) * (i + 1));
+            Vector3 startPosition = new Vector3(vec.x, vec.y, vec.z) + Vector3.up * 0.5f;
+            var temp = Instantiate(playerUnits[i], startPosition, Quaternion.identity);
+            //TODO: Take the spline and cut it up in the amount of units per side. then assign the positions and rotations based on the new cut up splines.
+            temp.transform.LookAt(playerPositionTargets.transform.parent.transform);
+            playerUnits[i] = temp;
         }
 
         for (int i = 0; i < enemyUnits.Count; i++)
         {
-            enemyUnits[i].transform.position = enemyPositionTargets[i].position;
-            enemyUnits[i].transform.rotation = enemyPositionTargets[i].rotation;
+            var vec = enemyPositionTargets.EvaluatePosition(1f/(enemyUnits.Count + 1) * (i+1));
+            Vector3 startPosition = new Vector3(vec.x, vec.y, vec.z) + Vector3.up * 0.5f;
+            var temp = Instantiate(enemyUnits[i], startPosition, Quaternion.identity);
+            temp.transform.LookAt(enemyPositionTargets.transform.parent.transform);
+            enemyUnits[i] = temp;
         }
 
         SetAllPlayerValues();
@@ -141,6 +152,8 @@ public class BattleSystem : MonoBehaviour
         }
     }
 
+    
+    
     private void EndOfCombat(bool playerWon)
     {
         //return control to UI element type I guess...
