@@ -2955,7 +2955,7 @@ MonoBehaviour:
   m_ActionEvents:
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 1786990423}
         m_TargetAssemblyTypeName: InputSystemWrapper, Assembly-CSharp
         m_MethodName: Submit
         m_Mode: 0
@@ -2971,7 +2971,7 @@ MonoBehaviour:
     m_ActionName: 'Combat/submit[/Keyboard/space,/DualSenseGamepadHID/buttonSouth]'
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 1786990423}
         m_TargetAssemblyTypeName: InputSystemWrapper, Assembly-CSharp
         m_MethodName: Cancel
         m_Mode: 0
@@ -2987,7 +2987,7 @@ MonoBehaviour:
     m_ActionName: 'Combat/cancel[/Keyboard/escape,/DualSenseGamepadHID/buttonEast]'
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 1786990423}
         m_TargetAssemblyTypeName: InputSystemWrapper, Assembly-CSharp
         m_MethodName: WestButton
         m_Mode: 0
@@ -3003,7 +3003,7 @@ MonoBehaviour:
     m_ActionName: 'Combat/skill tab[/Keyboard/e,/DualSenseGamepadHID/buttonWest]'
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 1786990423}
         m_TargetAssemblyTypeName: InputSystemWrapper, Assembly-CSharp
         m_MethodName: NorthButton
         m_Mode: 0
@@ -3019,7 +3019,7 @@ MonoBehaviour:
     m_ActionName: 'Combat/inspect[/Keyboard/q,/DualSenseGamepadHID/rightShoulder]'
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 1786990423}
         m_TargetAssemblyTypeName: InputSystemWrapper, Assembly-CSharp
         m_MethodName: Navigate
         m_Mode: 0
@@ -3034,7 +3034,7 @@ MonoBehaviour:
     m_ActionId: 0ac83447-5c3c-4714-b24b-9367fc04f939
     m_ActionName: 'Combat/navigate[/Keyboard/w,/Keyboard/s,/Keyboard/a,/Keyboard/d,/DualSenseGamepadHID/dpad/up,/DualSenseGamepadHID/dpad/down,/DualSenseGamepadHID/dpad/left,/DualSenseGamepadHID/dpad/right]'
   m_NeverAutoSwitchControlSchemes: 0
-  m_DefaultControlScheme: 
+  m_DefaultControlScheme: controller
   m_DefaultActionMap: Combat
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
@@ -3464,12 +3464,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5412059372320585796, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5726985171672694888, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
       propertyPath: m_Name
       value: BattleSystem
       objectReference: {fileID: 0}
+    - target: {fileID: 6307742980792821771, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: playerInput
+      value: 
+      objectReference: {fileID: 1786990422}
     - target: {fileID: 6307742980792821771, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
       propertyPath: battleCamera
       value: 
