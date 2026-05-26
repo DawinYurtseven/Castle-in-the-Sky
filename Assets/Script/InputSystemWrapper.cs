@@ -6,6 +6,7 @@ public class InputSystemWrapper : MonoBehaviour
     private enum State
     {
         Combat,
+        Map,
         Menu,
         Dialogue
     }
@@ -13,6 +14,7 @@ public class InputSystemWrapper : MonoBehaviour
     private State state;
 
     [SerializeField] private BattleSystem battleSystem;
+    [SerializeField] private Map map;
 
     public void Submit(InputAction.CallbackContext context)
     {
@@ -21,6 +23,8 @@ public class InputSystemWrapper : MonoBehaviour
         {
             case State.Combat:
                 battleSystem.Submit();
+                break;
+            case State.Map:
                 break;
             case State.Menu:
                 break;

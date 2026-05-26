@@ -1,11 +1,14 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using TMPro;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.Rendering;
+using UnityEngine.Splines;
 using UnityEngine.UI;
 
 public class BattleSystem : MonoBehaviour
@@ -33,6 +36,8 @@ public class BattleSystem : MonoBehaviour
     /// 2 - view towards the player
     /// </summary>
     [SerializeField] private Transform[] cameraTargets;
+    
+    [SerializeField] private SplineContainer playerPositionTargets, enemyPositionTargets;
 
     public Transform inFrontOfEnemies, inFrontOfPlayers;
     [SerializeField] private GameObject winCanvas, loseCanvas;
@@ -53,24 +58,38 @@ public class BattleSystem : MonoBehaviour
 
         battleCamera ??= Camera.main;
 
-        //TODO: instantiate the GUI here
+        //TODO: make a smarter way to enable gui. animations on enable would work
         gameGUI.SetActive(true);
+        //TODO: better work than this search part. maybe custom script? 
         playerValueHorizontalGameObject = gameGUI.transform.Find("Player value horizontal").gameObject;
         queueHorizontalGameObject = gameGUI.transform.Find("Queue").gameObject;
     }
 
-    void Start()
+
+    public void StartOfCombat()
     {
-        StartOfCombat();
+        
+        for(int i = 0; i < playerUnits.Count; i++)
+        {
+            var vec = playerPositionTargets.EvaluatePosition(1f / (playerUnits.Count + 1) * (i + 1));
+            Vector3 startPosition = new Vector3(vec.x, vec.y, vec.z) + Vector3.up * 0.5f;
+            var temp = Instantiate(playerUnits[i], startPosition, Quaternion.identity);
+            //TODO: Take the spline and cut it up in the amount of units per side. then assign the positions and rotations based on the new cut up splines.
+            temp.transform.LookAt(playerPositionTargets.transform.parent.transform);
+            playerUnits[i] = temp;
+        }
+
+        for (int i = 0; i < enemyUnits.Count; i++)
+        {
+            var vec = enemyPositionTargets.EvaluatePosition(1f/(enemyUnits.Count + 1) * (i+1));
+            Vector3 startPosition = new Vector3(vec.x, vec.y, vec.z) + Vector3.up * 0.5f;
+            var temp = Instantiate(enemyUnits[i], startPosition, Quaternion.identity);
+            temp.transform.LookAt(enemyPositionTargets.transform.parent.transform);
+            enemyUnits[i] = temp;
+        }
+
         SetAllPlayerValues();
-    }
 
-
-    void StartOfCombat()
-    {
-        
-        
-        
         EndOfTurnTrigger += EndOfTurn;
 
         //first, order all the units based on their 'speed' stat
@@ -84,7 +103,6 @@ public class BattleSystem : MonoBehaviour
         {
             unit.BeginningOfCombat();
         }
-
         currentActiveUnit = queue[0];
         PopQueue();
         StartCoroutine(currentActiveUnit.BeginningOfTurn());
@@ -102,17 +120,13 @@ public class BattleSystem : MonoBehaviour
             unit.PassTimeValue(timeValue);
         }
 
+        //TODO: Maybe more animation handling instead of hard code?
         queue.Add(currentUnit);
         OrderQueue();
         //maybe animations or something.
         currentActiveUnit = queue[0];
         PopQueue();
         StartCoroutine(currentActiveUnit.BeginningOfTurn());
-        /*if (currentActiveUnit is PlayerUnit playerUnit)
-        {
-            var index = playerUnits.IndexOf(playerUnit);
-            //TODO: I forgo
-        }*/
     }
 
     public void DeathOfUnit(Unit unit)
@@ -138,6 +152,8 @@ public class BattleSystem : MonoBehaviour
         }
     }
 
+    
+    
     private void EndOfCombat(bool playerWon)
     {
         //return control to UI element type I guess...
