@@ -3,7 +3,7 @@
     "name": "Input Maping",
     "maps": [
         {
-            "name": "Combat",
+            "name": "Base Input",
             "id": "85427cb7-5d3f-4e0c-9197-0a0127ccda53",
             "actions": [
                 {
@@ -25,7 +25,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "skill tab",
+                    "name": "West",
                     "type": "Button",
                     "id": "78139cc9-2ce3-4c52-8311-487af515a6fa",
                     "expectedControlType": "",
@@ -34,7 +34,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "inspect",
+                    "name": "North",
                     "type": "Button",
                     "id": "56fd0d66-6363-4cef-b0b1-fe6646d04cc7",
                     "expectedControlType": "",
@@ -50,6 +50,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "Pause",
+                    "type": "Button",
+                    "id": "555465e8-7824-4b29-ad8e-a744bc2c3eff",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -78,7 +87,7 @@
                 {
                     "name": "",
                     "id": "edf4d475-7162-4d64-bbcd-99289b428936",
-                    "path": "<Keyboard>/escape",
+                    "path": "<Keyboard>/shift",
                     "interactions": "",
                     "processors": "",
                     "groups": ";mouse and keyboard",
@@ -104,7 +113,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";mouse and keyboard",
-                    "action": "skill tab",
+                    "action": "West",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -115,7 +124,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";controller",
-                    "action": "skill tab",
+                    "action": "West",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -126,7 +135,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";mouse and keyboard",
-                    "action": "inspect",
+                    "action": "North",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -137,7 +146,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";controller",
-                    "action": "inspect",
+                    "action": "North",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -250,6 +259,83 @@
                     "action": "navigate",
                     "isComposite": false,
                     "isPartOfComposite": true
+                },
+                {
+                    "name": "2D Vector",
+                    "id": "ce9eb962-9722-451f-8b80-6f58807bdd4e",
+                    "path": "2DVector",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "navigate",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "up",
+                    "id": "a3bb7ebd-ffa8-4d32-8086-fd4c0e9062dd",
+                    "path": "<Gamepad>/leftStick/up",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "navigate",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "down",
+                    "id": "40fab7c9-dc47-4d8f-a480-e08d942cd283",
+                    "path": "<Gamepad>/leftStick/down",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "navigate",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "left",
+                    "id": "26cb45a7-f323-4884-97c9-f97186296178",
+                    "path": "<Gamepad>/leftStick/left",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "navigate",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "right",
+                    "id": "949a8b73-3a48-4cb2-ad24-b5cd8bc5e888",
+                    "path": "<Gamepad>/leftStick/right",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "navigate",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "a657c74b-cc1b-4d92-9c86-d2c3640db192",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pause",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "33af04d9-edb0-4e76-92a2-a80fcf1abcfc",
+                    "path": "<Gamepad>/start",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pause",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         }

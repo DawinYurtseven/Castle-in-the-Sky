@@ -63,8 +63,10 @@ public class Node : MonoBehaviour
         var temp = Instantiate(lineRendererPrefab, transform);
         var linerend = temp.GetComponent<LineRenderer>();
         linerend.useWorldSpace = true;
-        linerend.SetPositions(new []{transform.position,position});
+        linerend.SetPositions(new []{Vector3.zero,position});
         linerend.startColor = Color.blue;
         linerend.endColor = Color.blue;
+        
+        linerend.useWorldSpace = false;
     }
 }

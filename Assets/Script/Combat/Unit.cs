@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
-using UnityEditor;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -129,6 +129,7 @@ public class Unit : MonoBehaviour
 
     //image for Queue and player values
     public Sprite hudImage;
+    public TextMeshProUGUI hudValues;
 
     #endregion
 
@@ -147,21 +148,12 @@ public class Unit : MonoBehaviour
     public UnityAction<Unit,object> SkillUsageTrigger;
 
 
-    protected void Awake()
-    {
-        CalculateStats();
+    
 
-        //Something to instantiate the mesh at the position.
-        startPosition = transform.position;
-
-        //calculate time value at the beginning of combat
-        TimeValue = CalculateTimeValue(2f);
-    }
-
-    private void CalculateStats()
+    private void CalculateStats(bool reset = false)
     {
         //TODO: Balance this shit after playing
-        if (MaxHP == 0)
+        if (MaxHP == 0 || reset)
         {
             MaxHP = CurrentHP = constitution * 10;
         }
@@ -172,7 +164,7 @@ public class Unit : MonoBehaviour
             CurrentHP = Mathf.CeilToInt(percentHP * MaxHP);
         }
 
-        if (MaxSP == 0)
+        if (MaxSP == 0 || reset)
         {
             MaxSP = CurrentSP = intelligence * 5;
         }
@@ -233,6 +225,7 @@ public class Unit : MonoBehaviour
     protected virtual IEnumerator SkillUsage() //change this later
     {
         TimeValue += CalculateTimeValue(SelectedSkill.timeValue);
+        CurrentSP -= SelectedSkill.skillCost;
         //TODO: make skill cost cut with a global function
         bool validAction;
         do
@@ -247,8 +240,15 @@ public class Unit : MonoBehaviour
         yield return EndTurn();
     }
 
-    public virtual void BeginningOfCombat()
+    public void BeginningOfCombat()
     {
+        CalculateStats(true);
+
+        //Something to instantiate the mesh at the position.
+        startPosition = transform.position;
+
+        //calculate time value at the beginning of combat
+        TimeValue = CalculateTimeValue(2f);
         //prep shit here, maybe take this out later when battle system can call these.
         BeginningOfCombatTrigger?.Invoke(this);
     }
@@ -297,6 +297,24 @@ public class Unit : MonoBehaviour
     public void SetCurrentTarget(List<Unit> units)
     {
         currentTarget = units;
+    }
+    
+    public void CalculateHUDValues(Button left = null, Button right = null)
+    {
+        hudValues.text = $"{name}\nHP: {CurrentHP}/{MaxHP}\nSP: {CurrentSP}/{MaxSP}";
+        hudCanvas.gameObject.transform.LookAt(BattleSystem.system.battleCamera.gameObject.transform.position);
+        var navigation = new Navigation();
+        if (left != null)
+        {
+            navigation.selectOnLeft = left;
+        }
+
+        if (right != null)
+        {
+            navigation.selectOnRight = right;
+        }
+
+        selected.navigation = navigation;
     }
 
     #endregion

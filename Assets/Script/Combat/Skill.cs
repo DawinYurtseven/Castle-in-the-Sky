@@ -68,6 +68,7 @@ public abstract class Skill
         {
             foreach (var item in exclude)
             {
+                var i = items.Find((x) => x.name == item.name);
                 items.Remove(item);
             }
         }

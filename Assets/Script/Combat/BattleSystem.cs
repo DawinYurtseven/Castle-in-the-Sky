@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using DG.Tweening;
 using TMPro;
 using Unity.Mathematics;
@@ -48,8 +49,6 @@ public class BattleSystem : MonoBehaviour
 
     private GameObject playerValueHorizontalGameObject, queueHorizontalGameObject;
 
-    private readonly List<Items> gatheredItems = new();
-
     private void Awake()
     {
         if (system == null) system = this;
@@ -65,18 +64,35 @@ public class BattleSystem : MonoBehaviour
         queueHorizontalGameObject = gameGUI.transform.Find("Queue").gameObject;
     }
 
+    private void ResetCombatState()
+    {
+        combatIsOver = false;
+        EndOfTurnTrigger = null;
+        queue.Clear();
+        playerDeaths = 0;
+        enemyDeaths = 0;
+    }
 
     public void StartOfCombat()
     {
+        InputSystemWrapper.instance.SetState(InputSystemWrapper.State.Combat);
+        ResetCombatState();
         
         for(int i = 0; i < playerUnits.Count; i++)
         {
             var vec = playerPositionTargets.EvaluatePosition(1f / (playerUnits.Count + 1) * (i + 1));
             Vector3 startPosition = new Vector3(vec.x, vec.y, vec.z) + Vector3.up * 0.5f;
-            var temp = Instantiate(playerUnits[i], startPosition, Quaternion.identity);
+            var temp = playerUnits[i].gameObject;
+            temp.transform.position = startPosition;
             //TODO: Take the spline and cut it up in the amount of units per side. then assign the positions and rotations based on the new cut up splines.
-            temp.transform.LookAt(playerPositionTargets.transform.parent.transform);
-            playerUnits[i] = temp;
+            temp.transform.rotation = Quaternion.Euler
+            (
+                0, 
+                Quaternion.LookRotation(
+                    temp.transform.position - playerPositionTargets.transform.parent.transform.position, 
+                    Vector3.forward).eulerAngles.y, 
+                0);
+            temp.SetActive(true);
         }
 
         for (int i = 0; i < enemyUnits.Count; i++)
@@ -91,18 +107,19 @@ public class BattleSystem : MonoBehaviour
         SetAllPlayerValues();
 
         EndOfTurnTrigger += EndOfTurn;
-
+        
         //first, order all the units based on their 'speed' stat
-        queue.Clear();
         queue.AddRange(playerUnits);
         queue.AddRange(enemyUnits);
-        OrderQueue();
-
         //trigger their Beginning Of Combat
         foreach (var unit in queue)
         {
             unit.BeginningOfCombat();
         }
+        //then order the queue 
+        OrderQueue();
+
+        
         currentActiveUnit = queue[0];
         PopQueue();
         StartCoroutine(currentActiveUnit.BeginningOfTurn());
@@ -160,32 +177,19 @@ public class BattleSystem : MonoBehaviour
         combatIsOver = true;
         if (playerWon)
         {
+            //main character always the first object
+            winCanvas.GetComponent<WinScreenController>().mainCharacter = playerUnits[0];
             winCanvas?.gameObject.SetActive(true);
+            for (int i = enemyUnits.Count - 1; i >= 0; i--)
+            {
+                Destroy(enemyUnits[i].gameObject);
+            }
+            enemyUnits.Clear();
         }
         else
         {
             loseCanvas?.gameObject.SetActive(true);
         }
-    }
-
-    private void AddItem(Items item, int amount = 1)
-    {
-        List<Unit> units = new();
-        units.AddRange(playerUnits);
-        var foundItem = gatheredItems.Find(items =>
-        {
-            return items.GetType() == item.GetType();
-        });
-
-        if (foundItem == null)
-        {
-            item.Acquire(units, amount);
-        }
-        else
-        {
-            foundItem.Acquire(units, amount);
-        }
-            
     }
 
 
@@ -211,6 +215,7 @@ public class BattleSystem : MonoBehaviour
     {
         EnemyView,
         PlayerView,
+        FullView,
         Base,
     }
 
@@ -219,12 +224,17 @@ public class BattleSystem : MonoBehaviour
     /// this is for when the camera needs to move to a specific position with set angles.
     /// </summary>
     /// <param name="target"></param>
+    /// <param name="cameraTarget"></param>
     /// <returns></returns>
-    ///
+    /// 
     /// 
     public IEnumerator MoveCamera(Transform target, CameraTargets cameraTarget )
     {
         float wantedFOV = 60f;
+
+        int index = 0;
+        float zAxis = 0.0f;
+        Vector3 interpolatedPosition;
         switch (cameraTarget)
         {
             case CameraTargets.Base:
@@ -242,7 +252,7 @@ public class BattleSystem : MonoBehaviour
                     {
                         left = enemyUnits[i - 1].selected;
                     }
-                    else if (i != enemyUnits.Count - 1)
+                    if (i != enemyUnits.Count - 1)
                     {
                         right = enemyUnits[i + 1].selected;
                     }
@@ -267,12 +277,110 @@ public class BattleSystem : MonoBehaviour
                 currentSelectButton = targetUnit.selected;
                 currentSelectButton.Select();
                 targetUnit.SelectHUD(true, battleCamera.transform);
-                var index = enemyUnits.IndexOf((EnemyUnit)targetUnit) + 1;
-                var zAxis = target.eulerAngles.z;
-                Vector3 interpolatedPosition = Vector3.Lerp(enemyUnits[0].transform.position,
+                index = enemyUnits.IndexOf((EnemyUnit)targetUnit) + 1;
+                zAxis = target.eulerAngles.z;
+                interpolatedPosition = Vector3.Lerp(enemyUnits[0].transform.position,
                     enemyUnits[^1].transform.position, index / ((float)enemyUnits.Count + 1));
                 target.LookAt(interpolatedPosition);
                 target.eulerAngles =  new Vector3(target.eulerAngles.x, target.eulerAngles.y, zAxis);
+                break;
+            case CameraTargets.FullView:
+                wantedFOV = 70;
+                for (int i = 0; i < enemyUnits.Count; i++)
+                {
+                    Button left = null, right = null;
+                    enemyUnits[i].selected.GetComponent<GameButton>().OnSelectEvent += () =>
+                    {
+                        MoveValuesForEnemyView(target);
+                    };
+                    if (i != 0)
+                    {
+                        left = enemyUnits[i - 1].selected;
+                    }
+                    else
+                    {
+                        left = playerUnits[i].selected;
+                        playerUnits[i].selected.GetComponent<GameButton>().OnSelectEvent += () =>
+                        {
+                            MoveValuesForPlayerView(target);
+                        };
+                    }
+
+                    if (i != enemyUnits.Count - 1)
+                    {
+                        right = enemyUnits[i + 1].selected;
+                    }
+                    else
+                    {
+                        right = playerUnits[^1].selected;
+                        playerUnits[^1].selected.GetComponent<GameButton>().OnSelectEvent += () =>
+                        {
+                            MoveValuesForPlayerView(target);
+                        };
+                    }
+
+                    enemyUnits[i].CalculateHUDValues(left, right);
+                }
+                for (int i = 0; i < playerUnits.Count; i++)
+                {
+                    Button left = null, right = null;
+                    playerUnits[i].selected.GetComponent<GameButton>().OnSelectEvent += () =>
+                    {
+                        MoveValuesForPlayerView(target);
+                    };
+                    if (i != 0)
+                    {
+                        left = playerUnits[i - 1].selected;
+                    }
+                    else
+                    {
+                        left = enemyUnits[i].selected;
+                        enemyUnits[i].selected.GetComponent<GameButton>().OnSelectEvent += () =>
+                        {
+                            MoveValuesForEnemyView(target);
+                        };
+                    }
+
+                    if (i != playerUnits.Count - 1)
+                    {
+                        right = playerUnits[i + 1].selected;
+                    }
+                    else
+                    {
+                        right = enemyUnits[^1].selected;
+                        enemyUnits[^1].selected.GetComponent<GameButton>().OnSelectEvent += () =>
+                        {
+                            MoveValuesForEnemyView(target);
+                        };
+                    }
+                    
+                    playerUnits[i].CalculateHUDValues(left, right);
+                }
+                
+                if (targetUnit == null || targetUnit is not EnemyUnit)
+                {
+                    for (int i = 0; i < enemyUnits.Count; i++)
+                    {
+                        if (enemyUnits[i].HP > 0)
+                        {
+                            targetUnit = enemyUnits[i];
+                            break;
+                        }
+                    }
+                }
+                
+                //TODO: make this player unit specific for enemy view and not rotate the z axis
+
+                currentSelectButton = targetUnit.selected;
+                currentSelectButton.Select();
+                targetUnit.SelectHUD(true, battleCamera.transform);
+                index = enemyUnits.IndexOf((EnemyUnit)targetUnit) + 1;
+                zAxis = target.eulerAngles.z;
+                interpolatedPosition = Vector3.Lerp(enemyUnits[0].transform.position,
+                    enemyUnits[^1].transform.position, index / ((float)enemyUnits.Count + 1));
+                target.LookAt(interpolatedPosition);
+                target.eulerAngles =  new Vector3(target.eulerAngles.x, target.eulerAngles.y, zAxis);
+                
                 break;
         }
         
@@ -283,6 +391,36 @@ public class BattleSystem : MonoBehaviour
 
         
         
+    }
+
+    private void MoveValuesForEnemyView(Transform target)
+    {
+        float wantedFOV = 70f;
+        var index = enemyUnits.IndexOf((EnemyUnit)targetUnit) + 1;
+        var zAxis = target.eulerAngles.z;
+        Vector3 interpolatedPosition = Vector3.Lerp(enemyUnits[0].transform.position,
+            enemyUnits[^1].transform.position, index / ((float)enemyUnits.Count + 1));
+        target.LookAt(interpolatedPosition);
+        target.eulerAngles = new Vector3(target.eulerAngles.x, target.eulerAngles.y, zAxis);
+        battleCamera.DOFieldOfView(wantedFOV, 0.2f).SetEase(Ease.OutExpo);
+        battleCamera.transform.DOMove(target.position, 0.2f).SetEase(Ease.OutExpo);
+        battleCamera.transform.DORotate(target.rotation.eulerAngles, 0.2f).SetEase(Ease.OutExpo);
+
+    }
+
+    private void MoveValuesForPlayerView(Transform target)
+    {
+        float wantedFOV = 60f;
+        var nextIndex = playerUnits.IndexOf((PlayerUnit)targetUnit) + 1;
+        var nextTarget = cameraTargets[2];
+        var nextZAxis = nextTarget.eulerAngles.z;
+        Vector3 nextInterpolatedPosition = Vector3.Lerp(playerUnits[0].transform.position,
+            playerUnits[^1].transform.position, nextIndex / ((float)playerUnits.Count + 1));
+        nextTarget.LookAt(nextInterpolatedPosition);
+        nextTarget.eulerAngles =  new Vector3(nextTarget.eulerAngles.x, nextTarget.eulerAngles.y, nextZAxis);
+        battleCamera.DOFieldOfView(wantedFOV, 0.2f).SetEase(Ease.OutExpo);
+        battleCamera.transform.DOMove(nextTarget.position, 0.2f).SetEase(Ease.OutExpo);
+        battleCamera.transform.DORotate(nextTarget.rotation.eulerAngles, 0.2f).SetEase(Ease.OutExpo);
     }
 
     public void UpdatePlayerValues(PlayerUnit playerUnit)
@@ -590,9 +728,9 @@ public class BattleSystem : MonoBehaviour
             {
                 SetCurrentSelectButton((Button)selectable);
                 //frendly unit
-                if (selectable.transform.parent.TryGetComponent(typeof(UnitViewComponent), out var unitComponent ))
+                if (selectable.transform.parent.transform.parent.TryGetComponent(typeof(Unit), out var unitComponent ))
                 {
-                    var unit = (Unit)unitComponent.transform.parent.GetComponent(typeof(Unit));
+                    var unit = (Unit)unitComponent.GetComponent(typeof(Unit));
                     if (unit == null)
                     {
                         Debug.Log("Tough luck");
@@ -601,28 +739,11 @@ public class BattleSystem : MonoBehaviour
                     targetUnit?.SelectHUD(false);
                     targetUnit = unit;
                     targetUnit.SelectHUD(true);
-                    int index;
-                    Vector3 interpolatedPosition;
-                    if (unit is EnemyUnit enemy)
+                    if (selectable.gameObject.TryGetComponent(typeof(GameButton), out var go))
                     {
-                        index = enemyUnits.IndexOf(enemy) + 1;
-                        interpolatedPosition = Vector3.Lerp(enemyUnits[0].transform.position,
-                            enemyUnits[^1].transform.position, index / ((float)enemyUnits.Count + 1));
+                        var button = go.GetComponent<GameButton>();
+                        button.OnSelectEvent.Invoke();
                     }
-                    else
-                    {
-                        index = playerUnits.IndexOf((PlayerUnit)unit) + 1;
-                        interpolatedPosition = Vector3.Lerp(playerUnits[0].transform.position,
-                            playerUnits[^1].transform.position, index / ((float)playerUnits.Count + 1));
-                    }
-
-                    //TODO: replace the cameraTargets[1] with the target from the playerUnit
-                    cameraTargets[1].position = battleCamera.transform.position;
-                    cameraTargets[1].rotation = battleCamera.transform.rotation;
-                    var zAxis = battleCamera.transform.eulerAngles.z;
-                    cameraTargets[1].LookAt(interpolatedPosition);
-                    cameraTargets[1].eulerAngles = new Vector3(cameraTargets[1].eulerAngles.x, cameraTargets[1].eulerAngles.y, zAxis);
-                    StartCoroutine(MoveCamera(cameraTargets[1], CameraTargets.Base));
                 }
                 /*else if (selectable.TryGetComponent(typeof(GameButton), out var gameButton))
                 {

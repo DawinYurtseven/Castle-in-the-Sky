@@ -20,10 +20,25 @@ public class WinScreenController : MonoBehaviour
 
     //TODO: do a proper cleanup of the scene with all game objects that got instantiated deleted and the progress of the characters saved.
     //make sure to not save it to the prefab tho
+
+    private void ResetScreen()
+    {
+        for (int i = transform.childCount - 1; i >= 0; i--)
+        {
+            Destroy(transform.GetChild(i).gameObject);
+        }
+    }
     
     //called when the game is won
     private void OnEnable()
     {
+        //TODO: Do a reset
+        
+        ResetScreen();
+        
+        //TODO: Some form of level up showcase?
+        
+        //Get screen value
         rectTransform = GetComponent<RectTransform>();
         
         //replace with animations

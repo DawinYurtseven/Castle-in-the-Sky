@@ -102,7 +102,8 @@ public abstract class Items
         {
             foreach (var item in exclude)
             {
-                items.Remove(item);
+                var i = items.Find((x) => x.ItemName == item.ItemName);
+                items.Remove(i);
             }
         }
         var index = Random.Range(0, items.Count);

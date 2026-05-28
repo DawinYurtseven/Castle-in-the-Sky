@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 4307352905880556915}
   - component: {fileID: 454303946965171184}
   - component: {fileID: 8067291542539566122}
+  - component: {fileID: 6041810983955769933}
   m_Layer: 0
   m_Name: seleected
   m_TagString: Untagged
@@ -120,6 +121,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &6041810983955769933
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3213404966654920991}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce67d5b6d0ea3eb409393d2f1b63ad7d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameButton
 --- !u!1 &8012127345190636561
 GameObject:
   m_ObjectHideFlags: 0
@@ -302,7 +315,6 @@ GameObject:
   - component: {fileID: 6894125885573825827}
   - component: {fileID: 679220116369599030}
   - component: {fileID: 6431263085291578533}
-  - component: {fileID: 5077551922099455920}
   m_Layer: 0
   m_Name: Enemy View
   m_TagString: Untagged
@@ -394,18 +406,6 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
---- !u!114 &5077551922099455920
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8825964533218835900}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b440f0b2f0e91e3428d874613c69689b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UnitViewComponent
 --- !u!1 &8879554493622864232
 GameObject:
   m_ObjectHideFlags: 0

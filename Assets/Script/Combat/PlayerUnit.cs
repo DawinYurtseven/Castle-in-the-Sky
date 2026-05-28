@@ -18,11 +18,6 @@ public class PlayerUnit : Unit
 
     [SerializeField] private PlayerCombatUiController playerCombatUiController;
 
-    private new void Awake()
-    {
-        base.Awake();
-    }
-
     
     public List<Tuple<string, int>> GetStats()
     {
@@ -107,6 +102,7 @@ public class PlayerUnit : Unit
         //call animation with selectedSkill.animationName here but idk
         yield return new WaitForSeconds(0.3f);
         yield return base.SkillUsage();
+        BattleSystem.system.UpdatePlayerValues(this);
     }
 
     public override void TakeDamage(float damage)
@@ -161,6 +157,7 @@ public class PlayerUnit : Unit
                 yield return BattleSystem.system.MoveCamera(cameraTargets[2], BattleSystem.CameraTargets.EnemyView);
                 break;
             case CombatState.Skill:
+                if (SelectedSkill.skillCost > CurrentSP) yield break;
                 playerCombatUiController.SkillTabVisibility(false);
                 if (SelectedSkill.type == SkillTypes.Damage || SelectedSkill.type == SkillTypes.Debuff)
                 {
@@ -293,7 +290,7 @@ public class PlayerUnit : Unit
             stateStack.Push(CombatState.Inspect);
             stateStack.Push(CombatState.TargetEnemy);
             playerCombatUiController.SetVisibility(false);
-            yield return BattleSystem.system.MoveCamera(cameraTargets[2], BattleSystem.CameraTargets.EnemyView);
+            yield return BattleSystem.system.MoveCamera(cameraTargets[2], BattleSystem.CameraTargets.FullView);
         }
         else if (state == CombatState.Skill)
         {

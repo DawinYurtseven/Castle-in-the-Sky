@@ -137,7 +137,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &33229706
 RectTransform:
   m_ObjectHideFlags: 0
@@ -259,12 +259,12 @@ MonoBehaviour:
   currentNode: {fileID: 0}
   systems:
   - {fileID: 332834709}
-  mapGameObject: {fileID: 33229705}
+  mapImage: {fileID: 0}
   nodePrefab: {fileID: 576747265433828519, guid: da75ed85505a90249b46cd910b3204ab, type: 3}
   startPos: {x: 0, y: 0, z: -45}
-  width: 290
-  depth: 80
-  levelDepth: 10
+  width: 145
+  depth: 60
+  levelDepth: 15
 --- !u!4 &40551819
 Transform:
   m_ObjectHideFlags: 0
@@ -298,7 +298,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &230409243
 RectTransform:
   m_ObjectHideFlags: 0
@@ -404,7 +404,6 @@ MonoBehaviour:
   hudCanvas: {fileID: 0}
   selected: {fileID: 0}
   hudImage: {fileID: 0}
-  hudValues: {fileID: 0}
   cameraTargets: []
   playerCombatUiController: {fileID: 0}
 --- !u!1 &705507993
@@ -596,8 +595,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.38268343, y: 0, z: 0, w: 0.92387956}
-  m_LocalPosition: {x: 0, y: 250, z: -180}
+  m_LocalRotation: {x: 0.2588191, y: 0, z: 0, w: 0.9659258}
+  m_LocalPosition: {x: 0, y: 80, z: -120}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1141,25 +1140,9 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 0ac83447-5c3c-4714-b24b-9367fc04f939
     m_ActionName: 'Combat/navigate[/Keyboard/w,/Keyboard/s,/Keyboard/a,/Keyboard/d,/DualSenseGamepadHID/dpad/up,/DualSenseGamepadHID/dpad/down,/DualSenseGamepadHID/dpad/left,/DualSenseGamepadHID/dpad/right]'
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1786990423}
-        m_TargetAssemblyTypeName: InputSystemWrapper, Assembly-CSharp
-        m_MethodName: Pause
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: 555465e8-7824-4b29-ad8e-a744bc2c3eff
-    m_ActionName: 'Base Input/Pause[/Keyboard/escape,/DualSenseGamepadHID/start]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: controller
-  m_DefaultActionMap: Base Input
+  m_DefaultActionMap: Combat
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
 --- !u!114 &1786990423
@@ -1175,7 +1158,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InputSystemWrapper
   battleSystem: {fileID: 271161166}
-  map: {fileID: 40551818}
+  map: {fileID: 0}
 --- !u!1001 &657222546890148984
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1403,34 +1386,6 @@ PrefabInstance:
     - target: {fileID: 7612345400426154662, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 7904981863880879093, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.90485173
-      objectReference: {fileID: 0}
-    - target: {fileID: 7904981863880879093, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0.027150327
-      objectReference: {fileID: 0}
-    - target: {fileID: 7904981863880879093, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0.42485905
-      objectReference: {fileID: 0}
-    - target: {fileID: 7904981863880879093, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0.0010392949
-      objectReference: {fileID: 0}
-    - target: {fileID: 7904981863880879093, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 2.867
-      objectReference: {fileID: 0}
-    - target: {fileID: 7904981863880879093, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: -50.334
-      objectReference: {fileID: 0}
-    - target: {fileID: 7904981863880879093, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: -1.216
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:

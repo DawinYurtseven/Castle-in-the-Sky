@@ -134,6 +134,7 @@ GameObject:
   - component: {fileID: 8082924101955903610}
   - component: {fileID: 7019073405892690846}
   - component: {fileID: 6925353253600159198}
+  - component: {fileID: 7053389220489208401}
   m_Layer: 0
   m_Name: seleected
   m_TagString: Untagged
@@ -242,6 +243,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &7053389220489208401
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2072177225303740285}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce67d5b6d0ea3eb409393d2f1b63ad7d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameButton
 --- !u!1 &2328172828759349704
 GameObject:
   m_ObjectHideFlags: 0
@@ -323,7 +336,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &173086505946394059
 Transform:
   m_ObjectHideFlags: 0
@@ -457,6 +470,7 @@ MonoBehaviour:
   hudCanvas: {fileID: 3177632962379265972}
   selected: {fileID: 6925353253600159198}
   hudImage: {fileID: 21300000, guid: 52fe3477a9855174f858732f340dcbd2, type: 3}
+  hudValues: {fileID: 2575812287367121644}
   cameraTargets:
   - {fileID: 3076511880455798361}
   - {fileID: 8042265415148835477}
@@ -595,7 +609,6 @@ GameObject:
   - component: {fileID: 3177632962379265972}
   - component: {fileID: 5810395100833277297}
   - component: {fileID: 5829971413696067618}
-  - component: {fileID: 8733045925947710789}
   m_Layer: 0
   m_Name: Player View
   m_TagString: Untagged
@@ -687,18 +700,6 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
---- !u!114 &8733045925947710789
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5606049421444575874}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b440f0b2f0e91e3428d874613c69689b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UnitViewComponent
 --- !u!1 &5608837547662194080
 GameObject:
   m_ObjectHideFlags: 0
