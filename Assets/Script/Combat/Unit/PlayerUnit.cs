@@ -273,13 +273,21 @@ public class PlayerUnit : Unit
 
     public IEnumerator SkillTab()
     {
-        if (stateStack.Peek() != CombatState.Root) yield break;
-        playerCombatUiController.SetVisibility(false);
-        stateStack.Push(CombatState.Skill);
-        yield return BattleSystem.system.MoveCamera(cameraTargets[1], BattleSystem.CameraTargets.Base);
-        playerCombatUiController.SkillTabVisibility(true, cameraTargets[1], Skills, this);
-        playerCombatUiController.SetVisibility(true);
-        BattleSystem.system.SetCurrentSelectButton(playerCombatUiController.PeekFirstButton());
+        switch (stateStack.Peek())
+        {
+            
+            case CombatState.Root:
+                playerCombatUiController.SetVisibility(false);
+                stateStack.Push(CombatState.Skill);
+                yield return BattleSystem.system.MoveCamera(cameraTargets[1], BattleSystem.CameraTargets.Base);
+                playerCombatUiController.SkillTabVisibility(true, cameraTargets[1], Skills, this);
+                playerCombatUiController.SetVisibility(true);
+                BattleSystem.system.SetCurrentSelectButton(playerCombatUiController.PeekFirstButton());
+                break;
+            case CombatState.Skill:
+                BattleSystem.system.TriggerSpecificButtonAction();
+                break;
+        }
     }
 
     public IEnumerator Inspect()

@@ -4,7 +4,6 @@ Shader "Combat/CombatButton"
     {
         [MainColor] _BaseColor("Base Color", Color) = (1, 1, 1, 1)
         [MainTexture] _BaseMap("Base Map", 2D) = "white" {}
-        [BrushTexture] _BrushFadeMap("Fade Map", 2D) = "white" {}
         [FadeProgress] _FadeProgress("Fade Progress", Range(0,1)) = 0.0
     }
 
@@ -39,13 +38,10 @@ Shader "Combat/CombatButton"
 
             TEXTURE2D(_BaseMap);
             SAMPLER(sampler_BaseMap);
-            TEXTURE2D(_BrushFadeMap);
-            SAMPLER(sampler_BrushFadeMap);
 
             CBUFFER_START(UnityPerMaterial)
                 half4 _BaseColor;
                 float4 _BaseMap_ST;
-                float4 _BrushFadeMap_ST;
                 float fadeProgress;
             CBUFFER_END
 
@@ -60,11 +56,8 @@ Shader "Combat/CombatButton"
             half4 frag(Varyings IN) : SV_Target
             {
                 half4 color = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, IN.uv);
-                if (color.a == 0)
-                    clip(-0.1);
-
-                half4 fade = SAMPLE_TEXTURE2D(_BrushFadeMap, sampler_BrushFadeMap, IN.uv);
-                clip(fade.r - fadeProgress);
+                
+                clip(1.0 - fadeProgress);
                 return color;
             }
             ENDHLSL

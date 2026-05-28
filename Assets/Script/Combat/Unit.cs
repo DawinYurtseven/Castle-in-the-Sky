@@ -148,7 +148,24 @@ public class Unit : MonoBehaviour
     public UnityAction<Unit,object> SkillUsageTrigger;
 
 
-    
+
+    private void Start()
+    {
+        ResetSelected();
+    }
+
+    public void ResetSelected()
+    {
+        selected.GetComponent<GameButton>().OnSelectEvent = () =>
+        {
+            BattleSystem.system.SetSelection(this);
+        };
+    }
+
+    public void RotateSelected(Transform target)
+    {
+        selected.transform.parent.LookAt(target);
+    }
 
     private void CalculateStats(bool reset = false)
     {

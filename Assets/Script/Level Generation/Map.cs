@@ -11,7 +11,8 @@ public class Map : MonoBehaviour
 
     public List<PlayerUnit> currentPlayerUnits;
 
-    public List<Node> nodes = new List<Node>();
+    public List<Node> nodes = new List<Node>(); 
+    private List<List<Node>> layers = new List<List<Node>>();
     public Node currentNode;
 
     [SerializeField] private List<GameObject> systems = new();
@@ -55,9 +56,6 @@ public class Map : MonoBehaviour
 
         nodes.Clear();
 
-        // 1. Create a jagged list to hold nodes layer by layer
-        List<List<Node>> layers = new List<List<Node>>();
-
         for (int i = 0; i < levelDepth; i++)
         {
             layers.Add(new List<Node>());
@@ -95,7 +93,8 @@ public class Map : MonoBehaviour
                     {
                         for (int k = 0; k < layers[i1 + 1].Count; k++)
                         {
-                            layers[i1 + 1][k].GetComponent<Button>().interactable = true;
+                            if(newNode.nextNodes.Contains(layers[i1 + 1][k]))
+                                layers[i1 + 1][k].GetComponent<Button>().interactable = true;
                         }
                     }
 
@@ -132,9 +131,10 @@ public class Map : MonoBehaviour
                 //prevent overshooting the index
                 if (nextLayerIndexPointer == nextLayerCount) nextLayerIndexPointer--;
                 //prevent undershooting the index
-                else if (
+                else if (nextLayer[nextLayerIndexPointer].previousNodes.Count != 0
+                         &&
                     //when the next connection already has 2 connections and it is not the last one, increase
-                    (
+                    ((
                         nextLayer[nextLayerIndexPointer].previousNodes.Count == 2
                         && nextLayerIndexPointer < nextLayerCount - 1
                         && currentLayerCount != 1
@@ -155,7 +155,7 @@ public class Map : MonoBehaviour
                         && j == currentLayerCount - 1 
                         && nextLayerCount - 1 - nextLayerIndexPointer >=2 
                         )
-                    )  
+                    ) ) 
                     nextLayerIndexPointer++;
                 
                 
@@ -177,7 +177,7 @@ public class Map : MonoBehaviour
                 {
                     nav.selectOnDown = connectNode.previousNodes[0].GetComponent<Button>();
                 }
-
+ 
                 // Enforce at least one connection forward
                 connectNode.nextNodes.Add(nextLayer[nextLayerIndexPointer]);
                 nextLayer[nextLayerIndexPointer].previousNodes.Add(connectNode);
@@ -235,6 +235,14 @@ public class Map : MonoBehaviour
 
     public void ReturnToMap()
     {
+        if (currentNode != null)
+        {
+            foreach (var node in layers[currentNode.level - 1])
+            {
+                node.GetComponent<Button>().interactable = false;
+            }
+        }
+        
         InputSystemWrapper.instance.SetState(InputSystemWrapper.State.Map);
         foreach (var unit in currentPlayerUnits)
         {

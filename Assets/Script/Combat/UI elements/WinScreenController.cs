@@ -46,7 +46,7 @@ public class WinScreenController : MonoBehaviour
         var screenWidth = Screen.width;
         
         var stats = Instantiate(buttonPrefab,transform);
-        stats.transform.localPosition = new Vector3(screenWidth * 1.5f,screenHeight * 0.5f );
+        stats.transform.localPosition = new Vector3(screenWidth * 1.5f,screenHeight * 0.25f );
         stats.name = "Stats";
         stats.GetComponentInChildren<TMP_Text>().text = "STATS";
         stats.GetComponent<Animator>().SetTrigger(Enter);
@@ -62,7 +62,7 @@ public class WinScreenController : MonoBehaviour
         createdObjects.Add(skills);
         
         var items = Instantiate(buttonPrefab,transform);
-        items.transform.localPosition = new Vector3(screenWidth * 1.5f, screenHeight * -0.5f);
+        items.transform.localPosition = new Vector3(screenWidth * 1.5f, screenHeight * -0.25f);
         items.name = "Items";
         items.GetComponentInChildren<TMP_Text>().text = "ITEMS";
         items.GetComponent<Animator>().SetTrigger(Enter);

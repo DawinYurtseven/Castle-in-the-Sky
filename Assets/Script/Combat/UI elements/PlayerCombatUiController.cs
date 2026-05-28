@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class PlayerCombatUiController : MonoBehaviour
 {
-    private static readonly int AlphaClipping = Shader.PropertyToID("_alphaClipping");
+    private static readonly int Progress = Shader.PropertyToID("_Progress");
     private static readonly int BaseMap = Shader.PropertyToID("_BaseMap");
     [SerializeField] private List<Button> rootButtons = new();
     
@@ -28,12 +29,13 @@ public class PlayerCombatUiController : MonoBehaviour
     {
         initialTransformRotation = transform.rotation;
 
+        //TODO also for the skillButtons
         for (int i = 0; i < rootButtons.Count; i++)
         {
             var mat = new Material(baseButtonShader);
             var tex = rootButtons[i].GetComponent<Image>().sprite.texture;
             mat.SetTexture(BaseMap, tex);
-            mat.SetFloat(AlphaClipping, 0.174f);
+            mat.SetFloat(Progress, 0.174f);
             rootButtons[i].GetComponent<Image>().material = mat;
             
         }
@@ -73,12 +75,24 @@ public class PlayerCombatUiController : MonoBehaviour
                 if (skills.Count == i) break;
                 var skillObj = Instantiate(skillButtonPrefab[i], transform);
                 Skill skill = Skill.GetSkill(skills[i]);
-
-                skillObj.transform.Find("Skill Name").GetComponent<TextMeshProUGUI>().text = skill.skillName;
-                skillObj.transform.Find("CostImage/Skill Cost").GetComponent<TextMeshProUGUI>().text =
-                    skill.skillCost.ToString();
-                skillObj.transform.Find("Skill Description").GetComponent<TextMeshProUGUI>().text = skill.skillDescription;
                 
+                skillObj.transform.Find("Cost Image/Skill Cost").GetComponent<TextMeshProUGUI>().text =
+                    skill.skillCost.ToString();
+
+                var skillBaseImage = skillObj.transform.Find("Base Image");
+                skillBaseImage.transform.Find("Skill Description").GetComponent<TextMeshProUGUI>().text = skill.skillDescription;
+                skillBaseImage.transform.Find("Skill Name").GetComponent<TextMeshProUGUI>().text = skill.skillName;
+                
+                var mat = new Material(baseButtonShader);
+                var tex = skillBaseImage.GetComponent<Image>().sprite.texture;
+                mat.SetTexture(BaseMap, tex);
+                mat.SetFloat(Progress, 0.174f);
+                skillBaseImage.GetComponent<Image>().material = mat;
+                var costMat = new Material(baseButtonShader);
+                tex = skillObj.transform.Find("Cost Image").GetComponent<Image>().sprite.texture;
+                costMat.SetTexture(BaseMap, tex);
+                costMat.SetFloat(Progress, 0.174f);
+                skillObj.transform.Find("Cost Image").GetComponent<Image>().material = costMat;
                 
                 var desiredRot = Quaternion.Euler(0, 0, -skillAngle * i + halfAngle);
                 skillObj.GetComponent<RectTransform>().localPosition =desiredRot  * new Vector3 (skillDistance + skillMaxOffset * (i %2 == 0 ? 1 : 0),  -skillHeightDifference * i + halfHeight, 0);
@@ -93,6 +107,16 @@ public class PlayerCombatUiController : MonoBehaviour
                 {
                     currentSelectedSkill = skill;
                     currentSelectedSkillButton = skillButton;
+                };
+                skillButton.GetComponent<GameButton>().OnSpecificAction += () =>
+                {
+                    skillObj.transform.DOLocalRotate(new Vector3(90, 0, 0), 0.1f).SetEase(Ease.Linear).OnComplete(() =>
+                    {
+                        bool active = skillBaseImage.transform.Find("Skill Description").gameObject.activeSelf;
+                        skillBaseImage.transform.Find("Skill Description").gameObject.SetActive( !active);
+                        skillBaseImage.transform.Find("Skill Name").gameObject.SetActive(active);
+                        skillObj.transform.DOLocalRotate(new Vector3(0,0,0), 0.1f).SetEase(Ease.Linear);
+                    });
                 };
                 if(playerUnit.CurrentSP < skill.skillCost)
                     skillButton.interactable = false;

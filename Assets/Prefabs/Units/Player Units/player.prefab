@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 373493664029823091}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.22, y: 0, z: -1.91}
+  m_LocalPosition: {x: 0, y: 0, z: 2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -715,7 +715,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &3076511880455798361
 Transform:
   m_ObjectHideFlags: 0
@@ -1493,13 +1493,13 @@ MonoBehaviour:
   - {fileID: 5966344462515643370}
   - {fileID: 6097844119587268933}
   - {fileID: 8250658484135557833}
-  baseButtonShader: {fileID: 4800000, guid: 2cf87afa9ba173f4d8e39dae14b0266c, type: 3}
+  baseButtonShader: {fileID: 4800000, guid: d758702c01f13764b9ffbbd7cb5b0a16, type: 3}
   skillDistance: 65
-  skillAngle: 5
+  skillAngle: 15
   skillMaxOffset: 7
-  skillHeightDifference: 3
+  skillHeightDifference: 5
   skillButtonPrefab:
   - {fileID: 7563755695980443256, guid: 6d87baae94e8f6448b0f2220dce975d4, type: 3}
   - {fileID: 4277998594853259174, guid: fc79e08599750b84e8564a65ca6ee5b7, type: 3}
-  - {fileID: 7563755695980443256, guid: 6d87baae94e8f6448b0f2220dce975d4, type: 3}
+  - {fileID: 1272818187011805707, guid: f583029ea3bfd494c8fe6927f564e98c, type: 3}
   skillButtons: []

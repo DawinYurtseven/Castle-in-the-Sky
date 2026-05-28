@@ -89,7 +89,7 @@ public class BattleSystem : MonoBehaviour
             (
                 0, 
                 Quaternion.LookRotation(
-                    temp.transform.position - playerPositionTargets.transform.parent.transform.position, 
+                    playerPositionTargets.transform.parent.transform.position - temp.transform.position, 
                     Vector3.forward).eulerAngles.y, 
                 0);
             temp.SetActive(true);
@@ -404,7 +404,10 @@ public class BattleSystem : MonoBehaviour
         target.eulerAngles = new Vector3(target.eulerAngles.x, target.eulerAngles.y, zAxis);
         battleCamera.DOFieldOfView(wantedFOV, 0.2f).SetEase(Ease.OutExpo);
         battleCamera.transform.DOMove(target.position, 0.2f).SetEase(Ease.OutExpo);
-        battleCamera.transform.DORotate(target.rotation.eulerAngles, 0.2f).SetEase(Ease.OutExpo);
+        battleCamera.transform.DORotate(target.rotation.eulerAngles, 0.2f).SetEase(Ease.OutExpo).OnComplete(() =>
+        {
+            targetUnit.RotateSelected(target);
+        });
 
     }
 
@@ -420,7 +423,10 @@ public class BattleSystem : MonoBehaviour
         nextTarget.eulerAngles =  new Vector3(nextTarget.eulerAngles.x, nextTarget.eulerAngles.y, nextZAxis);
         battleCamera.DOFieldOfView(wantedFOV, 0.2f).SetEase(Ease.OutExpo);
         battleCamera.transform.DOMove(nextTarget.position, 0.2f).SetEase(Ease.OutExpo);
-        battleCamera.transform.DORotate(nextTarget.rotation.eulerAngles, 0.2f).SetEase(Ease.OutExpo);
+        battleCamera.transform.DORotate(nextTarget.rotation.eulerAngles, 0.2f).SetEase(Ease.OutExpo).OnComplete(() =>
+        {
+            targetUnit.RotateSelected(nextTarget);
+        });
     }
 
     public void UpdatePlayerValues(PlayerUnit playerUnit)
@@ -687,9 +693,20 @@ public class BattleSystem : MonoBehaviour
         }
     }
 
+    public void SetSelection(Unit selectedUnit)
+    {
+        targetUnit?.SelectHUD(false);
+        targetUnit = selectedUnit;
+        targetUnit.SelectHUD(true);
+    }
+
     public void ClearSelection(bool all = false)
     {
-        if (!all) targetUnit?.SelectHUD(false);
+        if (!all)
+        {
+            targetUnit?.SelectHUD(false);
+            targetUnit?.ResetSelected();
+        }
         else
         {
             List<Unit> temp = new List<Unit>();
@@ -698,6 +715,7 @@ public class BattleSystem : MonoBehaviour
             for (int i = 0; i < temp.Count; i++)
             {
                 temp[i]?.SelectHUD(false);
+                temp[i]?.ResetSelected();
             }
         }
 
@@ -736,20 +754,22 @@ public class BattleSystem : MonoBehaviour
                         Debug.Log("Tough luck");
                         return;
                     }
-                    targetUnit?.SelectHUD(false);
-                    targetUnit = unit;
-                    targetUnit.SelectHUD(true);
                     if (selectable.gameObject.TryGetComponent(typeof(GameButton), out var go))
                     {
                         var button = go.GetComponent<GameButton>();
                         button.OnSelectEvent.Invoke();
                     }
                 }
-                /*else if (selectable.TryGetComponent(typeof(GameButton), out var gameButton))
-                {
-                    
-                }*/
             }
+        }
+    }
+
+    public void TriggerSpecificButtonAction()
+    {
+        if (currentSelectButton.TryGetComponent(typeof(GameButton), out var go))
+        {
+            var button = go.GetComponent<GameButton>();
+            button.OnSpecificAction.Invoke();
         }
     }
 
