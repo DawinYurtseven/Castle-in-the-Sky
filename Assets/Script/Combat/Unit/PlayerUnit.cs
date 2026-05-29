@@ -18,7 +18,7 @@ public class PlayerUnit : Unit
 
     [SerializeField] private PlayerCombatUiController playerCombatUiController;
 
-    
+
     public List<Tuple<string, int>> GetStats()
     {
         List<Tuple<string, int>> stats = new List<Tuple<string, int>>();
@@ -78,7 +78,7 @@ public class PlayerUnit : Unit
     public void AddSkill(Skill skill)
     {
         var foundName = Skills.Find((e) => e.Equals(skill.name));
-        if(foundName == SkillNames.none && skill.name != SkillNames.none)
+        if (foundName == SkillNames.none && skill.name != SkillNames.none)
             Skills.Add(skill.name);
     }
 
@@ -273,21 +273,13 @@ public class PlayerUnit : Unit
 
     public IEnumerator SkillTab()
     {
-        switch (stateStack.Peek())
-        {
-            
-            case CombatState.Root:
-                playerCombatUiController.SetVisibility(false);
-                stateStack.Push(CombatState.Skill);
-                yield return BattleSystem.system.MoveCamera(cameraTargets[1], BattleSystem.CameraTargets.Base);
-                playerCombatUiController.SkillTabVisibility(true, cameraTargets[1], Skills, this);
-                playerCombatUiController.SetVisibility(true);
-                BattleSystem.system.SetCurrentSelectButton(playerCombatUiController.PeekFirstButton());
-                break;
-            case CombatState.Skill:
-                BattleSystem.system.TriggerSpecificButtonAction();
-                break;
-        }
+        if (stateStack.Peek() != CombatState.Root) yield break;
+        playerCombatUiController.SetVisibility(false);
+        stateStack.Push(CombatState.Skill);
+        yield return BattleSystem.system.MoveCamera(cameraTargets[1], BattleSystem.CameraTargets.Base);
+        playerCombatUiController.SkillTabVisibility(true, cameraTargets[1], Skills, this);
+        playerCombatUiController.SetVisibility(true);
+        BattleSystem.system.SetCurrentSelectButton(playerCombatUiController.PeekFirstButton());
     }
 
     public IEnumerator Inspect()
@@ -302,7 +294,7 @@ public class PlayerUnit : Unit
         }
         else if (state == CombatState.Skill)
         {
-            playerCombatUiController.ShowSkillDetails();
+            BattleSystem.system.TriggerSpecificButtonAction();
         }
     }
 

@@ -110,12 +110,28 @@ public class PlayerCombatUiController : MonoBehaviour
                 };
                 skillButton.GetComponent<GameButton>().OnSpecificAction += () =>
                 {
-                    skillObj.transform.DOLocalRotate(new Vector3(90, 0, 0), 0.1f).SetEase(Ease.Linear).OnComplete(() =>
+                    bool active = skillBaseImage.transform.Find("Skill Description").gameObject.activeSelf;
+                    skillObj.transform.DOScale(active ? Vector3.one : Vector3.one * 1.6f, 0.4f);
+                    skillObj.transform.DOLocalRotate(new Vector3(90, 0, 0), 0.025f).SetEase(Ease.Linear).OnComplete(() =>
                     {
-                        bool active = skillBaseImage.transform.Find("Skill Description").gameObject.activeSelf;
                         skillBaseImage.transform.Find("Skill Description").gameObject.SetActive( !active);
                         skillBaseImage.transform.Find("Skill Name").gameObject.SetActive(active);
-                        skillObj.transform.DOLocalRotate(new Vector3(0,0,0), 0.1f).SetEase(Ease.Linear);
+                        skillObj.transform.DOLocalRotate(new Vector3(180,0,0), 0.025f).SetEase(Ease.Linear).OnComplete(() => 
+                            skillObj.transform.DOLocalRotate(new Vector3(1440,0,0), 0.35f, RotateMode.FastBeyond360).SetEase(Ease.OutQuart));
+                    });
+                };
+
+                skillButton.GetComponent<GameButton>().OnDeselectEvent += () =>
+                {
+                    bool active = skillBaseImage.transform.Find("Skill Description").gameObject.activeSelf;
+                    if (!active) return;
+                    skillObj.transform.DOScale(Vector3.one, 0.4f);
+                    skillObj.transform.DOLocalRotate(new Vector3(90, 0, 0), 0.025f).SetEase(Ease.Linear).OnComplete(() =>
+                    {
+                        skillBaseImage.transform.Find("Skill Description").gameObject.SetActive( false);
+                        skillBaseImage.transform.Find("Skill Name").gameObject.SetActive(true);
+                        skillObj.transform.DOLocalRotate(new Vector3(180,0,0), 0.025f).SetEase(Ease.Linear).OnComplete(() => 
+                            skillObj.transform.DOLocalRotate(new Vector3(1800,0,0), 0.35f).SetEase(Ease.OutExpo));
                     });
                 };
                 if(playerUnit.CurrentSP < skill.skillCost)
@@ -169,17 +185,17 @@ public class PlayerCombatUiController : MonoBehaviour
 
     public void ShowSkillDetails()
     {
-        var description = currentSelectedSkillButton.transform.Find("Skill Description");
+        var description = currentSelectedSkillButton.transform.Find("Base Image/Skill Description");
         if (description.gameObject.activeSelf)
         {
-            currentSelectedSkillButton.transform.Find("Skill Name").gameObject.SetActive(true);
-            currentSelectedSkillButton.transform.Find("Skill Cost").gameObject.SetActive(true);
+            currentSelectedSkillButton.transform.Find("Base Image/Skill Name").gameObject.SetActive(true);
+            currentSelectedSkillButton.transform.Find("Cost Image/Skill Cost").gameObject.SetActive(true);
             description.gameObject.SetActive(false);
         }
         else
         {
-            currentSelectedSkillButton.transform.Find("Skill Name").gameObject.SetActive(false);
-            currentSelectedSkillButton.transform.Find("Skill Cost").gameObject.SetActive(false);
+            currentSelectedSkillButton.transform.Find("Base Image/Skill Name").gameObject.SetActive(false);
+            currentSelectedSkillButton.transform.Find("Cost Image/Skill Cost").gameObject.SetActive(false);
             description.gameObject.SetActive(true);
         }
     }
