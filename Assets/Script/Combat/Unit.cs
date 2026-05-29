@@ -112,13 +112,14 @@ public class Unit : MonoBehaviour
     #endregion
 
     #region Components
-
+    
     /// <summary>
     /// 0- base target for other units to go to when performing a 1-1 action
     /// </summary>
     ///
-    [Header("Components")]
+    [Header("Components")] 
     [SerializeField] protected Transform[] positionTargets;
+    [SerializeField] public Transform[] cameraTargets;
 
     [SerializeField] internal Animator animator;
     [SerializeField] internal Canvas hudCanvas;
@@ -164,7 +165,13 @@ public class Unit : MonoBehaviour
 
     public void RotateSelected(Transform target)
     {
-        selected.transform.parent.LookAt(target);
+        hudCanvas.transform.rotation = Quaternion.Euler
+        (
+            0,
+            target.transform.rotation.eulerAngles.y +180f,
+            0
+        );
+        BattleSystem.system.SetSelection(this);
     }
 
     private void CalculateStats(bool reset = false)
@@ -306,8 +313,14 @@ public class Unit : MonoBehaviour
 
     public void SelectHUD(bool active, Transform toLookAt = null)
     {
+        if (toLookAt != null)
+            hudCanvas.transform.rotation = Quaternion.Euler
+            (
+                0,
+                toLookAt.transform.rotation.eulerAngles.y +180f,
+                0
+            );
         hudCanvas.gameObject.SetActive(active);
-        hudCanvas.transform.LookAt(toLookAt);
     }
 
 

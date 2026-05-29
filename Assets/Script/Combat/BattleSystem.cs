@@ -100,7 +100,13 @@ public class BattleSystem : MonoBehaviour
             var vec = enemyPositionTargets.EvaluatePosition(1f/(enemyUnits.Count + 1) * (i+1));
             Vector3 startPosition = new Vector3(vec.x, vec.y, vec.z) + Vector3.up * 0.5f;
             var temp = Instantiate(enemyUnits[i], startPosition, Quaternion.identity);
-            temp.transform.LookAt(enemyPositionTargets.transform.parent.transform);
+            temp.transform.rotation = Quaternion.Euler
+            (
+                0, 
+                Quaternion.LookRotation(
+                    playerPositionTargets.transform.parent.transform.position - temp.transform.position, 
+                    Vector3.forward).eulerAngles.y, 
+                0);
             enemyUnits[i] = temp;
         }
 
@@ -204,6 +210,11 @@ public class BattleSystem : MonoBehaviour
     {
         currentSelectButton = button;
         currentSelectButton?.Select();
+        if (currentSelectButton != null && currentSelectButton.TryGetComponent(typeof(GameButton), out var component))
+        {
+            var gameButton = component as GameButton;
+            if (gameButton != null) gameButton.OnSelectEvent.Invoke();
+        }
     }
 
     public void DeselectButton()
@@ -285,13 +296,13 @@ public class BattleSystem : MonoBehaviour
                 target.eulerAngles =  new Vector3(target.eulerAngles.x, target.eulerAngles.y, zAxis);
                 break;
             case CameraTargets.FullView:
-                wantedFOV = 70;
                 for (int i = 0; i < enemyUnits.Count; i++)
                 {
                     Button left = null, right = null;
-                    enemyUnits[i].selected.GetComponent<GameButton>().OnSelectEvent += () =>
+                    var ie = i;
+                    enemyUnits[i].selected.GetComponent<GameButton>().OnSelectEvent = () =>
                     {
-                        MoveValuesForEnemyView(target);
+                        MoveValuesForInspectView(enemyUnits[ie].cameraTargets[0],enemyUnits[ie]);
                     };
                     if (i != 0)
                     {
@@ -300,10 +311,6 @@ public class BattleSystem : MonoBehaviour
                     else
                     {
                         left = playerUnits[i].selected;
-                        playerUnits[i].selected.GetComponent<GameButton>().OnSelectEvent += () =>
-                        {
-                            MoveValuesForPlayerView(target);
-                        };
                     }
 
                     if (i != enemyUnits.Count - 1)
@@ -313,10 +320,6 @@ public class BattleSystem : MonoBehaviour
                     else
                     {
                         right = playerUnits[^1].selected;
-                        playerUnits[^1].selected.GetComponent<GameButton>().OnSelectEvent += () =>
-                        {
-                            MoveValuesForPlayerView(target);
-                        };
                     }
 
                     enemyUnits[i].CalculateHUDValues(left, right);
@@ -324,9 +327,10 @@ public class BattleSystem : MonoBehaviour
                 for (int i = 0; i < playerUnits.Count; i++)
                 {
                     Button left = null, right = null;
-                    playerUnits[i].selected.GetComponent<GameButton>().OnSelectEvent += () =>
+                    var ip = i;
+                    playerUnits[i].selected.GetComponent<GameButton>().OnSelectEvent = () =>
                     {
-                        MoveValuesForPlayerView(target);
+                        MoveValuesForInspectView(playerUnits[ip].cameraTargets[3], playerUnits[ip]);
                     };
                     if (i != 0)
                     {
@@ -335,10 +339,6 @@ public class BattleSystem : MonoBehaviour
                     else
                     {
                         left = enemyUnits[i].selected;
-                        enemyUnits[i].selected.GetComponent<GameButton>().OnSelectEvent += () =>
-                        {
-                            MoveValuesForEnemyView(target);
-                        };
                     }
 
                     if (i != playerUnits.Count - 1)
@@ -348,10 +348,6 @@ public class BattleSystem : MonoBehaviour
                     else
                     {
                         right = enemyUnits[^1].selected;
-                        enemyUnits[^1].selected.GetComponent<GameButton>().OnSelectEvent += () =>
-                        {
-                            MoveValuesForEnemyView(target);
-                        };
                     }
                     
                     playerUnits[i].CalculateHUDValues(left, right);
@@ -370,63 +366,28 @@ public class BattleSystem : MonoBehaviour
                 }
                 
                 //TODO: make this player unit specific for enemy view and not rotate the z axis
-
-                currentSelectButton = targetUnit.selected;
-                currentSelectButton.Select();
-                targetUnit.SelectHUD(true, battleCamera.transform);
-                index = enemyUnits.IndexOf((EnemyUnit)targetUnit) + 1;
-                zAxis = target.eulerAngles.z;
-                interpolatedPosition = Vector3.Lerp(enemyUnits[0].transform.position,
-                    enemyUnits[^1].transform.position, index / ((float)enemyUnits.Count + 1));
-                target.LookAt(interpolatedPosition);
-                target.eulerAngles =  new Vector3(target.eulerAngles.x, target.eulerAngles.y, zAxis);
                 
-                break;
+                SetCurrentSelectButton(targetUnit.selected);
+                yield break;
         }
         
         battleCamera.DOFieldOfView(wantedFOV, 0.2f).SetEase(Ease.OutExpo);
         battleCamera.transform.DOMove(target.position, 0.2f).SetEase(Ease.OutExpo);
         yield return battleCamera.transform.DORotate(target.rotation.eulerAngles, 0.2f).SetEase(Ease.OutExpo)
             .WaitForCompletion();
-
-        
         
     }
 
-    private void MoveValuesForEnemyView(Transform target)
+    private void MoveValuesForInspectView(Transform target, Unit unit)
     {
         float wantedFOV = 70f;
-        var index = enemyUnits.IndexOf((EnemyUnit)targetUnit) + 1;
-        var zAxis = target.eulerAngles.z;
-        Vector3 interpolatedPosition = Vector3.Lerp(enemyUnits[0].transform.position,
-            enemyUnits[^1].transform.position, index / ((float)enemyUnits.Count + 1));
-        target.LookAt(interpolatedPosition);
-        target.eulerAngles = new Vector3(target.eulerAngles.x, target.eulerAngles.y, zAxis);
         battleCamera.DOFieldOfView(wantedFOV, 0.2f).SetEase(Ease.OutExpo);
         battleCamera.transform.DOMove(target.position, 0.2f).SetEase(Ease.OutExpo);
         battleCamera.transform.DORotate(target.rotation.eulerAngles, 0.2f).SetEase(Ease.OutExpo).OnComplete(() =>
         {
-            targetUnit.RotateSelected(target);
+            unit.RotateSelected(target);
         });
 
-    }
-
-    private void MoveValuesForPlayerView(Transform target)
-    {
-        float wantedFOV = 60f;
-        var nextIndex = playerUnits.IndexOf((PlayerUnit)targetUnit) + 1;
-        var nextTarget = cameraTargets[2];
-        var nextZAxis = nextTarget.eulerAngles.z;
-        Vector3 nextInterpolatedPosition = Vector3.Lerp(playerUnits[0].transform.position,
-            playerUnits[^1].transform.position, nextIndex / ((float)playerUnits.Count + 1));
-        nextTarget.LookAt(nextInterpolatedPosition);
-        nextTarget.eulerAngles =  new Vector3(nextTarget.eulerAngles.x, nextTarget.eulerAngles.y, nextZAxis);
-        battleCamera.DOFieldOfView(wantedFOV, 0.2f).SetEase(Ease.OutExpo);
-        battleCamera.transform.DOMove(nextTarget.position, 0.2f).SetEase(Ease.OutExpo);
-        battleCamera.transform.DORotate(nextTarget.rotation.eulerAngles, 0.2f).SetEase(Ease.OutExpo).OnComplete(() =>
-        {
-            targetUnit.RotateSelected(nextTarget);
-        });
     }
 
     public void UpdatePlayerValues(PlayerUnit playerUnit)
@@ -753,11 +714,6 @@ public class BattleSystem : MonoBehaviour
                     {
                         Debug.Log("Tough luck");
                         return;
-                    }
-                    if (selectable.gameObject.TryGetComponent(typeof(GameButton), out var go))
-                    {
-                        var button = go.GetComponent<GameButton>();
-                        button.OnSelectEvent.Invoke();
                     }
                 }
             }

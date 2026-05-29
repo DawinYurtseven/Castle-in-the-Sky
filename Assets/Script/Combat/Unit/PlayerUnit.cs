@@ -8,13 +8,14 @@ public class PlayerUnit : Unit
 {
     #region Components
 
+    /// for the cameraTargets from the unit base class
     /// <summary>
     /// 0- standard camera angle for when it is players turn
     /// 1- skill view
     /// 2- Enemy View
     /// maybe I'll need later more so this is an array now
     /// </summary>
-    [SerializeField] private Transform[] cameraTargets; // this is for the camera to move to depending on the situation.
+    /// // this is for the camera to move to depending on the situation.
 
     [SerializeField] private PlayerCombatUiController playerCombatUiController;
 
@@ -167,12 +168,8 @@ public class PlayerUnit : Unit
                         var list = new List<Unit>();
                         list.AddRange(BattleSystem.system.enemyUnits);
                         SetCurrentTarget(list);
-                        yield return BattleSystem.system.MoveCameraToIndexTransform(3);
                     }
-                    else
-                    {
-                        yield return BattleSystem.system.MoveCameraToIndexTransform(1);
-                    }
+                    yield return BattleSystem.system.MoveCamera(cameraTargets[2], BattleSystem.CameraTargets.EnemyView);
                 }
                 else
                 {
@@ -186,10 +183,9 @@ public class PlayerUnit : Unit
                     }
                     else
                     {
-                        yield return BattleSystem.system.MoveCameraToIndexTransform(2);
+                        yield return BattleSystem.system.MoveCamera(cameraTargets[3], BattleSystem.CameraTargets.PlayerView);
                     }
 
-                    yield return BattleSystem.system.MoveCameraToIndexTransform(4);
                 }
 
                 playerCombatUiController.SetVisibility(false);
@@ -259,7 +255,7 @@ public class PlayerUnit : Unit
                 yield return SkillTab();
                 break;
             case CombatState.Inspect:
-                BattleSystem.system.ClearSelection();
+                BattleSystem.system.ClearSelection(true);
                 yield return BattleSystem.system.MoveCamera(cameraTargets[0], BattleSystem.CameraTargets.Base);
                 playerCombatUiController.SetVisibility(true);
                 stateStack.Pop();
