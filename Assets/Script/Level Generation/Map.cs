@@ -64,7 +64,7 @@ public class Map : MonoBehaviour
             int nodesInLayer = 1;
             if (i > 0 && i < levelDepth - 1)
             {
-                nodesInLayer = Random.Range(2, 5); // 2 to 4 nodes wide for middle layers
+                nodesInLayer = Random.Range(2, 4); // 2 to 3 nodes wide for middle layers
             }
 
             for (int j = 0; j < nodesInLayer; j++)
@@ -307,8 +307,13 @@ public class Map : MonoBehaviour
                 if (currentSelectButton != null)
                 {
                     var targetPos = previous.transform.position - currentSelectButton.transform.position;
+                    mapGameObject.transform.DOKill();
+                    var currentPos = mapGameObject.transform.position;
                     mapGameObject.transform.DOMove(mapGameObject.transform.position + targetPos, 0.3f)
-                        .SetEase(Ease.OutExpo);
+                        .SetEase(Ease.OutExpo).OnKill(() =>
+                        {
+                            mapGameObject.transform.position = currentPos + targetPos;
+                        });
                 }
             }
         }

@@ -804,6 +804,7 @@ GameObject:
   - component: {fileID: 3053212475131628980}
   - component: {fileID: 6661407142299598482}
   - component: {fileID: 5083454688338564307}
+  - component: {fileID: 7299663094556790823}
   m_Layer: 0
   m_Name: Player Win
   m_TagString: Untagged
@@ -871,6 +872,25 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &7299663094556790823
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5412059372320585796}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d54b20d32cf4357428a8660d579522d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WinScreenController
+  buttonPrefab: {fileID: 1414944789080979500, guid: 64ee1501be296914e8ed84745c696a4a, type: 3}
+  statSelectPrefab: {fileID: 5065350603811441467, guid: 0a7709485cc4a16488558d468cd92464, type: 3}
+  skillsSelectPrefab: {fileID: 2164327219458180897, guid: 4d8a546de1b66f944908894f84226878, type: 3}
+  itemSelectPrefab: {fileID: 1201617224625896284, guid: a8ab1ea6c3244874990f77545f6fc02b, type: 3}
+  createdObjects: []
+  mainCharacter: {fileID: 0}
+  motherCanvas: {fileID: 7137748767593892278}
 --- !u!1 &5726985171672694888
 GameObject:
   m_ObjectHideFlags: 0
@@ -934,8 +954,8 @@ MonoBehaviour:
   - {fileID: 7083632416270067869}
   - {fileID: 7612345400426154662}
   - {fileID: 7904981863880879093}
-  playerPositionTargets: []
-  enemyPositionTargets: []
+  playerPositionTargets: {fileID: 0}
+  enemyPositionTargets: {fileID: 0}
   inFrontOfEnemies: {fileID: 4690570279529954959}
   inFrontOfPlayers: {fileID: 8643990080382451737}
   winCanvas: {fileID: 5412059372320585796}

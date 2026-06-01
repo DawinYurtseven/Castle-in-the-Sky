@@ -13,20 +13,41 @@ public class WinScreenController : MonoBehaviour
     private static readonly int Exit = Animator.StringToHash("Exit");
     private static readonly int Enter = Animator.StringToHash("Enter");
     [SerializeField] private GameObject buttonPrefab,statSelectPrefab, skillsSelectPrefab ,itemSelectPrefab;
-    [SerializeField] private List<GameObject> createdObjects;
     [SerializeField] public PlayerUnit mainCharacter;
+    [SerializeField] private List<GameObject> rootButtons,StatButtons, SkillButtons, ItemButtons;
     
     private RectTransform rectTransform;
 
     //TODO: do a proper cleanup of the scene with all game objects that got instantiated deleted and the progress of the characters saved.
     //make sure to not save it to the prefab tho
+    
+    private float screenHeight => transform.parent.GetComponent<CanvasScaler>().referenceResolution.y;
+    private float screenWidth => transform.parent.GetComponent<CanvasScaler>().referenceResolution.x;
 
-    private void ResetScreen()
+    private IEnumerator ResetScreen()
     {
-        for (int i = transform.childCount - 1; i >= 0; i--)
-        {
-            Destroy(transform.GetChild(i).gameObject);
-        }
+        yield return ClearAllButtons(false);
+        
+        rectTransform = GetComponent<RectTransform>();
+        
+
+        var stats = rootButtons[0];
+        stats.transform.localPosition = new Vector3(screenWidth * 1.5f, screenHeight * 0.25f, 0);
+        stats.SetActive(true);
+        stats.GetComponent<Animator>().SetTrigger(Enter);
+        stats.GetComponent<Button>().onClick.AddListener(() => StartCoroutine(OnStats()));
+        
+        var skills = rootButtons[1];
+        skills.transform.localPosition = new Vector3(screenWidth * 1.5f, 0, 0);
+        skills.SetActive(true);
+        skills.GetComponent<Animator>().SetTrigger(Enter);
+        skills.GetComponent<Button>().onClick.AddListener(() => StartCoroutine(OnSkills()));
+        
+        var items = rootButtons[2];
+        items.transform.localPosition = new Vector3(screenWidth * 1.5f, -screenHeight * 0.25f, 0);
+        items.SetActive(true);
+        items.GetComponent<Animator>().SetTrigger(Enter);
+        items.GetComponent<Button>().onClick.AddListener(() => StartCoroutine(OnItems()));
     }
     
     //called when the game is won
@@ -34,49 +55,20 @@ public class WinScreenController : MonoBehaviour
     {
         //TODO: Do a reset
         
-        ResetScreen();
+        StartCoroutine(ResetScreen());
         
         //TODO: Some form of level up showcase?
         
-        //Get screen value
-        rectTransform = GetComponent<RectTransform>();
-        
-        //replace with animations
-        var screenHeight = Screen.height;
-        var screenWidth = Screen.width;
-        
-        var stats = Instantiate(buttonPrefab,transform);
-        stats.transform.localPosition = new Vector3(screenWidth * 1.5f,screenHeight * 0.25f );
-        stats.name = "Stats";
-        stats.GetComponentInChildren<TMP_Text>().text = "STATS";
-        stats.GetComponent<Animator>().SetTrigger(Enter);
-        stats.GetComponent<Button>().onClick.AddListener(() => StartCoroutine(OnStats()));
-        createdObjects.Add(stats);
-        
-        var skills = Instantiate(buttonPrefab,transform);
-        skills.transform.localPosition = new Vector3(screenWidth * 1.5f, 0);
-        skills.name = "Skills";
-        skills.GetComponentInChildren<TMP_Text>().text = "SKILLS";
-        skills.GetComponent<Animator>().SetTrigger(Enter);
-        skills.GetComponent<Button>().onClick.AddListener(() => StartCoroutine(OnSkills()));
-        createdObjects.Add(skills);
-        
-        var items = Instantiate(buttonPrefab,transform);
-        items.transform.localPosition = new Vector3(screenWidth * 1.5f, screenHeight * -0.25f);
-        items.name = "Items";
-        items.GetComponentInChildren<TMP_Text>().text = "ITEMS";
-        items.GetComponent<Animator>().SetTrigger(Enter);
-        items.GetComponent<Button>().onClick.AddListener(() => StartCoroutine(OnItems()));
-        createdObjects.Add(items);
     }
 
 
     private IEnumerator OnStats()
     {
         yield return ClearAllButtons();
-        var stats = Instantiate(statSelectPrefab, transform);
+        var stats = StatButtons[0];
         stats.transform.localPosition = new Vector3(0, 0);
-        
+        stats.SetActive(true);
+
         var anim = stats.GetComponent<Animator>();
         anim.SetTrigger(Expand);
         yield return null;
@@ -143,11 +135,11 @@ public class WinScreenController : MonoBehaviour
     {
         yield return ClearAllButtons();
         
-        var skill1 = Instantiate(skillsSelectPrefab, transform);
+        var skill1 = SkillButtons[0];
         skill1.transform.localPosition = new Vector3(-rectTransform.rect.width * 0.3f, 0);
-        var skill2 = Instantiate(skillsSelectPrefab, transform);
+        var skill2 = SkillButtons[1];
         skill2.transform.localPosition = new Vector3(0, 0);
-        var skill3 = Instantiate(skillsSelectPrefab, transform);
+        var skill3 = SkillButtons[2];
         skill3.transform.localPosition = new Vector3(rectTransform.rect.width * 0.3f, 0);
         
         List<Skill> skills = new List<Skill>();
@@ -272,11 +264,11 @@ public class WinScreenController : MonoBehaviour
     {
         yield return ClearAllButtons();
         
-        var item1 = Instantiate(itemSelectPrefab, transform);
+        var item1 = ItemButtons[0];
         item1.transform.localPosition = new Vector3(-rectTransform.rect.width * 0.3f, 0);
-        var item2 = Instantiate(itemSelectPrefab, transform);
+        var item2 = ItemButtons[1];
         item2.transform.localPosition = new Vector3(0, 0);
-        var item3 = Instantiate(itemSelectPrefab, transform);
+        var item3 = ItemButtons[2];
         item3.transform.localPosition = new Vector3(rectTransform.rect.width * 0.3f, 0);
 
         List<Items> items = new List<Items>();
@@ -435,21 +427,30 @@ public class WinScreenController : MonoBehaviour
 
     
     //TODO: Why are you doing this with code when you can do this with animations.
-    private IEnumerator ClearAllButtons()
+    private IEnumerator ClearAllButtons(bool withAnimation = true)
     {
-        for (int i = 0; i < createdObjects.Count; i++)
+        if (withAnimation)
         {
-            createdObjects[i].GetComponent<Animator>().SetTrigger(Exit);
+            for (int i = 0; i < rootButtons.Count; i++)
+            {
+                rootButtons[i].GetComponent<Animator>().SetTrigger(Exit);
+            }
+            var length = rootButtons[0].GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.length;
+            yield return new WaitForSeconds(length + 0.2f);
         }
-
-        yield return null;
-        var length = createdObjects[0].GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.length;
-        yield return new WaitForSeconds(length + 0.2f);
-
-        for (int i = createdObjects.Count - 1; i >= 0; i--)
+        
+        for (int i = 0; i < rootButtons.Count; i++)
         {
-            Destroy(createdObjects[i]);
+            rootButtons[i].transform.localPosition = new  Vector3(screenWidth * 1.5f, screenHeight * (0.25f - 0.25f * i), 0);
+            rootButtons[i].SetActive(false);
         }
-        createdObjects.Clear();
+        
+        StatButtons[0].SetActive(false);
+        SkillButtons[0].SetActive(false);
+        SkillButtons[1].SetActive(false);
+        SkillButtons[2].SetActive(false);
+        ItemButtons[0].SetActive(false);
+        ItemButtons[1].SetActive(false);
+        ItemButtons[2].SetActive(false);
     }
 }

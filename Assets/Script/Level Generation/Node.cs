@@ -60,13 +60,14 @@ public class Node : MonoBehaviour
 
     public void ConnectLine(Vector3 position)
     {
+        //make 80% line 
+        var newPos = position.normalized * position.magnitude * 0.95f;
+        
         var temp = Instantiate(lineRendererPrefab, transform);
         var linerend = temp.GetComponent<LineRenderer>();
-        linerend.useWorldSpace = true;
-        linerend.SetPositions(new []{Vector3.zero,position});
+        linerend.SetPositions(new []{Vector3.zero,newPos});
         linerend.startColor = Color.blue;
         linerend.endColor = Color.blue;
-        
         linerend.useWorldSpace = false;
     }
 }
