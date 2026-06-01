@@ -150,7 +150,7 @@ public class WinScreenController : MonoBehaviour
             });
         }
         stats.transform.GetChild(0).GetChild(1).GetComponent<Button>().Select();
-        
+        currentSelectButton = stats.transform.GetChild(0).GetChild(1).GetComponent<Button>();
         stats.transform.GetChild(6).gameObject.SetActive(true);
         stats.transform.GetChild(6).GetComponent<Button>().onClick.RemoveAllListeners();
         stats.transform.GetChild(6).GetComponent<Button>().onClick.AddListener(() =>
@@ -310,7 +310,8 @@ public class WinScreenController : MonoBehaviour
             Map.System.ReturnToMap();
             gameObject.SetActive(false);
         });
-        
+        currentSelectButton = skill1.GetComponent<Button>();
+        currentSelectButton.Select();
     }
     
     private IEnumerator OnItems()
@@ -439,6 +440,8 @@ public class WinScreenController : MonoBehaviour
             gameObject.SetActive(false);
         });
 
+        currentSelectButton = item1.GetComponent<Button>();
+        currentSelectButton.Select();
         //await animations type shit.
 
         //make new 3 buttons for each item
@@ -561,6 +564,6 @@ public class WinScreenController : MonoBehaviour
 
     public void Confirm()
     {
-        currentSelectButton.onClick.Invoke();
+        currentSelectButton?.onClick.Invoke();
     }
 }

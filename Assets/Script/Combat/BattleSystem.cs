@@ -724,7 +724,7 @@ public class BattleSystem : MonoBehaviour
 
     public void TriggerSpecificButtonAction()
     {
-        if (currentSelectButton.TryGetComponent(typeof(GameButton), out var go))
+        if (currentSelectButton != null && currentSelectButton.TryGetComponent(typeof(GameButton), out var go))
         {
             var button = go.GetComponent<GameButton>();
             button.OnSpecificAction.Invoke();
