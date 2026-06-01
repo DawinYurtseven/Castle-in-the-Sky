@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 
 public class InputSystemWrapper : MonoBehaviour
 {
@@ -21,8 +22,11 @@ public class InputSystemWrapper : MonoBehaviour
 
     public void SetState(State state)
     {
+        previousState = this.state;
         this.state = state;
     }
+
+    public State previousState;
 
     [SerializeField] private BattleSystem battleSystem;
     [SerializeField] private Map map;

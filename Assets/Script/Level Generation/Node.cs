@@ -60,8 +60,8 @@ public class Node : MonoBehaviour
 
     public void ConnectLine(Vector3 position)
     {
-        //make 80% line 
-        var newPos = position.normalized * position.magnitude * 0.95f;
+        //make 90% line 
+        var newPos = position.normalized * position.magnitude * 0.9f;
         
         var temp = Instantiate(lineRendererPrefab, transform);
         var linerend = temp.GetComponent<LineRenderer>();

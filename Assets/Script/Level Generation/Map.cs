@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class Map : MonoBehaviour
 {
@@ -161,22 +163,7 @@ public class Map : MonoBehaviour
                 
                 var initialIndex = nextLayerIndexPointer;
                 Node connectNode = currentLayer[j];
-
-                var nav = new Navigation();
-                if (j != 0)
-                {
-                    nav.selectOnLeft = currentLayer[j - 1].GetComponent<Button>();
-                }
-
-                if (j != currentLayerCount - 1)
-                {
-                    nav.selectOnRight = currentLayer[j + 1].GetComponent<Button>();
-                }
-
-                if (i != 0)
-                {
-                    nav.selectOnDown = connectNode.previousNodes[0].GetComponent<Button>();
-                }
+                
  
                 // Enforce at least one connection forward
                 connectNode.nextNodes.Add(nextLayer[nextLayerIndexPointer]);
@@ -220,9 +207,6 @@ public class Map : MonoBehaviour
                 {
                     nextLayerIndexPointer++;
                 }
-
-                nav.selectOnUp = connectNode.nextNodes[(connectNode.nextNodes.Count / 2)].GetComponent<Button>();
-                connectNode.GetComponent<Button>().navigation = nav;
             }
         }
 
@@ -273,47 +257,43 @@ public class Map : MonoBehaviour
     {
     }
 
-    //TODO: This is what I need for the battleSystem as well
-    public void Menu()
-    {
-    }
-
     public void Navigate(Vector2 normalizedInput)
     {
         if (currentSelectButton == null) return;
         if (normalizedInput != Vector2.zero)
         {
-            bool isVertical = Mathf.Abs(normalizedInput.y) > Mathf.Abs(normalizedInput.x);
             Selectable selectable;
-            if (isVertical)
+            var node = currentSelectButton.GetComponent<Node>().nextNodes;
+            node.AddRange(currentSelectButton.GetComponent<Node>().previousNodes);
+            var direction = new Vector3(normalizedInput.x, 0, normalizedInput.y);
+            var closest = node[0];
+            Vector3 closestNormalized;
+            Vector3 nextNodeNormalized;
+            for (var i = 1; i < node.Count; i++)
             {
-                selectable = normalizedInput.y > 0
-                    ? currentSelectButton.navigation.selectOnUp
-                    : currentSelectButton.navigation.selectOnDown;
+                 closestNormalized = (closest.transform.position - currentSelectButton.transform.position).normalized;
+                 nextNodeNormalized = (node[i].transform.position - currentSelectButton.transform.position).normalized;
+                if (Vector3.Distance(direction, closestNormalized) >
+                    Vector3.Distance(direction, nextNodeNormalized))
+                {
+                    closest = node[i];
+                }
             }
-            else
-            {
-                selectable = normalizedInput.x > 0
-                    ? currentSelectButton.navigation.selectOnRight
-                    : currentSelectButton.navigation.selectOnLeft;
-            }
+            closestNormalized = (closest.transform.position - currentSelectButton.transform.position).normalized;
+            Debug.Log(Vector3.Distance(closestNormalized, direction));
+            if (Vector3.Distance(closestNormalized, direction) > Math.Sqrt(2)) return;
+            
+            selectable = closest.GetComponent<Button>();
 
             if (selectable != null)
             {
-                //TODO: maybe make it so it depends on the next connection?
-                var previous = currentSelectButton;
                 currentSelectButton = (Button)selectable;
                 currentSelectButton?.Select();
                 if (currentSelectButton != null)
                 {
-                    var targetPos = previous.transform.position - currentSelectButton.transform.position;
                     mapGameObject.transform.DOKill();
-                    var currentPos = mapGameObject.transform.position;
-                    mapGameObject.transform.DOMove(mapGameObject.transform.position + targetPos, 0.3f)
-                        .SetEase(Ease.OutExpo).OnKill(() =>
-                        {
-                            mapGameObject.transform.position = currentPos + targetPos;
-                        });
+                    mapGameObject.transform.DOMove(-currentSelectButton.transform.localPosition, 0.3f)
+                        .SetEase(Ease.OutExpo);
                 }
             }
         }
