@@ -271,8 +271,8 @@ public class Map : MonoBehaviour
             Vector3 nextNodeNormalized;
             for (var i = 1; i < node.Count; i++)
             {
-                 closestNormalized = (closest.transform.position - currentSelectButton.transform.position).normalized;
-                 nextNodeNormalized = (node[i].transform.position - currentSelectButton.transform.position).normalized;
+                closestNormalized = (closest.transform.position - currentSelectButton.transform.position).normalized;
+                nextNodeNormalized = (node[i].transform.position - currentSelectButton.transform.position).normalized;
                 if (Vector3.Distance(direction, closestNormalized) >
                     Vector3.Distance(direction, nextNodeNormalized))
                 {

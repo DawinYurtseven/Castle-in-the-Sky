@@ -37,7 +37,11 @@ public class PlayerCombatUiController : MonoBehaviour
             mat.SetTexture(BaseMap, tex);
             mat.SetFloat(Progress, 0.174f);
             rootButtons[i].GetComponent<Image>().material = mat;
-            
+            mat = new Material(baseButtonShader);
+            tex = rootButtons[i].gameObject.transform.GetChild(0).GetComponent<Image>().sprite.texture;
+            mat.SetTexture(BaseMap, tex);
+            mat.SetFloat(Progress, 0.174f);
+            rootButtons[i].transform.GetChild(0).GetComponent<Image>().material = mat;
         }
     }
 

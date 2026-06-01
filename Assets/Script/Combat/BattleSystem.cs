@@ -613,7 +613,8 @@ public class BattleSystem : MonoBehaviour
 
     public void Submit()
     {
-        if (currentActiveUnit != null && currentActiveUnit is PlayerUnit playerUnit)
+        if(combatIsOver) winCanvas.GetComponent<WinScreenController>().Confirm();
+        else if (currentActiveUnit != null && currentActiveUnit is PlayerUnit playerUnit)
         {
             currentSelectButton?.onClick.Invoke();
             StartCoroutine(playerUnit.Submit(targetUnit));
@@ -686,7 +687,8 @@ public class BattleSystem : MonoBehaviour
     public void Navigate(Vector2 normalizedInput)
     {
         if (currentSelectButton == null) return;
-        if (normalizedInput != Vector2.zero)
+        if(combatIsOver) winCanvas.GetComponent<WinScreenController>().Navigate(normalizedInput);
+        else if (normalizedInput != Vector2.zero)
         {
             bool isVertical = Mathf.Abs(normalizedInput.y) > Mathf.Abs(normalizedInput.x);
             Selectable selectable;

@@ -12,11 +12,13 @@ public class WinScreenController : MonoBehaviour
     private static readonly int Collapse = Animator.StringToHash("Collapse");
     private static readonly int Exit = Animator.StringToHash("Exit");
     private static readonly int Enter = Animator.StringToHash("Enter");
-    [SerializeField] private GameObject buttonPrefab,statSelectPrefab, skillsSelectPrefab ,itemSelectPrefab;
+    private static readonly int FinishedExpanding = Animator.StringToHash("FinishedExpanding");
+    private static readonly int FinishedEntering = Animator.StringToHash("FinishedEntering");
     [SerializeField] public PlayerUnit mainCharacter;
     [SerializeField] private List<GameObject> rootButtons,StatButtons, SkillButtons, ItemButtons;
     
     private RectTransform rectTransform;
+    private Button currentSelectButton;
 
     //TODO: do a proper cleanup of the scene with all game objects that got instantiated deleted and the progress of the characters saved.
     //make sure to not save it to the prefab tho
@@ -34,20 +36,48 @@ public class WinScreenController : MonoBehaviour
         var stats = rootButtons[0];
         stats.transform.localPosition = new Vector3(screenWidth * 1.5f, screenHeight * 0.25f, 0);
         stats.SetActive(true);
-        stats.GetComponent<Animator>().SetTrigger(Enter);
-        stats.GetComponent<Button>().onClick.AddListener(() => StartCoroutine(OnStats()));
+        var statAnimator = stats.GetComponent<Animator>();
+        statAnimator.SetTrigger(Enter);
+        stats.GetComponent<Button>().onClick.AddListener(() =>
+        {
+            statAnimator.SetBool(FinishedEntering, false);
+            StartCoroutine(OnStats());
+        });
+        yield return null;
         
         var skills = rootButtons[1];
         skills.transform.localPosition = new Vector3(screenWidth * 1.5f, 0, 0);
         skills.SetActive(true);
-        skills.GetComponent<Animator>().SetTrigger(Enter);
-        skills.GetComponent<Button>().onClick.AddListener(() => StartCoroutine(OnSkills()));
+        var skillAnimator = skills.GetComponent<Animator>();
+        skillAnimator.SetTrigger(Enter);
+        skills.GetComponent<Button>().onClick.AddListener(() =>
+        {
+            skillAnimator.SetBool(FinishedEntering, false);
+            StartCoroutine(OnSkills());
+        });
+        yield return null;
         
         var items = rootButtons[2];
         items.transform.localPosition = new Vector3(screenWidth * 1.5f, -screenHeight * 0.25f, 0);
         items.SetActive(true);
-        items.GetComponent<Animator>().SetTrigger(Enter);
-        items.GetComponent<Button>().onClick.AddListener(() => StartCoroutine(OnItems()));
+        var itemsAnimator = items.GetComponent<Animator>();
+        itemsAnimator.SetTrigger(Enter);
+        items.GetComponent<Button>().onClick.AddListener(() =>
+        {
+            itemsAnimator.SetBool(FinishedEntering, false);
+            StartCoroutine(OnItems());
+        });
+
+        yield return null;
+        yield return new WaitUntil(() => itemsAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !statAnimator.IsInTransition(0));
+
+        
+        statAnimator.SetBool(FinishedEntering, true);
+        skillAnimator.SetBool(FinishedEntering, true);
+        itemsAnimator.SetBool(FinishedEntering, true);
+        
+        currentSelectButton = stats.GetComponent<Button>();
+        currentSelectButton.Select();
     }
     
     //called when the game is won
@@ -92,6 +122,7 @@ public class WinScreenController : MonoBehaviour
             plus.gameObject.SetActive(true);
 
             var i1 = i;
+            minus.GetComponent<Button>().onClick.RemoveAllListeners();
             minus.GetComponent<Button>().onClick.AddListener(() =>
             {
                 if (allocatable < 10 && mainCharacter.GetStat(statlist[i1].Item1) > statlist[i1].Item2)
@@ -105,6 +136,7 @@ public class WinScreenController : MonoBehaviour
             });
 
             var i2 = i;
+            plus.GetComponent<Button>().onClick.RemoveAllListeners();
             plus.GetComponent<Button>().onClick.AddListener(() =>
             {
                 if (allocatable > 0)
@@ -117,8 +149,10 @@ public class WinScreenController : MonoBehaviour
                 }
             });
         }
+        stats.transform.GetChild(0).GetChild(1).GetComponent<Button>().Select();
         
         stats.transform.GetChild(6).gameObject.SetActive(true);
+        stats.transform.GetChild(6).GetComponent<Button>().onClick.RemoveAllListeners();
         stats.transform.GetChild(6).GetComponent<Button>().onClick.AddListener(() =>
         {
             if (allocatable == 0) 
@@ -137,10 +171,13 @@ public class WinScreenController : MonoBehaviour
         
         var skill1 = SkillButtons[0];
         skill1.transform.localPosition = new Vector3(-rectTransform.rect.width * 0.3f, 0);
+        skill1.SetActive(true);
         var skill2 = SkillButtons[1];
         skill2.transform.localPosition = new Vector3(0, 0);
+        skill2.SetActive(true);
         var skill3 = SkillButtons[2];
         skill3.transform.localPosition = new Vector3(rectTransform.rect.width * 0.3f, 0);
+        skill3.SetActive(true);
         
         List<Skill> skills = new List<Skill>();
         for (int i = 0; i < 3; i++)
@@ -153,6 +190,7 @@ public class WinScreenController : MonoBehaviour
         animator1.SetTrigger(Expand);
         yield return null; // otherwise too quick
         yield return new WaitUntil(() => animator1.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator1.IsInTransition(0));
+        animator1.SetBool(FinishedExpanding, true);
         skill1.transform.GetChild(0).gameObject.SetActive(true);
         skill1.transform.GetChild(1).gameObject.SetActive(true);
         skill1.transform.GetChild(2).gameObject.SetActive(true);
@@ -165,6 +203,7 @@ public class WinScreenController : MonoBehaviour
         animator2.SetTrigger(Expand);
         yield return null; // otherwise too quick
         yield return new WaitUntil(() => animator2.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator2.IsInTransition(0));
+        animator2.SetBool(FinishedExpanding, true);
         skill2.transform.GetChild(0).gameObject.SetActive(true);
         skill2.transform.GetChild(1).gameObject.SetActive(true);
         skill2.transform.GetChild(2).gameObject.SetActive(true);
@@ -176,16 +215,20 @@ public class WinScreenController : MonoBehaviour
         animator3.SetTrigger(Expand);
         yield return null; // otherwise too quick
         yield return new WaitUntil(() => animator3.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator3.IsInTransition(0));
+        animator3.SetBool(FinishedExpanding, true);
         skill3.transform.GetChild(0).gameObject.SetActive(true);
         skill3.transform.GetChild(1).gameObject.SetActive(true);
         skill3.transform.GetChild(2).gameObject.SetActive(true);
         StartCoroutine(InsertTextIntoObject(skill3.transform.GetChild(1).GetComponentInChildren<TMP_Text>(), skills[2].skillName));
         StartCoroutine(InsertTextIntoObject(skill3.transform.GetChild(0).GetComponentInChildren<TMP_Text>(), skills[2].skillDescription));
         StartCoroutine(InsertTextIntoObject(skill3.transform.GetChild(2).GetComponentInChildren<TMP_Text>(), skills[2].skillCost.ToString()));
-        
-        
+
+        skill1.GetComponent<Button>().onClick.RemoveAllListeners();
         skill1.GetComponent<Button>().onClick.AddListener(() =>
         {
+            animator1.SetBool(FinishedExpanding, false);
+            animator2.SetBool(FinishedExpanding, false);
+            animator3.SetBool(FinishedExpanding, false);
             List<GameObject> others = new List<GameObject>();
             List<Animator> otherAnimators = new List<Animator>();
             others.Add(skill2);
@@ -209,8 +252,13 @@ public class WinScreenController : MonoBehaviour
             Map.System.ReturnToMap();
             gameObject.SetActive(false);
         });
+        
+        skill2.GetComponent<Button>().onClick.RemoveAllListeners();
         skill2.GetComponent<Button>().onClick.AddListener(() =>
         {
+            animator1.SetBool(FinishedExpanding, false);
+            animator2.SetBool(FinishedExpanding, false);
+            animator3.SetBool(FinishedExpanding, false);
             List<GameObject> others = new List<GameObject>();
             List<Animator> otherAnimators = new List<Animator>();
             others.Add(skill1);
@@ -232,8 +280,13 @@ public class WinScreenController : MonoBehaviour
             Map.System.ReturnToMap();
             gameObject.SetActive(false);
         });
+        
+        skill3.GetComponent<Button>().onClick.RemoveAllListeners();
         skill3.GetComponent<Button>().onClick.AddListener(() =>
         {
+            animator1.SetBool(FinishedExpanding, false);
+            animator2.SetBool(FinishedExpanding, false);
+            animator3.SetBool(FinishedExpanding, false);
             List<GameObject> others = new List<GameObject>();
             List<Animator> otherAnimators = new List<Animator>();
             others.Add(skill1);
@@ -266,11 +319,14 @@ public class WinScreenController : MonoBehaviour
         
         var item1 = ItemButtons[0];
         item1.transform.localPosition = new Vector3(-rectTransform.rect.width * 0.3f, 0);
+        item1.SetActive(true);
         var item2 = ItemButtons[1];
         item2.transform.localPosition = new Vector3(0, 0);
+        item2.SetActive(true);
         var item3 = ItemButtons[2];
         item3.transform.localPosition = new Vector3(rectTransform.rect.width * 0.3f, 0);
-
+        item3.SetActive(true);
+        
         List<Items> items = new List<Items>();
         for (int i = 0; i < 3; i++)
         {
@@ -282,6 +338,7 @@ public class WinScreenController : MonoBehaviour
         animator1.SetTrigger(Expand);
         yield return null; // otherwise too quick
         yield return new WaitUntil(() => animator1.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator1.IsInTransition(0));
+        animator1.SetBool(FinishedExpanding, true);
         StartCoroutine(InsertTextIntoObject(item1.transform.GetChild(0).GetComponent<TMP_Text>(), items[0].ItemName));
         StartCoroutine(InsertTextIntoObject(item1.transform.GetChild(1).GetComponent<TMP_Text>(), items[0].ItemDescription));
         
@@ -289,6 +346,7 @@ public class WinScreenController : MonoBehaviour
         animator2.SetTrigger(Expand);
         yield return null; // otherwise too quick
         yield return new WaitUntil(() => animator2.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator2.IsInTransition(0));
+        animator2.SetBool(FinishedExpanding, true);
         StartCoroutine(InsertTextIntoObject(item2.transform.GetChild(0).GetComponent<TMP_Text>(), items[1].ItemName));
         StartCoroutine(InsertTextIntoObject(item2.transform.GetChild(1).GetComponent<TMP_Text>(), items[1].ItemDescription));
         
@@ -296,11 +354,16 @@ public class WinScreenController : MonoBehaviour
         animator3.SetTrigger(Expand);
         yield return null; // otherwise too quick
         yield return new WaitUntil(() => animator3.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator3.IsInTransition(0));
+        animator3.SetBool(FinishedExpanding, true);
         StartCoroutine(InsertTextIntoObject(item3.transform.GetChild(0).GetComponent<TMP_Text>(), items[2].ItemName));
         StartCoroutine(InsertTextIntoObject(item3.transform.GetChild(1).GetComponent<TMP_Text>(), items[2].ItemDescription));
         
+        item1.GetComponent<Button>().onClick.RemoveAllListeners();
         item1.GetComponent<Button>().onClick.AddListener(() =>
         {
+            animator1.SetBool(FinishedExpanding, false);
+            animator2.SetBool(FinishedExpanding, false);
+            animator3.SetBool(FinishedExpanding, false);
             List<GameObject> others = new List<GameObject>();
             List<Animator> otherAnimators = new List<Animator>();
             others.Add(item2);
@@ -321,8 +384,13 @@ public class WinScreenController : MonoBehaviour
             Map.System.ReturnToMap();
             gameObject.SetActive(false);
         });
+        
+        item2.GetComponent<Button>().onClick.RemoveAllListeners();
         item2.GetComponent<Button>().onClick.AddListener(() =>
         {
+            animator1.SetBool(FinishedExpanding, false);
+            animator2.SetBool(FinishedExpanding, false);
+            animator3.SetBool(FinishedExpanding, false);
             List<GameObject> others = new List<GameObject>();
             List<Animator> otherAnimators = new List<Animator>();
             others.Add(item1);
@@ -343,8 +411,13 @@ public class WinScreenController : MonoBehaviour
             Map.System.ReturnToMap();
             gameObject.SetActive(false);
         });
+        
+        item3.GetComponent<Button>().onClick.RemoveAllListeners();
         item3.GetComponent<Button>().onClick.AddListener(() =>
         {
+            animator1.SetBool(FinishedExpanding, false);
+            animator2.SetBool(FinishedExpanding, false);
+            animator3.SetBool(FinishedExpanding, false);
             List<GameObject> others = new List<GameObject>();
             List<Animator> otherAnimators = new List<Animator>();
             others.Add(item1);
@@ -452,5 +525,42 @@ public class WinScreenController : MonoBehaviour
         ItemButtons[0].SetActive(false);
         ItemButtons[1].SetActive(false);
         ItemButtons[2].SetActive(false);
+    }
+
+    public void Navigate(Vector2 normalizedInput)
+    {
+        if (currentSelectButton == null) return;
+        if (normalizedInput != Vector2.zero)
+        {
+            bool isVertical = Mathf.Abs(normalizedInput.y) > Mathf.Abs(normalizedInput.x);
+            Selectable selectable;
+            if (isVertical)
+            {
+                selectable = normalizedInput.y > 0
+                    ? currentSelectButton.navigation.selectOnUp
+                    : currentSelectButton.navigation.selectOnDown;
+            }
+            else
+            {
+                selectable = normalizedInput.x > 0
+                    ? currentSelectButton.navigation.selectOnRight
+                    : currentSelectButton.navigation.selectOnLeft;
+            }
+
+            if (selectable != null)
+            {
+                currentSelectButton = (Button)selectable;
+                currentSelectButton?.Select();
+                if (currentSelectButton != null)
+                {
+                    //think about what to put here if needed be
+                }
+            }
+        }
+    }
+
+    public void Confirm()
+    {
+        currentSelectButton.onClick.Invoke();
     }
 }
