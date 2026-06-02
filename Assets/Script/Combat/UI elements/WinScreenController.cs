@@ -288,11 +288,11 @@ public class WinScreenController : MonoBehaviour
             var i1 = i;
             ItemButtons[i].GetComponent<Button>().onClick.AddListener(() =>
             {
-                var item = mainCharacter.items.Find((e) => e.GetType() == items[i1].GetType());
+                var item = mainCharacter.Items.Find((e) => e.GetType() == items[i1].GetType());
                 if (item == null)
                 {
                     item = items[i1];
-                    mainCharacter.items.Add(items[i1]);
+                    mainCharacter.Items.Add(items[i1]);
                 }
 
                 var unit = new List<Unit>(BattleSystem.system.playerUnits);

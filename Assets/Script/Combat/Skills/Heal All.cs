@@ -32,7 +32,7 @@ public class HealAll : Skill
         foreach (var units in unit.currentTarget)
         {
             units.TakeDamage(-totalHeal);
-            validAction = units.CurrentHP == units.MaxHP || validAction;
+            validAction = units.currentHP == units.maxHP || validAction;
         }
         
         return validAction;

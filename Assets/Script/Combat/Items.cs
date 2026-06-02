@@ -39,7 +39,7 @@ public abstract class Items
     public void SubscribeToTeamEvents(Unit unit)
     {
         
-            unit.items.Add(this);
+            unit.Items.Add(this);
             switch (triggerPosition)
             {
                 case ItemTriggerPosition.BasicAttack:

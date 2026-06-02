@@ -6,8 +6,9 @@ using UnityEngine.UI;
 
 public class EnemyUnit : Unit
 {
-    private void Awake()
+    internal override void Awake()
     {
+        base.Awake();
         hudValues = GetComponentInChildren<TextMeshProUGUI>(true);
         selected = GetComponentInChildren<Button>(true);
     }

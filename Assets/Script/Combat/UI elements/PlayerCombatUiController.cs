@@ -138,7 +138,7 @@ public class PlayerCombatUiController : MonoBehaviour
                             skillObj.transform.DOLocalRotate(new Vector3(1800,0,0), 0.35f).SetEase(Ease.OutExpo));
                     });
                 };
-                if(playerUnit.CurrentSP < skill.skillCost)
+                if(playerUnit.currentSP < skill.skillCost)
                     skillButton.interactable = false;
                 skillButtons.Add(skillButton);
             }
