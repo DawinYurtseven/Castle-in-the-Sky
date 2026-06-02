@@ -284,7 +284,7 @@ public class Unit : MonoBehaviour
         BeginningOfTurnTrigger?.Invoke(this);
     }
 
-    protected IEnumerator EndTurn()
+    protected virtual IEnumerator EndTurn()
     {
         yield return transform.DOMove(startPosition, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
         EndOfTurnTrigger?.Invoke(this);

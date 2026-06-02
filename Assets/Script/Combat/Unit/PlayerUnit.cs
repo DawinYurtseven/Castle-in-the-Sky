@@ -22,12 +22,14 @@ public class PlayerUnit : Unit
 
     public List<Tuple<string, int>> GetStats()
     {
-        List<Tuple<string, int>> stats = new List<Tuple<string, int>>();
-        stats.Add(new Tuple<string, int>("Strength", strength));
-        stats.Add(new Tuple<string, int>("Constitution", constitution));
-        stats.Add(new Tuple<string, int>("Speed", speed));
-        stats.Add(new Tuple<string, int>("Intelligence", intelligence));
-        stats.Add(new Tuple<string, int>("Luck", luck));
+        List<Tuple<string, int>> stats = new List<Tuple<string, int>>
+        {
+            new ("Strength", strength),
+            new ("Constitution", constitution),
+            new ("Speed", speed),
+            new ("Intelligence", intelligence),
+            new ("Luck", luck)
+        };
         return stats;
     }
 
@@ -87,7 +89,9 @@ public class PlayerUnit : Unit
 
     protected override IEnumerator BasicAttack()
     {
+        inAnim = true;
         yield return base.BasicAttack();
+        inAnim = false;
     }
 
     protected override IEnumerator SkillUsage()
@@ -100,10 +104,16 @@ public class PlayerUnit : Unit
                 .WaitForCompletion();
         }
 
-        //call animation with selectedSkill.animationName here but idk
+        //call animation with selectedSkill.animationName here but IDK
         yield return new WaitForSeconds(0.3f);
         yield return base.SkillUsage();
         BattleSystem.system.UpdatePlayerValues(this);
+    }
+
+    protected override IEnumerator EndTurn()
+    {
+        isTurn = false;
+        return base.EndTurn();
     }
 
     public override void TakeDamage(float damage)
@@ -119,6 +129,7 @@ public class PlayerUnit : Unit
         stateStack.Push(CombatState.Root);
         yield return BattleSystem.system.MoveCamera(cameraTargets[0], BattleSystem.CameraTargets.Base);
         playerCombatUiController.SetVisibility(true);
+        isTurn = true;
     }
 
 
@@ -140,12 +151,12 @@ public class PlayerUnit : Unit
     /// </summary>
     private readonly Stack<CombatState> stateStack = new();
 
-    private bool inAnim = false;
+    private bool inAnim, isTurn;
 
     public IEnumerator Submit(Unit targetUnit)
     {
         //this will simulate the ui for now until I have actually implemented ui
-        if (stateStack.Count == 0 || inAnim) yield break;
+        if (stateStack.Count == 0 || inAnim || !isTurn) yield break;
         if (targetUnit != null)
         {
             SetCurrentTarget(new List<Unit> { targetUnit });
@@ -240,7 +251,7 @@ public class PlayerUnit : Unit
 
     public IEnumerator Cancel()
     {
-        if (stateStack.Count < 2 || inAnim) yield break;
+        if (stateStack.Count < 2 || inAnim|| !isTurn) yield break;
         stateStack.Pop();
         switch (stateStack.Peek())
         {
@@ -274,7 +285,7 @@ public class PlayerUnit : Unit
 
     public IEnumerator SkillTab()
     {
-        if (stateStack.Peek() != CombatState.Root || inAnim) yield break;
+        if (stateStack.Peek() != CombatState.Root || inAnim|| !isTurn) yield break;
         inAnim = true;
         playerCombatUiController.SetVisibility(false);
         yield return BattleSystem.system.MoveCamera(cameraTargets[1], BattleSystem.CameraTargets.Base);
@@ -287,7 +298,7 @@ public class PlayerUnit : Unit
 
     public IEnumerator Inspect()
     {
-        if(inAnim) yield break;
+        if(inAnim|| !isTurn) yield break;
         inAnim = true;
         var state = stateStack.Peek();
         if (state == CombatState.Root)

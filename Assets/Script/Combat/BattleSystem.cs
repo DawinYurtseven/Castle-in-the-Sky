@@ -686,37 +686,35 @@ public class BattleSystem : MonoBehaviour
 
     public void Navigate(Vector2 normalizedInput)
     {
-        if (currentSelectButton == null) return;
         if(combatIsOver) winCanvas.GetComponent<WinScreenController>().Navigate(normalizedInput);
-        else if (normalizedInput != Vector2.zero)
+        
+        if (currentSelectButton == null || normalizedInput == Vector2.zero) return;
+        bool isVertical = Mathf.Abs(normalizedInput.y) > Mathf.Abs(normalizedInput.x);
+        Selectable selectable;
+        if (isVertical)
         {
-            bool isVertical = Mathf.Abs(normalizedInput.y) > Mathf.Abs(normalizedInput.x);
-            Selectable selectable;
-            if (isVertical)
-            {
-                selectable = normalizedInput.y > 0
-                    ? currentSelectButton.navigation.selectOnUp
-                    : currentSelectButton.navigation.selectOnDown;
-            }
-            else
-            {
-                selectable = normalizedInput.x > 0
-                    ? currentSelectButton.navigation.selectOnRight
-                    : currentSelectButton.navigation.selectOnLeft;
-            }
+            selectable = normalizedInput.y > 0
+                ? currentSelectButton.navigation.selectOnUp
+                : currentSelectButton.navigation.selectOnDown;
+        }
+        else
+        {
+            selectable = normalizedInput.x > 0
+                ? currentSelectButton.navigation.selectOnRight
+                : currentSelectButton.navigation.selectOnLeft;
+        }
 
-            if (selectable != null)
+        if (selectable != null)
+        {
+            SetCurrentSelectButton((Button)selectable);
+            //frendly unit
+            if (selectable.transform.parent.transform.parent.TryGetComponent(typeof(Unit), out var unitComponent ))
             {
-                SetCurrentSelectButton((Button)selectable);
-                //frendly unit
-                if (selectable.transform.parent.transform.parent.TryGetComponent(typeof(Unit), out var unitComponent ))
+                var unit = (Unit)unitComponent.GetComponent(typeof(Unit));
+                if (unit == null)
                 {
-                    var unit = (Unit)unitComponent.GetComponent(typeof(Unit));
-                    if (unit == null)
-                    {
-                        Debug.Log("Tough luck");
-                        return;
-                    }
+                    Debug.Log("Tough luck");
+                    return;
                 }
             }
         }

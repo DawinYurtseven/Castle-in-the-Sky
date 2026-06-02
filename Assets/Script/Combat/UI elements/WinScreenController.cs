@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using TMPro;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -102,6 +103,8 @@ public class WinScreenController : MonoBehaviour
     private IEnumerator OnStats()
     {
         yield return ClearAllButtons();
+        
+        
         var stats = StatButtons[0];
         stats.transform.localPosition = new Vector3(0, 0);
         stats.SetActive(true);
@@ -165,7 +168,6 @@ public class WinScreenController : MonoBehaviour
             if (allocatable == 0) 
             {
                 Map.System.ReturnToMap();
-                //TODO: end the screen and go to menu
                 gameObject.SetActive(false);
             }
            
@@ -176,282 +178,139 @@ public class WinScreenController : MonoBehaviour
     {
         yield return ClearAllButtons();
         
-        var skill1 = SkillButtons[0];
-        skill1.transform.localPosition = new Vector3(-rectTransform.rect.width * 0.3f, 0);
-        skill1.SetActive(true);
-        var skill2 = SkillButtons[1];
-        skill2.transform.localPosition = new Vector3(0, 0);
-        skill2.SetActive(true);
-        var skill3 = SkillButtons[2];
-        skill3.transform.localPosition = new Vector3(rectTransform.rect.width * 0.3f, 0);
-        skill3.SetActive(true);
+        
+        SkillButtons[0].transform.localPosition = new Vector3(-rectTransform.rect.width * 0.3f, 0);
+        SkillButtons[0].SetActive(true);
+        
+        SkillButtons[1].transform.localPosition = new Vector3(0, 0);
+        SkillButtons[1].SetActive(true);
+        
+        SkillButtons[2].transform.localPosition = new Vector3(rectTransform.rect.width * 0.3f, 0);
+        SkillButtons[2].SetActive(true);
         
         List<Skill> skills = new List<Skill>();
+        List<Animator> anims = new List<Animator>();
         for (int i = 0; i < 3; i++)
         {
             skills.Add(Skill.GetRandomSkill(skills));
+            anims.Add(SkillButtons[i].GetComponent<Animator>());
+        }
+
+        for (int i = 0; i < 3; i++)
+        {
+            var animator = SkillButtons[i].GetComponent<Animator>();
+            animator.SetTrigger(Expand);
+            yield return null; // otherwise too quick
+            yield return new WaitUntil(() => animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator.IsInTransition(0));
+            SkillButtons[i].transform.GetChild(0).gameObject.SetActive(true);
+            SkillButtons[i].transform.GetChild(1).gameObject.SetActive(true);
+            SkillButtons[i].transform.GetChild(2).gameObject.SetActive(true);
+            StartCoroutine(InsertTextIntoObject(SkillButtons[i].transform.GetChild(0).GetComponentInChildren<TMP_Text>(), skills[i].skillDescription));
+            StartCoroutine(InsertTextIntoObject(SkillButtons[i].transform.GetChild(1).GetComponentInChildren<TMP_Text>(), skills[i].skillName));
+            StartCoroutine(InsertTextIntoObject(SkillButtons[i].transform.GetChild(2).GetComponentInChildren<TMP_Text>(),
+                skills[i].skillCost.ToString()));
+            
+            List<GameObject> others = new List<GameObject>();
+            List<Animator> otherAnimators = new List<Animator>();
+            others.AddRange(SkillButtons);
+            otherAnimators.AddRange(anims);
+            others.Remove(SkillButtons[i]);
+            otherAnimators.Remove(animator);
+            
+            SkillButtons[i].GetComponent<Button>().onClick.RemoveAllListeners();
+            var i1 = i;
+            SkillButtons[i].GetComponent<Button>().onClick.AddListener(() =>
+            {
+                mainCharacter.AddSkill(skills[i1]);
+                
+                /*others[0].transform.GetChild(0).gameObject.SetActive(false);
+                others[0].transform.GetChild(1).gameObject.SetActive(false); 
+                others[0].transform.GetChild(2).gameObject.SetActive(false);
+            
+                others[1].transform.GetChild(0).gameObject.SetActive(false);
+                others[1].transform.GetChild(1).gameObject.SetActive(false);
+                others[1].transform.GetChild(2).gameObject.SetActive(false);*/
+
+                StartCoroutine(OnTimeClickEvent( SkillButtons[i1], others, animator, otherAnimators, () =>
+                {
+                    Map.System.ReturnToMap();
+                    gameObject.SetActive(false);
+                }));
+            });
         }
         
-        //expanding the item tabs
-        var animator1 = skill1.GetComponent<Animator>();
-        animator1.SetTrigger(Expand);
-        yield return null; // otherwise too quick
-        yield return new WaitUntil(() => animator1.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator1.IsInTransition(0));
-        animator1.SetBool(FinishedExpanding, true);
-        skill1.transform.GetChild(0).gameObject.SetActive(true);
-        skill1.transform.GetChild(1).gameObject.SetActive(true);
-        skill1.transform.GetChild(2).gameObject.SetActive(true);
-        StartCoroutine(InsertTextIntoObject(skill1.transform.GetChild(1).GetComponentInChildren<TMP_Text>(), skills[0].skillName));
-        StartCoroutine(InsertTextIntoObject(skill1.transform.GetChild(0).GetComponentInChildren<TMP_Text>(), skills[0].skillDescription));
-        StartCoroutine(InsertTextIntoObject(skill1.transform.GetChild(2).GetComponentInChildren<TMP_Text>(),
-            skills[0].skillCost.ToString()));
-        
-        var animator2 = skill2.GetComponent<Animator>();
-        animator2.SetTrigger(Expand);
-        yield return null; // otherwise too quick
-        yield return new WaitUntil(() => animator2.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator2.IsInTransition(0));
-        animator2.SetBool(FinishedExpanding, true);
-        skill2.transform.GetChild(0).gameObject.SetActive(true);
-        skill2.transform.GetChild(1).gameObject.SetActive(true);
-        skill2.transform.GetChild(2).gameObject.SetActive(true);
-        StartCoroutine(InsertTextIntoObject(skill2.transform.GetChild(1).GetComponentInChildren<TMP_Text>(), skills[1].skillName));
-        StartCoroutine(InsertTextIntoObject(skill2.transform.GetChild(0).GetComponentInChildren<TMP_Text>(), skills[1].skillDescription));
-        StartCoroutine(InsertTextIntoObject(skill2.transform.GetChild(2).GetComponentInChildren<TMP_Text>(), skills[1].skillCost.ToString()));
-        
-        var animator3 = skill3.GetComponent<Animator>();
-        animator3.SetTrigger(Expand);
-        yield return null; // otherwise too quick
-        yield return new WaitUntil(() => animator3.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator3.IsInTransition(0));
-        animator3.SetBool(FinishedExpanding, true);
-        skill3.transform.GetChild(0).gameObject.SetActive(true);
-        skill3.transform.GetChild(1).gameObject.SetActive(true);
-        skill3.transform.GetChild(2).gameObject.SetActive(true);
-        StartCoroutine(InsertTextIntoObject(skill3.transform.GetChild(1).GetComponentInChildren<TMP_Text>(), skills[2].skillName));
-        StartCoroutine(InsertTextIntoObject(skill3.transform.GetChild(0).GetComponentInChildren<TMP_Text>(), skills[2].skillDescription));
-        StartCoroutine(InsertTextIntoObject(skill3.transform.GetChild(2).GetComponentInChildren<TMP_Text>(), skills[2].skillCost.ToString()));
-
-        skill1.GetComponent<Button>().onClick.RemoveAllListeners();
-        skill1.GetComponent<Button>().onClick.AddListener(() =>
-        {
-            animator1.SetBool(FinishedExpanding, false);
-            animator2.SetBool(FinishedExpanding, false);
-            animator3.SetBool(FinishedExpanding, false);
-            List<GameObject> others = new List<GameObject>();
-            List<Animator> otherAnimators = new List<Animator>();
-            others.Add(skill2);
-            others.Add(skill3);
-            otherAnimators.Add(animator2);
-            otherAnimators.Add(animator3);
-            
-            mainCharacter.AddSkill(skills[0]);
-
-            skill3.transform.GetChild(0).gameObject.SetActive(false);
-            skill3.transform.GetChild(1).gameObject.SetActive(false);
-            skill3.transform.GetChild(2).gameObject.SetActive(false);
-            
-            skill2.transform.GetChild(0).gameObject.SetActive(false);
-            skill2.transform.GetChild(1).gameObject.SetActive(false);
-            skill2.transform.GetChild(2).gameObject.SetActive(false);
-
-            StartCoroutine(OnTimeClickEvent( skill1, others, animator1, otherAnimators,() =>{}));
-            
-            //TODO: MoveToMap()
-            Map.System.ReturnToMap();
-            gameObject.SetActive(false);
-        });
-        
-        skill2.GetComponent<Button>().onClick.RemoveAllListeners();
-        skill2.GetComponent<Button>().onClick.AddListener(() =>
-        {
-            animator1.SetBool(FinishedExpanding, false);
-            animator2.SetBool(FinishedExpanding, false);
-            animator3.SetBool(FinishedExpanding, false);
-            List<GameObject> others = new List<GameObject>();
-            List<Animator> otherAnimators = new List<Animator>();
-            others.Add(skill1);
-            others.Add(skill3);
-            otherAnimators.Add(animator1);
-            otherAnimators.Add(animator3);
-            
-            mainCharacter.AddSkill(skills[1]);
-            skill3.transform.GetChild(0).gameObject.SetActive(false);
-            skill3.transform.GetChild(1).gameObject.SetActive(false);
-            skill3.transform.GetChild(2).gameObject.SetActive(false);
-            
-            skill1.transform.GetChild(2).gameObject.SetActive(false);
-            skill1.transform.GetChild(0).gameObject.SetActive(false);
-            skill1.transform.GetChild(1).gameObject.SetActive(false);
-            StartCoroutine(OnTimeClickEvent( skill2, others, animator2, otherAnimators,() =>{}));
-
-            //TODO: MoveToMap()
-            Map.System.ReturnToMap();
-            gameObject.SetActive(false);
-        });
-        
-        skill3.GetComponent<Button>().onClick.RemoveAllListeners();
-        skill3.GetComponent<Button>().onClick.AddListener(() =>
-        {
-            animator1.SetBool(FinishedExpanding, false);
-            animator2.SetBool(FinishedExpanding, false);
-            animator3.SetBool(FinishedExpanding, false);
-            List<GameObject> others = new List<GameObject>();
-            List<Animator> otherAnimators = new List<Animator>();
-            others.Add(skill1);
-            others.Add(skill2);
-            otherAnimators.Add(animator1);
-            otherAnimators.Add(animator2);
-            
-            mainCharacter.AddSkill(skills[2]);
-            
-            skill1.transform.GetChild(2).gameObject.SetActive(false);
-            skill1.transform.GetChild(0).gameObject.SetActive(false);
-            skill1.transform.GetChild(1).gameObject.SetActive(false);
-            
-            skill2.transform.GetChild(0).gameObject.SetActive(false);
-            skill2.transform.GetChild(1).gameObject.SetActive(false);
-            skill2.transform.GetChild(2).gameObject.SetActive(false);
-            
-            StartCoroutine(OnTimeClickEvent( skill3, others, animator3, otherAnimators,() =>{} ));
-            
-            //TODO: MoveToMap()
-            Map.System.ReturnToMap();
-            gameObject.SetActive(false);
-        });
-        currentSelectButton = skill1.GetComponent<Button>();
+        currentSelectButton = SkillButtons[0].GetComponent<Button>();
         currentSelectButton.Select();
     }
-    
+
     private IEnumerator OnItems()
     {
         yield return ClearAllButtons();
-        
-        var item1 = ItemButtons[0];
-        item1.transform.localPosition = new Vector3(-rectTransform.rect.width * 0.3f, 0);
-        item1.SetActive(true);
-        var item2 = ItemButtons[1];
-        item2.transform.localPosition = new Vector3(0, 0);
-        item2.SetActive(true);
-        var item3 = ItemButtons[2];
-        item3.transform.localPosition = new Vector3(rectTransform.rect.width * 0.3f, 0);
-        item3.SetActive(true);
-        
+
+
+        ItemButtons[0].transform.localPosition = new Vector3(-rectTransform.rect.width * 0.3f, 0);
+        ItemButtons[0].SetActive(true);
+
+        ItemButtons[1].transform.localPosition = new Vector3(0, 0);
+        ItemButtons[1].SetActive(true);
+
+        ItemButtons[2].transform.localPosition = new Vector3(rectTransform.rect.width * 0.3f, 0);
+        ItemButtons[2].SetActive(true);
+
         List<Items> items = new List<Items>();
+        List<Animator> anims = new List<Animator>();
         for (int i = 0; i < 3; i++)
         {
             items.Add(Items.GetRandomItem(items));
+            anims.Add(ItemButtons[i].GetComponent<Animator>());
         }
-        
-        //expanding the item tabs
-        var animator1 = item1.GetComponent<Animator>();
-        animator1.SetTrigger(Expand);
-        yield return null; // otherwise too quick
-        yield return new WaitUntil(() => animator1.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator1.IsInTransition(0));
-        animator1.SetBool(FinishedExpanding, true);
-        StartCoroutine(InsertTextIntoObject(item1.transform.GetChild(0).GetComponent<TMP_Text>(), items[0].ItemName));
-        StartCoroutine(InsertTextIntoObject(item1.transform.GetChild(1).GetComponent<TMP_Text>(), items[0].ItemDescription));
-        
-        var animator2 = item2.GetComponent<Animator>();
-        animator2.SetTrigger(Expand);
-        yield return null; // otherwise too quick
-        yield return new WaitUntil(() => animator2.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator2.IsInTransition(0));
-        animator2.SetBool(FinishedExpanding, true);
-        StartCoroutine(InsertTextIntoObject(item2.transform.GetChild(0).GetComponent<TMP_Text>(), items[1].ItemName));
-        StartCoroutine(InsertTextIntoObject(item2.transform.GetChild(1).GetComponent<TMP_Text>(), items[1].ItemDescription));
-        
-        var animator3 = item3.GetComponent<Animator>();
-        animator3.SetTrigger(Expand);
-        yield return null; // otherwise too quick
-        yield return new WaitUntil(() => animator3.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator3.IsInTransition(0));
-        animator3.SetBool(FinishedExpanding, true);
-        StartCoroutine(InsertTextIntoObject(item3.transform.GetChild(0).GetComponent<TMP_Text>(), items[2].ItemName));
-        StartCoroutine(InsertTextIntoObject(item3.transform.GetChild(1).GetComponent<TMP_Text>(), items[2].ItemDescription));
-        
-        item1.GetComponent<Button>().onClick.RemoveAllListeners();
-        item1.GetComponent<Button>().onClick.AddListener(() =>
-        {
-            animator1.SetBool(FinishedExpanding, false);
-            animator2.SetBool(FinishedExpanding, false);
-            animator3.SetBool(FinishedExpanding, false);
-            List<GameObject> others = new List<GameObject>();
-            List<Animator> otherAnimators = new List<Animator>();
-            others.Add(item2);
-            others.Add(item3);
-            otherAnimators.Add(animator2);
-            otherAnimators.Add(animator3);
-            var item = mainCharacter.items.Find((e) => e.GetType() == items[0].GetType());
-            if (item == null)
-            {
-                item = items[0];
-                mainCharacter.items.Add(items[0]);
-            }
-            var unit = new List<Unit>(BattleSystem.system.playerUnits);
-            item.Acquire(unit);
-            StartCoroutine(OnTimeClickEvent( item1, others, animator1, otherAnimators,() =>{}));
-            
-            //TODO: MoveToMap()
-            Map.System.ReturnToMap();
-            gameObject.SetActive(false);
-        });
-        
-        item2.GetComponent<Button>().onClick.RemoveAllListeners();
-        item2.GetComponent<Button>().onClick.AddListener(() =>
-        {
-            animator1.SetBool(FinishedExpanding, false);
-            animator2.SetBool(FinishedExpanding, false);
-            animator3.SetBool(FinishedExpanding, false);
-            List<GameObject> others = new List<GameObject>();
-            List<Animator> otherAnimators = new List<Animator>();
-            others.Add(item1);
-            others.Add(item3);
-            otherAnimators.Add(animator1);
-            otherAnimators.Add(animator3);
-            var item = mainCharacter.items.Find((e) => e.GetType() == items[1].GetType());
-            if (item == null)
-            {
-                item = items[1];
-                mainCharacter.items.Add(items[1]);
-            }
-            var unit = new List<Unit>(BattleSystem.system.playerUnits);
-            item.Acquire(unit);
-            StartCoroutine(OnTimeClickEvent( item2, others, animator2, otherAnimators,() =>{}));
 
-            //TODO: MoveToMap()
-            Map.System.ReturnToMap();
-            gameObject.SetActive(false);
-        });
-        
-        item3.GetComponent<Button>().onClick.RemoveAllListeners();
-        item3.GetComponent<Button>().onClick.AddListener(() =>
+        for (int i = 0; i < 3; i++)
         {
-            animator1.SetBool(FinishedExpanding, false);
-            animator2.SetBool(FinishedExpanding, false);
-            animator3.SetBool(FinishedExpanding, false);
+            var animator = ItemButtons[i].GetComponent<Animator>();
+            animator.SetTrigger(Expand);
+            yield return null; // otherwise too quick
+            yield return new WaitUntil(() =>
+                animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator.IsInTransition(0));
+            StartCoroutine(InsertTextIntoObject(ItemButtons[i].transform.GetChild(0).GetComponent<TMP_Text>(),
+                items[i].ItemName));
+            StartCoroutine(InsertTextIntoObject(ItemButtons[i].transform.GetChild(1).GetComponent<TMP_Text>(),
+                items[i].ItemDescription));
+
             List<GameObject> others = new List<GameObject>();
             List<Animator> otherAnimators = new List<Animator>();
-            others.Add(item1);
-            others.Add(item2);
-            otherAnimators.Add(animator1);
-            otherAnimators.Add(animator2);
-            var item = mainCharacter.items.Find((e) => e.GetType() == items[2].GetType());
-            if (item == null)
-            {
-                item = items[2];
-                mainCharacter.items.Add(items[2]);
-            }
-            var unit = new List<Unit>(BattleSystem.system.playerUnits);
-            item.Acquire(unit);
-            StartCoroutine(OnTimeClickEvent(item3, others, animator3, otherAnimators,() =>{} ));
-            
-            //TODO: MoveToMap()
-            Map.System.ReturnToMap();
-            gameObject.SetActive(false);
-        });
+            others.AddRange(ItemButtons);
+            otherAnimators.AddRange(anims);
+            others.Remove(ItemButtons[i]);
+            otherAnimators.Remove(animator);
 
-        currentSelectButton = item1.GetComponent<Button>();
+            ItemButtons[i].GetComponent<Button>().onClick.RemoveAllListeners();
+            var i1 = i;
+            ItemButtons[i].GetComponent<Button>().onClick.AddListener(() =>
+            {
+                var item = mainCharacter.items.Find((e) => e.GetType() == items[i1].GetType());
+                if (item == null)
+                {
+                    item = items[i1];
+                    mainCharacter.items.Add(items[i1]);
+                }
+
+                var unit = new List<Unit>(BattleSystem.system.playerUnits);
+                item.Acquire(unit);
+                StartCoroutine(OnTimeClickEvent(ItemButtons[i1], others, animator, otherAnimators, () =>
+                {
+                    Map.System.ReturnToMap();
+                    gameObject.SetActive(false);
+                }));
+
+                
+            });
+
+        }
+
+
+        currentSelectButton = ItemButtons[0].GetComponent<Button>();
         currentSelectButton.Select();
-        //await animations type shit.
-
-        //make new 3 buttons for each item
     }
 
     private IEnumerator OnTimeClickEvent(GameObject target, List<GameObject> others, Animator animator,
@@ -476,7 +335,7 @@ public class WinScreenController : MonoBehaviour
         {
             ani.SetTrigger(Collapse);
         }
-        
+        yield return new WaitForSeconds(0.5f);
         yield return target.transform.DOLocalMove(Vector3.zero, 0.5f).SetEase(Ease.InExpo).WaitForCompletion();
         yield return new WaitForSeconds(1f);
         var lastText = target.GetComponentsInChildren<TMP_Text>(true);
@@ -518,15 +377,10 @@ public class WinScreenController : MonoBehaviour
             for (int i = 0; i < rootButtons.Count; i++)
             {
                 rootButtons[i].GetComponent<Animator>().SetTrigger(Exit);
+                var length = rootButtons[i].GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.length;
+                yield return new WaitForSeconds(length/2f);
+                rootButtons[i].SetActive(false);
             }
-            var length = rootButtons[0].GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.length;
-            yield return new WaitForSeconds(length + 0.2f);
-        }
-        
-        for (int i = 0; i < rootButtons.Count; i++)
-        {
-            rootButtons[i].transform.localPosition = new  Vector3(screenWidth * 1.5f, screenHeight * (0.25f - 0.25f * i), 0);
-            rootButtons[i].SetActive(false);
         }
         
         StatButtons[0].SetActive(false);
