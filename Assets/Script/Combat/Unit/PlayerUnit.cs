@@ -140,15 +140,18 @@ public class PlayerUnit : Unit
     /// </summary>
     private readonly Stack<CombatState> stateStack = new();
 
+    private bool inAnim = false;
+
     public IEnumerator Submit(Unit targetUnit)
     {
         //this will simulate the ui for now until I have actually implemented ui
-        if (stateStack.Count == 0) yield break;
+        if (stateStack.Count == 0 || inAnim) yield break;
         if (targetUnit != null)
         {
             SetCurrentTarget(new List<Unit> { targetUnit });
         }
 
+        inAnim = true;
         switch (stateStack.Peek())
         {
             case CombatState.Root:
@@ -232,11 +235,12 @@ public class PlayerUnit : Unit
 
                 break;
         }
+        inAnim = false;
     }
 
     public IEnumerator Cancel()
     {
-        if (stateStack.Count < 2) yield break;
+        if (stateStack.Count < 2 || inAnim) yield break;
         stateStack.Pop();
         switch (stateStack.Peek())
         {
@@ -265,21 +269,26 @@ public class PlayerUnit : Unit
             case CombatState.TargetAlly:
                 break;
         }
+        inAnim = false;
     }
 
     public IEnumerator SkillTab()
     {
-        if (stateStack.Peek() != CombatState.Root) yield break;
+        if (stateStack.Peek() != CombatState.Root || inAnim) yield break;
+        inAnim = true;
         playerCombatUiController.SetVisibility(false);
-        stateStack.Push(CombatState.Skill);
         yield return BattleSystem.system.MoveCamera(cameraTargets[1], BattleSystem.CameraTargets.Base);
         playerCombatUiController.SkillTabVisibility(true, cameraTargets[1], Skills, this);
         playerCombatUiController.SetVisibility(true);
         BattleSystem.system.SetCurrentSelectButton(playerCombatUiController.PeekFirstButton());
+        stateStack.Push(CombatState.Skill);
+        inAnim = false;
     }
 
     public IEnumerator Inspect()
     {
+        if(inAnim) yield break;
+        inAnim = true;
         var state = stateStack.Peek();
         if (state == CombatState.Root)
         {
@@ -292,6 +301,7 @@ public class PlayerUnit : Unit
         {
             BattleSystem.system.TriggerSpecificButtonAction();
         }
+        inAnim = false;
     }
 
     #endregion

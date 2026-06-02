@@ -30,57 +30,30 @@ public class WinScreenController : MonoBehaviour
     {
         //TODO: make sure to reset all skills, stat icons and so on
         yield return ClearAllButtons(false);
-        
-        rectTransform = GetComponent<RectTransform>();
-        
-
-        var stats = rootButtons[0];
-        stats.transform.localPosition = new Vector3(screenWidth * 1.5f, screenHeight * 0.25f, 0);
-        stats.SetActive(true);
-        var statAnimator = stats.GetComponent<Animator>();
-        statAnimator.SetTrigger(Enter);
-        stats.GetComponent<Button>().onClick.RemoveAllListeners();
-        stats.GetComponent<Button>().onClick.AddListener(() =>
-        {
-            statAnimator.SetBool(FinishedEntering, false);
-            StartCoroutine(OnStats());
-        });
+         
+        rootButtons[0].transform.localPosition = new Vector3(screenWidth * 1.5f, screenHeight * 0.25f, 0);
+        rootButtons[0].SetActive(true);
+        rootButtons[0].GetComponent<Animator>().SetTrigger(Enter);
         yield return null;
         
-        var skills = rootButtons[1];
-        skills.transform.localPosition = new Vector3(screenWidth * 1.5f, 0, 0);
-        skills.SetActive(true);
-        var skillAnimator = skills.GetComponent<Animator>();
-        skillAnimator.SetTrigger(Enter);
-        skills.GetComponent<Button>().onClick.RemoveAllListeners();
-        skills.GetComponent<Button>().onClick.AddListener(() =>
-        {
-            skillAnimator.SetBool(FinishedEntering, false);
-            StartCoroutine(OnSkills());
-        });
+        rootButtons[1].transform.localPosition = new Vector3(screenWidth * 1.5f, 0, 0);
+        rootButtons[1].SetActive(true);
+        rootButtons[1].GetComponent<Animator>().SetTrigger(Enter);
+        
         yield return null;
         
-        var items = rootButtons[2];
-        items.transform.localPosition = new Vector3(screenWidth * 1.5f, -screenHeight * 0.25f, 0);
-        items.SetActive(true);
-        var itemsAnimator = items.GetComponent<Animator>();
-        itemsAnimator.SetTrigger(Enter);
-        items.GetComponent<Button>().onClick.RemoveAllListeners();
-        items.GetComponent<Button>().onClick.AddListener(() =>
-        {
-            itemsAnimator.SetBool(FinishedEntering, false);
-            StartCoroutine(OnItems());
-        });
-
+        rootButtons[2].transform.localPosition = new Vector3(screenWidth * 1.5f, -screenHeight * 0.25f, 0);
+        rootButtons[2].SetActive(true); 
+        rootButtons[2].GetComponent<Animator>().SetTrigger(Enter);
+        var itemsAnimator = rootButtons[2].GetComponent<Animator>();
         yield return null;
-        yield return new WaitUntil(() => itemsAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !statAnimator.IsInTransition(0));
-
+        yield return new WaitUntil(() => itemsAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !itemsAnimator.IsInTransition(0));
         
-        statAnimator.SetBool(FinishedEntering, true);
-        skillAnimator.SetBool(FinishedEntering, true);
-        itemsAnimator.SetBool(FinishedEntering, true);
+        rootButtons[0].GetComponent<Animator>().SetBool(FinishedEntering, true);
+        rootButtons[1].GetComponent<Animator>().SetBool(FinishedEntering, true);
+        rootButtons[2].GetComponent<Animator>().SetBool(FinishedEntering, true);
         
-        currentSelectButton = stats.GetComponent<Button>();
+        currentSelectButton = rootButtons[0].GetComponent<Button>();
         currentSelectButton.Select();
     }
     
@@ -95,7 +68,37 @@ public class WinScreenController : MonoBehaviour
         
     }
 
+    private void Awake()
+    {
+        rectTransform = GetComponent<RectTransform>();
+    }
 
+
+    public void OnStatsStart()
+    {
+        rootButtons[0].GetComponent<Animator>().SetBool(FinishedEntering, false);
+        rootButtons[1].GetComponent<Animator>().SetBool(FinishedEntering, false);
+        rootButtons[2].GetComponent<Animator>().SetBool(FinishedEntering, false);
+        StartCoroutine(OnStats());
+    }
+
+    public void OnSkillsStart()
+    {
+        rootButtons[0].GetComponent<Animator>().SetBool(FinishedEntering, false);
+        rootButtons[1].GetComponent<Animator>().SetBool(FinishedEntering, false);
+        rootButtons[2].GetComponent<Animator>().SetBool(FinishedEntering, false);
+        StartCoroutine(OnSkills());
+    }
+
+    public void OnItemsStart()
+    {
+        rootButtons[0].GetComponent<Animator>().SetBool(FinishedEntering, false);
+        rootButtons[1].GetComponent<Animator>().SetBool(FinishedEntering, false);
+        rootButtons[2].GetComponent<Animator>().SetBool(FinishedEntering, false);
+        StartCoroutine(OnItems());
+    }
+    
+    
     private IEnumerator OnStats()
     {
         yield return ClearAllButtons();

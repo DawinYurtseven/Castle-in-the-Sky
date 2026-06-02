@@ -534,6 +534,17 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!114 &742883083 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7299663094556790823, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+  m_PrefabInstance: {fileID: 657222546890148984}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d54b20d32cf4357428a8660d579522d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WinScreenController
 --- !u!4 &956288253 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6784757422468977715, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
@@ -1215,6 +1226,34 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1088385718027153963, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1088385718027153963, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1088385718027153963, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 742883083}
+    - target: {fileID: 1088385718027153963, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1088385718027153963, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: OnItemsStart
+      objectReference: {fileID: 0}
+    - target: {fileID: 1088385718027153963, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: WinScreenController, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 1088385718027153963, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     - target: {fileID: 1526171371620134634, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
       propertyPath: m_text
       value: 
@@ -1262,6 +1301,34 @@ PrefabInstance:
     - target: {fileID: 3232616512845849102, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
       propertyPath: m_ReferenceResolution.y
       value: 2160
+      objectReference: {fileID: 0}
+    - target: {fileID: 4103933246679353058, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4103933246679353058, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4103933246679353058, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 742883083}
+    - target: {fileID: 4103933246679353058, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4103933246679353058, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: OnStatsStart
+      objectReference: {fileID: 0}
+    - target: {fileID: 4103933246679353058, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: WinScreenController, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 4103933246679353058, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 4417200473696515391, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
       propertyPath: m_ActionEvents.Array.data[0].m_PersistentCalls.m_Calls.Array.data[0].m_Target
@@ -1466,6 +1533,34 @@ PrefabInstance:
     - target: {fileID: 7904981863880879093, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: -1.216
+      objectReference: {fileID: 0}
+    - target: {fileID: 8394849215576180027, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8394849215576180027, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8394849215576180027, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 742883083}
+    - target: {fileID: 8394849215576180027, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8394849215576180027, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: OnSkillsStart
+      objectReference: {fileID: 0}
+    - target: {fileID: 8394849215576180027, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: WinScreenController, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 8394849215576180027, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
