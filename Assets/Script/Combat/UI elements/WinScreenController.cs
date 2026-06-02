@@ -28,6 +28,7 @@ public class WinScreenController : MonoBehaviour
 
     private IEnumerator ResetScreen()
     {
+        //TODO: make sure to reset all skills, stat icons and so on
         yield return ClearAllButtons(false);
         
         rectTransform = GetComponent<RectTransform>();
@@ -38,6 +39,7 @@ public class WinScreenController : MonoBehaviour
         stats.SetActive(true);
         var statAnimator = stats.GetComponent<Animator>();
         statAnimator.SetTrigger(Enter);
+        stats.GetComponent<Button>().onClick.RemoveAllListeners();
         stats.GetComponent<Button>().onClick.AddListener(() =>
         {
             statAnimator.SetBool(FinishedEntering, false);
@@ -50,6 +52,7 @@ public class WinScreenController : MonoBehaviour
         skills.SetActive(true);
         var skillAnimator = skills.GetComponent<Animator>();
         skillAnimator.SetTrigger(Enter);
+        skills.GetComponent<Button>().onClick.RemoveAllListeners();
         skills.GetComponent<Button>().onClick.AddListener(() =>
         {
             skillAnimator.SetBool(FinishedEntering, false);
@@ -62,6 +65,7 @@ public class WinScreenController : MonoBehaviour
         items.SetActive(true);
         var itemsAnimator = items.GetComponent<Animator>();
         itemsAnimator.SetTrigger(Enter);
+        items.GetComponent<Button>().onClick.RemoveAllListeners();
         items.GetComponent<Button>().onClick.AddListener(() =>
         {
             itemsAnimator.SetBool(FinishedEntering, false);
@@ -485,6 +489,7 @@ public class WinScreenController : MonoBehaviour
 
     private IEnumerator InsertTextIntoObject(TMP_Text textObj, string text)
     {
+        textObj.text = "";
         for (int i = 0; i < text.Length; i++)
         {
             textObj.text += text[i];
