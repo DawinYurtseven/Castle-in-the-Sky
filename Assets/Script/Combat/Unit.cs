@@ -236,12 +236,13 @@ public class Unit : MonoBehaviour
             var totalDamage = Random.Range(0, 100) < critChance ? baseDamage * critAmount / 100 : baseDamage;
 
             //move object towards target
-
+            yield return BattleSystem.system.MoveCamera(null, BattleSystem.CameraTargets.Empty);
             yield return transform.DOMove(currentTarget[0].positionTargets[0].position, 0.2f).SetEase(Ease.InExpo)
                 .WaitForCompletion();
             //TODO: Do some anime shit 
             yield return new WaitForSeconds(0.3f);
             animator.SetTrigger(Attack);
+            yield return null;
             while(!(animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator.IsInTransition(0)))
             {
                 BattleSystem.system.battleCamera.transform.position = cameraTargets[0].position;
@@ -249,7 +250,8 @@ public class Unit : MonoBehaviour
                 yield return null;
             }
 
-            currentTarget[0].TakeDamage(totalDamage);
+            currentTarget[0].TakeDamage(totalDamage);// change with animation events
+            yield return BattleSystem.system.MoveCamera(null, BattleSystem.CameraTargets.Empty);
             yield return transform.DOMove(startPosition, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
         } while (repeated && currentTarget[0].currentHP > 0);
 
