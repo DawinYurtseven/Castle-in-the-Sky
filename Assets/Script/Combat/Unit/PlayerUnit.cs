@@ -78,8 +78,12 @@ public class PlayerUnit : Unit
         }
     }
 
-    public void AddSkill(Skill skill)
+    public void AddSkill(Skill skill, int i = -1)
     {
+        if (i != -1)
+        {
+            //TODO: replace with skill in there
+        }
         var foundName = skills.Find((e) => e.Equals(skill.name));
         if (foundName == SkillNames.none && skill.name != SkillNames.none)
             skills.Add(skill.name);

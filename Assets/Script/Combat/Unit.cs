@@ -9,7 +9,6 @@ using Random = UnityEngine.Random;
 
 public class Unit : MonoBehaviour
 {
-    private static readonly int Attack = Animator.StringToHash("Attack");
 
     #region Stats
 
@@ -108,6 +107,8 @@ public class Unit : MonoBehaviour
     [Header("Skills")] 
     [SerializeField] protected List<SkillNames> skills = new();
     internal Skill SelectedSkill;
+    public int SkillCount => skills.Count;
+    public Skill GetSkill(int index) => Skill.GetSkill(skills[index]);
 
     //TODO: Same for skills.
 
@@ -241,7 +242,7 @@ public class Unit : MonoBehaviour
                 .WaitForCompletion();
             //TODO: Do some anime shit 
             yield return new WaitForSeconds(0.3f);
-            animator.SetTrigger(Attack);
+            animator.Play("Attack");
             yield return null;
             while(!(animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator.IsInTransition(0)))
             {

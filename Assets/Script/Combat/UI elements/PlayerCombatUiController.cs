@@ -103,16 +103,17 @@ public class PlayerCombatUiController : MonoBehaviour
                 skillObj.GetComponent<RectTransform>().localRotation = desiredRot ;
                 
                 var skillButton = skillObj.GetComponent<Button>();
+                skillButton.onClick.RemoveAllListeners();
                 skillButton.onClick.AddListener(() =>
                 {
                     playerUnit.SelectedSkill = skill;
                 });
-                skillButton.GetComponent<GameButton>().OnSelectEvent += () =>
+                skillButton.GetComponent<GameButton>().OnSelectEvent = () =>
                 {
                     currentSelectedSkill = skill;
                     currentSelectedSkillButton = skillButton;
                 };
-                skillButton.GetComponent<GameButton>().OnSpecificAction += () =>
+                skillButton.GetComponent<GameButton>().OnSpecificAction = () =>
                 {
                     bool active = skillBaseImage.transform.Find("Skill Description").gameObject.activeSelf;
                     skillObj.transform.DOScale(active ? Vector3.one : Vector3.one * 1.6f, 0.4f);
@@ -125,7 +126,7 @@ public class PlayerCombatUiController : MonoBehaviour
                     });
                 };
 
-                skillButton.GetComponent<GameButton>().OnDeselectEvent += () =>
+                skillButton.GetComponent<GameButton>().OnDeselectEvent = () =>
                 {
                     bool active = skillBaseImage.transform.Find("Skill Description").gameObject.activeSelf;
                     if (!active) return;

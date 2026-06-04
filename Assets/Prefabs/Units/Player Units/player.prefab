@@ -352,7 +352,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &173086505946394059
 Transform:
   m_ObjectHideFlags: 0
@@ -479,7 +479,7 @@ MonoBehaviour:
   repeated: 0
   blocked: 0
   bufferedDamage: 0
-  skills: 
+  skills: 010000000100000001000000010000000100000001000000
   positionTargets:
   - {fileID: 1402062872345055723}
   cameraTargets:

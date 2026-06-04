@@ -79,10 +79,9 @@ public class BattleSystem : MonoBehaviour
         for(int i = 0; i < playerUnits.Count; i++)
         {
             var vec = playerPositionTargets.EvaluatePosition(1f / (playerUnits.Count + 1) * (i + 1));
-            Vector3 startPosition = new Vector3(vec.x, 0.0f, vec.z) + Vector3.up * 0.5f;
+            Vector3 startPosition = new Vector3(vec.x, vec.y, vec.z) + Vector3.up * 0.5f;
             var temp = playerUnits[i].gameObject;
             temp.transform.position = startPosition;
-            //TODO: Take the spline and cut it up in the amount of units per side. then assign the positions and rotations based on the new cut up splines.
             temp.transform.rotation = Quaternion.Euler
             (
                 0, 
@@ -96,7 +95,7 @@ public class BattleSystem : MonoBehaviour
         for (int i = 0; i < enemyUnits.Count; i++)
         {
             var vec = enemyPositionTargets.EvaluatePosition(1f/(enemyUnits.Count + 1) * (i+1));
-            Vector3 startPosition = new Vector3(vec.x, 0.5f, vec.z) + Vector3.up * 0.5f;
+            Vector3 startPosition = new Vector3(vec.x, vec.y, vec.z) + Vector3.up * 0.5f;
             var temp = Instantiate(enemyUnits[i], startPosition, Quaternion.identity);
             temp.transform.rotation = Quaternion.Euler
             (
