@@ -105,10 +105,11 @@ public class Unit : MonoBehaviour
     #region Skills
     
     [Header("Skills")] 
-    [SerializeField] protected List<SkillNames> skills = new();
+    [SerializeField] protected List<SkillNames> skillNames = new();
+    protected readonly List<Skill> Skills= new();
     internal Skill SelectedSkill;
-    public int SkillCount => skills.Count;
-    public Skill GetSkill(int index) => Skill.GetSkill(skills[index]);
+    public int SkillCount => Skills.Count;
+    public Skill GetSkill(int index) => Skills[index];
 
     //TODO: Same for skills.
 
@@ -122,6 +123,9 @@ public class Unit : MonoBehaviour
     ///
     [Header("Components")] 
     [SerializeField] protected Transform[] positionTargets;
+    /// <summary>
+    /// 0 - base 
+    /// </summary>
     [SerializeField] public Transform[] cameraTargets;
 
     [SerializeField] internal Animator animator;
@@ -154,6 +158,10 @@ public class Unit : MonoBehaviour
     internal virtual void Awake()
     {
         animator = GetComponent<Animator>();
+        foreach (var skillname in skillNames)
+        {
+            Skills.Add(Skill.GetSkill(skillname));
+        }
     }
 
     private void Start()
@@ -277,7 +285,7 @@ public class Unit : MonoBehaviour
         yield return EndTurn();
     }
 
-    public void BeginningOfCombat()
+    public virtual void BeginningOfCombat()
     {
         CalculateStats(true);
 

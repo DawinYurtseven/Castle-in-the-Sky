@@ -85,6 +85,17 @@ public class InputSystemWrapper : MonoBehaviour
         }
     }
 
+    public void RightShoulderButton(InputAction.CallbackContext context)
+    {
+        if (!context.performed) return;
+        switch (state)
+        {
+            case State.Combat:
+                battleSystem.SwitchTab();
+                break;
+        }
+    }
+
     //up, down, left, right
     private Vector2 previousDirection = Vector2.zero;
     public void Navigate(InputAction.CallbackContext context)

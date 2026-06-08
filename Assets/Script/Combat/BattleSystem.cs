@@ -6,7 +6,6 @@ using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.EventSystems;
 using UnityEngine.Splines;
 using UnityEngine.UI;
 
@@ -204,18 +203,23 @@ public class BattleSystem : MonoBehaviour
 
     public void SetCurrentSelectButton(Button button)
     {
-        currentSelectButton = button;
-        currentSelectButton?.Select();
         if (currentSelectButton != null && currentSelectButton.TryGetComponent(typeof(GameButton), out var component))
         {
             var gameButton = component as GameButton;
-            if (gameButton != null) gameButton.OnSelectEvent.Invoke();
+            if (gameButton != null) gameButton.OnDeselectEvent?.Invoke();
+        }
+        currentSelectButton = button;
+        currentSelectButton?.Select();
+        if (currentSelectButton != null && currentSelectButton.TryGetComponent(typeof(GameButton), out component))
+        {
+            var gameButton = component as GameButton;
+            if (gameButton != null) gameButton.OnSelectEvent?.Invoke();
         }
     }
 
     public void DeselectButton()
     {
-        EventSystem.current.SetSelectedGameObject(null);
+        SetCurrentSelectButton(null);
     }
 
     public enum CameraTargets
@@ -241,6 +245,7 @@ public class BattleSystem : MonoBehaviour
     {
         var wantedFOV = 60f;
         float zAxis;
+        Action method = () => {};
         switch (cameraTarget)
         {
             case CameraTargets.Empty:
@@ -257,18 +262,25 @@ public class BattleSystem : MonoBehaviour
                 wantedFOV = 70f;
                 if (median)
                 {
+                    target = cameraTargets[2];
                     Vector3 middlePointEnemy = Vector3.zero;
                     foreach (var t in playerUnits)
                     {
                         middlePointEnemy += t.transform.position;
                         t.CalculateHUDValues();
-                        t.SelectHUD(true, battleCamera.transform);
                     }
                     middlePointEnemy /= playerUnits.Count;
                     
                     zAxis = target.eulerAngles.z;
                     target.LookAt(middlePointEnemy);
                     target.eulerAngles =  new Vector3(target.eulerAngles.x, target.eulerAngles.y, zAxis);
+                    method = () =>
+                    {
+                        foreach (var t in playerUnits)
+                        {
+                            t.SelectHUD(true, battleCamera.transform);
+                        }
+                    };
                 }
                 else
                 {
@@ -287,22 +299,19 @@ public class BattleSystem : MonoBehaviour
 
                         playerUnits[i].CalculateHUDValues(left, right);
                     }
-                }
-                
-                if (targetUnit == null || targetUnit is not EnemyUnit)
-                {
-                    foreach (var t in enemyUnits.Where(t => t.HP > 0))
+                    if (targetUnit == null || targetUnit is  EnemyUnit)
                     {
-                        targetUnit = t;
-                        break;
+                        foreach (var t in playerUnits.Where(t => t.HP > 0))
+                        {
+                            targetUnit = t;
+                            break;
+                        }
                     }
-                }
                 
-                //TODO: make this player unit specific for enemy view and not rotate the z axis
+                    //TODO: make this player unit specific for enemy view and not rotate the z axis
 
-                currentSelectButton = targetUnit.selected;
-                currentSelectButton.Select();
-                targetUnit.SelectHUD(true, battleCamera.transform);
+                    SetCurrentSelectButton(targetUnit.selected);
+                }
                 break;
             case CameraTargets.EnemyView:
                 wantedFOV = 70f;
@@ -313,13 +322,20 @@ public class BattleSystem : MonoBehaviour
                     {
                         middlePointEnemy += t.transform.position;
                         t.CalculateHUDValues();
-                        t.SelectHUD(true, battleCamera.transform);
                     }
                     middlePointEnemy /= enemyUnits.Count;
                     
                     zAxis = target.eulerAngles.z;
                     target.LookAt(middlePointEnemy);
                     target.eulerAngles =  new Vector3(target.eulerAngles.x, target.eulerAngles.y, zAxis);
+
+                    method = () =>
+                    {
+                        foreach (var t in enemyUnits)
+                        {
+                            t.SelectHUD(true, battleCamera.transform);
+                        }
+                    };
                 }
                 else
                 {
@@ -343,25 +359,19 @@ public class BattleSystem : MonoBehaviour
                     var interpolatedPosition = Vector3.Lerp(enemyUnits[0].transform.position,
                         enemyUnits[^1].transform.position, index / ((float)enemyUnits.Count + 1));
                     target.LookAt(interpolatedPosition);
-                    target.eulerAngles =  new Vector3(target.eulerAngles.x, target.eulerAngles.y, zAxis);
-                }
-                
-
-                if (targetUnit == null || targetUnit is not EnemyUnit)
-                {
-                    foreach (var t in enemyUnits.Where(t => t.HP > 0))
+                    target.eulerAngles =  new Vector3(target.eulerAngles.x, target.eulerAngles.y, zAxis);if (targetUnit == null || targetUnit is not EnemyUnit)
                     {
-                        targetUnit = t;
-                        break;
+                        foreach (var t in enemyUnits.Where(t => t.HP > 0))
+                        {
+                            targetUnit = t;
+                            break;
+                        }
                     }
-                }
                 
-                //TODO: make this player unit specific for enemy view and not rotate the z axis
+                    //TODO: make this player unit specific for enemy view and not rotate the z axis
 
-                currentSelectButton = targetUnit.selected;
-                currentSelectButton.Select();
-                targetUnit.SelectHUD(true, battleCamera.transform);
-                
+                    SetCurrentSelectButton(targetUnit.selected);
+                }
                 break;
             case CameraTargets.FullView:
                 for (int i = 0; i < enemyUnits.Count; i++)
@@ -382,7 +392,7 @@ public class BattleSystem : MonoBehaviour
                     var ip = i;
                     playerUnits[i].selected.GetComponent<GameButton>().OnSelectEvent = () =>
                     {
-                        MoveValuesForInspectView(playerUnits[ip].cameraTargets[4], playerUnits[ip]);
+                        MoveValuesForInspectView(playerUnits[ip].cameraTargets[5], playerUnits[ip]);
                     };
                     var left = i != 0 ? playerUnits[i - 1].selected : enemyUnits[i].selected;
 
@@ -410,7 +420,7 @@ public class BattleSystem : MonoBehaviour
         
         battleCamera.DOFieldOfView(wantedFOV, 0.2f).SetEase(Ease.OutExpo);
         battleCamera.transform.DOMove(target.position, 0.2f).SetEase(Ease.OutExpo);
-        yield return battleCamera.transform.DORotate(target.rotation.eulerAngles, 0.2f).SetEase(Ease.OutExpo)
+        yield return battleCamera.transform.DORotate(target.rotation.eulerAngles, 0.2f).SetEase(Ease.OutExpo).OnComplete(() => method.Invoke())
             .WaitForCompletion();
         
     }
@@ -584,20 +594,19 @@ public class BattleSystem : MonoBehaviour
         }
     }
 
-    public void SkillTabVisibility(bool isVisible, List<Skill> skills = null, PlayerUnit playerUnit = null)
-    {
-        //TODO: make actual animation for the queue tab to be enabled
-        var queueTab = gameGUI.transform.Find("Queue");
-        queueTab.gameObject.SetActive(!isVisible);
-        
-        
-    }
-
     public void InspectTab()
     {
         if (currentActiveUnit != null && currentActiveUnit is PlayerUnit playerUnit)
         {
             StartCoroutine(playerUnit.Inspect());
+        }
+    }
+
+    public void SwitchTab()
+    {
+        if (currentActiveUnit != null && currentActiveUnit is PlayerUnit playerUnit)
+        {
+            StartCoroutine(playerUnit.TabFunctionality());
         }
     }
 
@@ -614,6 +623,7 @@ public class BattleSystem : MonoBehaviour
         {
             targetUnit?.SelectHUD(false);
             targetUnit?.ResetSelected();
+            targetUnit = null;
         }
         else
         {
@@ -657,8 +667,9 @@ public class BattleSystem : MonoBehaviour
             if (selectable.transform.parent.transform.parent.TryGetComponent(typeof(Unit), out var unitComponent ))
             {
                 var unit = (Unit)unitComponent.GetComponent(typeof(Unit));
-                if (unit == null)
+                if (unit != null)
                 {
+                    targetUnit = unit;
                 }
             }
         }

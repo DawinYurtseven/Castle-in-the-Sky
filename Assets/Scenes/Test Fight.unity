@@ -386,10 +386,10 @@ MonoBehaviour:
   speed: 1
   intelligence: 1
   luck: 1
-  MaxHP: 0
-  CurrentHP: 0
-  MaxSP: 0
-  CurrentSP: 0
+  maxHP: 0
+  currentHP: 0
+  maxSP: 0
+  currentSP: 0
   critAmount: 0
   critChance: 0
   damageAddition: 0
@@ -398,7 +398,7 @@ MonoBehaviour:
   repeated: 0
   blocked: 0
   bufferedDamage: 0
-  Skills: 
+  skillNames: 
   positionTargets: []
   cameraTargets: []
   animator: {fileID: 0}
@@ -545,11 +545,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d54b20d32cf4357428a8660d579522d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WinScreenController
---- !u!4 &956288253 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 6784757422468977715, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-  m_PrefabInstance: {fileID: 657222546890148984}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -732,270 +727,6 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
---- !u!1 &1302043876
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1302043877}
-  - component: {fileID: 1302043878}
-  m_Layer: 0
-  m_Name: Player Spline
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1302043877
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1302043876}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.47492588, y: -0.14, z: 0.408}
-  m_LocalScale: {x: 0.083333336, y: 1, z: 0.083333336}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 956288253}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1302043878
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1302043876}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dab5c7d4c32e743048dfca98e2d5914f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Splines::UnityEngine.Splines.SplineContainer
-  m_Spline:
-    m_EditModeType: 1
-    m_Knots: []
-    m_MetaData: []
-    m_Closed: 0
-    m_IntData:
-      m_Data: []
-    m_FloatData:
-      m_Data: []
-    m_Float4Data:
-      m_Data: []
-    m_ObjectData:
-      m_Data: []
-  m_Splines:
-  - m_EditModeType: 1
-    m_Knots:
-    - Position:
-        x: 0
-        y: 0
-        z: 0
-      TangentIn:
-        x: -0
-        y: -0
-        z: -0.5213187
-      TangentOut:
-        x: 0
-        y: 0
-        z: 0.5213187
-      Rotation:
-        value:
-          x: 0.0000000022462017
-          y: 0.99890393
-          z: 0.000000047934034
-          w: -0.046808906
-    - Position:
-        x: -0.4875121
-        y: 0.00000050032645
-        z: -5.1903415
-      TangentIn:
-        x: -0
-        y: -0
-        z: -1.797086
-      TangentOut:
-        x: 0
-        y: 0
-        z: 2.0187438
-      Rotation:
-        value:
-          x: 8.205113e-10
-          y: 0.9982174
-          z: -0.000000007712272
-          w: 0.059681557
-    - Position:
-        x: 1.6598873
-        y: -0.0000003302921
-        z: -11.408503
-      TangentIn:
-        x: -0
-        y: -0
-        z: -0.6578514
-      TangentOut:
-        x: 0
-        y: 0
-        z: 0.6578514
-      Rotation:
-        value:
-          x: 0.000000010447904
-          y: 0.98621064
-          z: -0.000000062260625
-          w: 0.16549517
-    m_MetaData:
-    - Mode: 0
-      Tension: 0.5
-    - Mode: 0
-      Tension: 0.5
-    - Mode: 0
-      Tension: 0.5
-    m_Closed: 0
-    m_IntData:
-      m_Data: []
-    m_FloatData:
-      m_Data: []
-    m_Float4Data:
-      m_Data: []
-    m_ObjectData:
-      m_Data: []
-  m_Knots:
-    m_KnotsLink: []
---- !u!1 &1659878716
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1659878717}
-  - component: {fileID: 1659878718}
-  m_Layer: 0
-  m_Name: Enemy Spline
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1659878717
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1659878716}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.637, y: 0, z: 0.535}
-  m_LocalScale: {x: 0.083333336, y: 1, z: 0.083333336}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 956288253}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1659878718
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1659878716}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dab5c7d4c32e743048dfca98e2d5914f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Splines::UnityEngine.Splines.SplineContainer
-  m_Spline:
-    m_EditModeType: 1
-    m_Knots: []
-    m_MetaData: []
-    m_Closed: 0
-    m_IntData:
-      m_Data: []
-    m_FloatData:
-      m_Data: []
-    m_Float4Data:
-      m_Data: []
-    m_ObjectData:
-      m_Data: []
-  m_Splines:
-  - m_EditModeType: 1
-    m_Knots:
-    - Position:
-        x: 0
-        y: 0
-        z: 0
-      TangentIn:
-        x: -0
-        y: -0
-        z: -0.7076514
-      TangentOut:
-        x: 0
-        y: 0
-        z: 0.7076514
-      Rotation:
-        value:
-          x: 0.000000001478258
-          y: 0.99297994
-          z: -0.000000012409938
-          w: 0.118282594
-    - Position:
-        x: 1.6623049
-        y: -0.0000001768799
-        z: -6.878502
-      TangentIn:
-        x: -0
-        y: -0
-        z: -2.1583812
-      TangentOut:
-        x: 0
-        y: 0
-        z: 2.1372247
-      Rotation:
-        value:
-          x: -0.0000000017533464
-          y: 0.9965265
-          z: -0.000000022097435
-          w: -0.08327713
-    - Position:
-        x: -2.0855045
-        y: -0.0000005691667
-        z: -12.717697
-      TangentIn:
-        x: -0
-        y: -0
-        z: -0.69384634
-      TangentOut:
-        x: 0
-        y: 0
-        z: 0.69384634
-      Rotation:
-        value:
-          x: -0.00000000795638
-          y: 0.9595751
-          z: -0.000000027126223
-          w: -0.28145254
-    m_MetaData:
-    - Mode: 0
-      Tension: 0.5
-    - Mode: 0
-      Tension: 0.5
-    - Mode: 0
-      Tension: 0.5
-    m_Closed: 0
-    m_IntData:
-      m_Data: []
-    m_FloatData:
-      m_Data: []
-    m_Float4Data:
-      m_Data: []
-    m_ObjectData:
-      m_Data: []
-  m_Knots:
-    m_KnotsLink: []
 --- !u!1 &1786990418
 GameObject:
   m_ObjectHideFlags: 0
@@ -1198,6 +929,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 555465e8-7824-4b29-ad8e-a744bc2c3eff
     m_ActionName: 'Base Input/Pause[/Keyboard/escape,/DualSenseGamepadHID/start]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1786990423}
+        m_TargetAssemblyTypeName: InputSystemWrapper, Assembly-CSharp
+        m_MethodName: RightShoulderButton
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 8f7bb67d-2605-4c0e-aa42-61ef8f5ac274
+    m_ActionName: 'Base Input/Right Shoulder[/Keyboard/r,/DualSenseGamepadHID/rightShoulder]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: controller
   m_DefaultActionMap: Base Input
@@ -1426,26 +1173,6 @@ PrefabInstance:
       propertyPath: battleCamera
       value: 
       objectReference: {fileID: 963194227}
-    - target: {fileID: 6307742980792821771, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      propertyPath: enemyPositionTargets
-      value: 
-      objectReference: {fileID: 1659878718}
-    - target: {fileID: 6307742980792821771, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      propertyPath: playerPositionTargets
-      value: 
-      objectReference: {fileID: 1302043878}
-    - target: {fileID: 6307742980792821771, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      propertyPath: 'enemyUnits.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2912670448996979080, guid: 809998c89dc00dd4d807e37f8812f5ee, type: 3}
-    - target: {fileID: 6307742980792821771, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      propertyPath: 'enemyUnits.Array.data[1]'
-      value: 
-      objectReference: {fileID: 2912670448996979080, guid: 809998c89dc00dd4d807e37f8812f5ee, type: 3}
-    - target: {fileID: 6307742980792821771, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      propertyPath: 'playerUnits.Array.data[0]'
-      value: 
-      objectReference: {fileID: 8056455527396080831, guid: f676198da9a265f45af9d42614c000c6, type: 3}
     - target: {fileID: 6456774566174733660, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0.9736252
@@ -1594,13 +1321,7 @@ PrefabInstance:
     - {fileID: 5796011995343637140, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
     - {fileID: 7423150012499984544, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
     - {fileID: 7436914795469223342, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 6784757422468977715, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1302043877}
-    - targetCorrespondingSourceObject: {fileID: 6784757422468977715, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1659878717}
+    m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
 --- !u!1660057539 &9223372036854775807
