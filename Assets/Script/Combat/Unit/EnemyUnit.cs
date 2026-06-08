@@ -11,8 +11,36 @@ public class EnemyUnit : Unit
         base.Awake();
         hudValues = GetComponentInChildren<TextMeshProUGUI>(true);
         selected = GetComponentInChildren<Button>(true);
+        ScaleStats();
     }
+    
+    /// <summary>
+    /// we want to make something like a scaling. So that when they are instantiated, given with a level,
+    /// scale to the appropriate state. This can be either with skills they have to unlock at a certain level and/or
+    /// stats that scale appropriately.
+    ///
+    /// I am not sure if I want to make it depending on the depth of the node it is on, or on the strength of the current party.
+    ///
+    /// for now, I will define something called a scaling curve for each stat. It will be multiplied with the depth of the node
+    /// and ceil to get an int for the stat. there can be additional bonuses on these stats depending on the style of node
+    /// they are spawned from. 
+    /// </summary>
+    
+    
+    [Header("Scaling Curves")]
+    [SerializeField] private float strCurve, conCurve, spdCurve, intCurve, lckCurve;  
+    
+    public int Depth { get; set; }
 
+    private void ScaleStats()
+    {
+        Strength = Mathf.CeilToInt(strCurve * Depth) + 1;
+        Constitution = Mathf.CeilToInt(conCurve * Depth)+ 1;
+        Speed = Mathf.CeilToInt(spdCurve * Depth) + 1;
+        Intelligence = Mathf.CeilToInt(intCurve * Depth) + 1;
+        Luck = Mathf.CeilToInt(lckCurve * Depth) + 1;
+    }
+    
     public override IEnumerator BeginningOfTurn()
     {
         yield return base.BeginningOfTurn();
