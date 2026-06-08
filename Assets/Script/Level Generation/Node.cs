@@ -40,7 +40,10 @@ public class Node : MonoBehaviour
                     {
                         //Get a better method for this depending on the level.
                         var random = Random.Range(0, Map.System.enemyUnitAssetList.Count);
-                        range.Add(Map.System.enemyUnitAssetList[random]);
+                        var enemy = Instantiate(Map.System.enemyUnitAssetList[random]);
+                        enemy.gameObject.SetActive(false);
+                        enemy.GetComponent<EnemyUnit>().Depth = level;
+                        range.Add(enemy.GetComponent<EnemyUnit>());
                     }
                     BattleSystem.system.playerUnits.AddRange(Map.System.currentPlayerUnits);
                     BattleSystem.system.enemyUnits.AddRange(range);

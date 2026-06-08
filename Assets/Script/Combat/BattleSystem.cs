@@ -95,7 +95,8 @@ public class BattleSystem : MonoBehaviour
         {
             var vec = enemyPositionTargets.EvaluatePosition(1f/(enemyUnits.Count + 1) * (i+1));
             Vector3 startPosition = new Vector3(vec.x, vec.y, vec.z) + Vector3.up * 0.5f;
-            var temp = Instantiate(enemyUnits[i], startPosition, Quaternion.identity);
+            var temp = enemyUnits[i].gameObject;
+            temp.transform.position = startPosition;
             temp.transform.rotation = Quaternion.Euler
             (
                 0, 
@@ -103,7 +104,7 @@ public class BattleSystem : MonoBehaviour
                     playerPositionTargets.transform.parent.transform.position - temp.transform.position, 
                     Vector3.forward).eulerAngles.y, 
                 0);
-            enemyUnits[i] = temp;
+            temp.SetActive(true);
         }
 
         SetAllPlayerValues();

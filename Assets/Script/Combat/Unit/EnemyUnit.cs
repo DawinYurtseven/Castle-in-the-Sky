@@ -11,9 +11,14 @@ public class EnemyUnit : Unit
         base.Awake();
         hudValues = GetComponentInChildren<TextMeshProUGUI>(true);
         selected = GetComponentInChildren<Button>(true);
-        ScaleStats();
     }
-    
+
+    public override void BeginningOfCombat()
+    {
+        ScaleStats();
+        base.BeginningOfCombat();
+    }
+
     /// <summary>
     /// we want to make something like a scaling. So that when they are instantiated, given with a level,
     /// scale to the appropriate state. This can be either with skills they have to unlock at a certain level and/or
