@@ -13,7 +13,7 @@ public class GrandSlash : Skill
         timeValue = 1.5f;
         type = SkillTypes.Damage;
         targetOne = false;
-        affectValue =1.5f;
+        affectValue =2.5f;
         animationName = "GrandSlash_Animation";
         userTargetPoint = 0;
         turnEffect = 0;

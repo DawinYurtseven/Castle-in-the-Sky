@@ -195,33 +195,12 @@ public class BattleSystem : MonoBehaviour
     }
 
 
-    #region Camera, UI and Input
-
-    [SerializeField] private Button currentSelectButton;
+    #region Camera and UI
 
     [SerializeField] private GameObject gameGUI, playerValuePrefab, queueImagePrefab, skillTabPrefab;
     private GameObject temporaryImageGameObject;
 
-    public void SetCurrentSelectButton(Button button)
-    {
-        if (currentSelectButton != null && currentSelectButton.TryGetComponent(typeof(GameButton), out var component))
-        {
-            var gameButton = component as GameButton;
-            if (gameButton != null) gameButton.OnDeselectEvent?.Invoke();
-        }
-        currentSelectButton = button;
-        currentSelectButton?.Select();
-        if (currentSelectButton != null && currentSelectButton.TryGetComponent(typeof(GameButton), out component))
-        {
-            var gameButton = component as GameButton;
-            if (gameButton != null) gameButton.OnSelectEvent?.Invoke();
-        }
-    }
-
-    public void DeselectButton()
-    {
-        SetCurrentSelectButton(null);
-    }
+    #region Camera
 
     public enum CameraTargets
     {
@@ -438,11 +417,36 @@ public class BattleSystem : MonoBehaviour
 
     }
 
+    #endregion
+
+    #region Player Values
+
     public void UpdatePlayerValues(PlayerUnit playerUnit)
     {
         var index = playerUnits.IndexOf(playerUnit);
         playerValues[index].GetComponentInChildren<TextMeshProUGUI>().text = $"HP:{playerUnit.HP}\nSP:{playerUnit.SP}";
     }
+
+    private void SetAllPlayerValues()
+    {
+        for (int i = playerValueHorizontalGameObject.transform.childCount - 1; i >= 0; i--)
+        {
+            DestroyImmediate(playerValueHorizontalGameObject.transform.GetChild(i).gameObject);
+        }
+
+        playerValues.Clear();
+        foreach (var t in playerUnits)
+        {
+            var temp = Instantiate(playerValuePrefab, playerValueHorizontalGameObject.transform);
+            temp.transform.Find("Image").GetComponent<Image>().sprite = t.hudImage;
+            temp.GetComponentInChildren<TextMeshProUGUI>().text = $"HP:{t.HP}\nSP:{t.SP}";
+            playerValues.Add(temp.gameObject);
+        }
+    }
+
+    #endregion
+
+    #region Queue
 
     public void ShowNewQueuePosition(Unit unit, float timeValue)
     {
@@ -547,26 +551,13 @@ public class BattleSystem : MonoBehaviour
         }
     }
 
-    private void SetAllPlayerValues()
-    {
-        for (int i = playerValueHorizontalGameObject.transform.childCount - 1; i >= 0; i--)
-        {
-            DestroyImmediate(playerValueHorizontalGameObject.transform.GetChild(i).gameObject);
-        }
-
-        playerValues.Clear();
-        foreach (var t in playerUnits)
-        {
-            var temp = Instantiate(playerValuePrefab, playerValueHorizontalGameObject.transform);
-            temp.transform.Find("Image").GetComponent<Image>().sprite = t.hudImage;
-            temp.GetComponentInChildren<TextMeshProUGUI>().text = $"HP:{t.HP}\nSP:{t.SP}";
-            playerValues.Add(temp.gameObject);
-        }
-    }
+    #endregion
 
     #endregion
 
     #region Input
+
+    #region Input calls
 
     public void Submit()
     {
@@ -609,36 +600,6 @@ public class BattleSystem : MonoBehaviour
         {
             StartCoroutine(playerUnit.TabFunctionality());
         }
-    }
-
-    public void SetSelection(Unit selectedUnit)
-    {
-        targetUnit?.SelectHUD(false);
-        targetUnit = selectedUnit;
-        targetUnit.SelectHUD(true);
-    }
-
-    public void ClearSelection(bool all = false)
-    {
-        if (!all)
-        {
-            targetUnit?.SelectHUD(false);
-            targetUnit?.ResetSelected();
-            targetUnit = null;
-        }
-        else
-        {
-            List<Unit> temp = new List<Unit>();
-            temp.AddRange(enemyUnits);
-            temp.AddRange(playerUnits);
-            foreach (var t in temp)
-            {
-                t?.SelectHUD(false);
-                t?.ResetSelected();
-            }
-        }
-
-        currentSelectButton = null;
     }
 
     public void Navigate(Vector2 normalizedInput)
@@ -684,6 +645,65 @@ public class BattleSystem : MonoBehaviour
             button.OnSpecificAction.Invoke();
         }
     }
+
+    #endregion
+
+    #region Button Selects
+
+    [SerializeField] private Button currentSelectButton;
+
+    public void SetSelection(Unit selectedUnit)
+    {
+        targetUnit?.SelectHUD(false);
+        targetUnit = selectedUnit;
+        targetUnit.SelectHUD(true);
+    }
+
+    public void ClearSelection(bool all = false)
+    {
+        if (!all)
+        {
+            targetUnit?.SelectHUD(false);
+            targetUnit?.ResetSelected();
+            targetUnit = null;
+        }
+        else
+        {
+            List<Unit> temp = new List<Unit>();
+            temp.AddRange(enemyUnits);
+            temp.AddRange(playerUnits);
+            foreach (var t in temp)
+            {
+                t?.SelectHUD(false);
+                t?.ResetSelected();
+            }
+        }
+
+        currentSelectButton = null;
+    }
+
+    public void SetCurrentSelectButton(Button button)
+    {
+        if (currentSelectButton != null && currentSelectButton.TryGetComponent(typeof(GameButton), out var component))
+        {
+            var gameButton = component as GameButton;
+            if (gameButton != null) gameButton.OnDeselectEvent?.Invoke();
+        }
+        currentSelectButton = button;
+        currentSelectButton?.Select();
+        if (currentSelectButton != null && currentSelectButton.TryGetComponent(typeof(GameButton), out component))
+        {
+            var gameButton = component as GameButton;
+            if (gameButton != null) gameButton.OnSelectEvent?.Invoke();
+        }
+    }
+
+    public void DeselectButton()
+    {
+        SetCurrentSelectButton(null);
+    }
+
+    #endregion
 
     #endregion
 }

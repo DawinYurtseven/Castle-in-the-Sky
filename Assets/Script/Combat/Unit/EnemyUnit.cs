@@ -39,11 +39,11 @@ public class EnemyUnit : Unit
 
     private void ScaleStats()
     {
-        Strength = Mathf.CeilToInt(strCurve * Depth) + 1;
-        Constitution = Mathf.CeilToInt(conCurve * Depth)+ 1;
-        Speed = Mathf.CeilToInt(spdCurve * Depth) + 1;
-        Intelligence = Mathf.CeilToInt(intCurve * Depth) + 1;
-        Luck = Mathf.CeilToInt(lckCurve * Depth) + 1;
+        Strength = Mathf.CeilToInt(strCurve * Depth);
+        Constitution = Mathf.CeilToInt(conCurve * Depth);
+        Speed = Mathf.CeilToInt(spdCurve * Depth);
+        Intelligence = Mathf.CeilToInt(intCurve * Depth);
+        Luck = Mathf.CeilToInt(lckCurve * Depth);
     }
     
     public override IEnumerator BeginningOfTurn()
