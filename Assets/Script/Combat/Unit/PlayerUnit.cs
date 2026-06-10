@@ -178,7 +178,7 @@ public class PlayerUnit : Unit
     {
         //this will simulate the ui for now until I have actually implemented ui
         if ( inAnim || !isTurn || stateStack.Count == 0) yield break;
-        if (targetUnit != null)
+        if (targetUnit)
         {
             SetCurrentTarget(new List<Unit> { targetUnit });
         }
@@ -196,7 +196,7 @@ public class PlayerUnit : Unit
             case CombatState.Skill:
                 if (SelectedSkill.skillCost > currentSP) yield break;
                 playerCombatUiController.SkillTabVisibility(false);
-                if (SelectedSkill.type == SkillTypes.Damage || SelectedSkill.type == SkillTypes.Debuff)
+                if (SelectedSkill.type is SkillTypes.Damage or SkillTypes.Debuff)
                 {
                     stateStack.Push(CombatState.TargetEnemy);
                     if (!SelectedSkill.targetOne)

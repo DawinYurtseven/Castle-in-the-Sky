@@ -280,7 +280,6 @@ public class Map : MonoBehaviour
                 }
             }
             closestNormalized = (closest.transform.position - currentSelectButton.transform.position).normalized;
-            Debug.Log(Vector3.Distance(closestNormalized, direction));
             if (Vector3.Distance(closestNormalized, direction) > Math.Sqrt(2)) return;
             
             selectable = closest.GetComponent<Button>();

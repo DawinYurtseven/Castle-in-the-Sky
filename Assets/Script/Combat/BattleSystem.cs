@@ -606,8 +606,8 @@ public class BattleSystem : MonoBehaviour
     {
         if(combatIsOver) winCanvas.GetComponent<WinScreenController>().Navigate(normalizedInput);
         
-        if (currentSelectButton == null || normalizedInput == Vector2.zero) return;
-        bool isVertical = Mathf.Abs(normalizedInput.y) > Mathf.Abs(normalizedInput.x);
+        if (!currentSelectButton || currentSelectButton.interactable || normalizedInput == Vector2.zero) return;
+        var isVertical = Mathf.Abs(normalizedInput.y) > Mathf.Abs(normalizedInput.x);
         Selectable selectable;
         if (isVertical)
         {
@@ -622,7 +622,7 @@ public class BattleSystem : MonoBehaviour
                 : currentSelectButton.navigation.selectOnLeft;
         }
 
-        if (selectable != null)
+        if (selectable)
         {
             SetCurrentSelectButton((Button)selectable);
             //friendly unit
