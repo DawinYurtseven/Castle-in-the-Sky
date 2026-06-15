@@ -173,7 +173,7 @@ public class Unit : MonoBehaviour
     {
         selected.GetComponent<GameButton>().OnSelectEvent = () =>
         {
-            BattleSystem.system.SetSelection(this);
+            BattleSystem.System.SetSelection(this);
         };
     }
 
@@ -185,7 +185,7 @@ public class Unit : MonoBehaviour
             target.transform.rotation.eulerAngles.y +180f,
             0
         );
-        BattleSystem.system.SetSelection(this);
+        BattleSystem.System.SetSelection(this);
     }
 
     private void CalculateStats(bool reset = false)
@@ -231,7 +231,7 @@ public class Unit : MonoBehaviour
     protected virtual IEnumerator BasicAttack()
     {
         timeValue += CalculateTimeValue(1f);
-        BattleSystem.system.AcceptNewQueuePosition(this, timeValue);
+        BattleSystem.System.AcceptNewQueuePosition(this, timeValue);
         
         do
         {
@@ -241,11 +241,8 @@ public class Unit : MonoBehaviour
             ActionTakenTrigger?.Invoke(this);
             BasicAttackTrigger?.Invoke(this);
 
-            var baseDamage = (strength + damageAddition) * damageMultiplier;
-            var totalDamage = Random.Range(0, 100) < critChance ? baseDamage * critAmount / 100 : baseDamage;
-
             //move object towards target
-            yield return BattleSystem.system.MoveCamera(null, BattleSystem.CameraTargets.Empty);
+            yield return BattleSystem.System.MoveCamera(null, BattleSystem.CameraTargets.Empty);
             yield return transform.DOMove(currentTarget[0].positionTargets[0].position, 0.2f).SetEase(Ease.InExpo)
                 .WaitForCompletion();
             //TODO: Do some anime shit 
@@ -254,17 +251,33 @@ public class Unit : MonoBehaviour
             yield return null;
             while(!(animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator.IsInTransition(0)))
             {
-                BattleSystem.system.battleCamera.transform.position = cameraTargets[0].position;
-                BattleSystem.system.battleCamera.transform.rotation = cameraTargets[0].rotation;
+                BattleSystem.System.battleCamera.transform.position = cameraTargets[0].position;
+                BattleSystem.System.battleCamera.transform.rotation = cameraTargets[0].rotation;
                 yield return null;
             }
-
-            currentTarget[0].TakeDamage(totalDamage);// change with animation events
-            yield return BattleSystem.system.MoveCamera(null, BattleSystem.CameraTargets.Empty);
+            yield return BattleSystem.System.MoveCamera(null, BattleSystem.CameraTargets.Empty);
             yield return transform.DOMove(startPosition, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
         } while (repeated && currentTarget[0].currentHP > 0);
 
         yield return EndTurn();
+    }
+
+    ///This is for the Animation trigger to enter a float between (0, 1] to split the damage to the attack if multiple hits exists. 
+    ///The total value of the split should be 1,
+    /// so if there are 2 hits, the first one can pass 0.6 and the second one can pass 0.4,
+    /// if there are 3 hits, the split can be 0.5, 0.3 and 0.2 and so on as example.
+    ///
+    /// This function should also have the damage calculation for the attack, so crits are individually calculated and not from one action
+    public void DealDamage(float split)
+    {
+        var baseDamage = (strength + damageAddition) * damageMultiplier * split;
+        var totalDamage = Random.Range(0, 100) < critChance ? baseDamage * critAmount / 100 : baseDamage;
+
+        foreach (var t in currentTarget)
+        {
+            t.TakeDamage(totalDamage);
+        }
+        
     }
 
     protected virtual IEnumerator SkillUsage() //change this later
@@ -309,7 +322,7 @@ public class Unit : MonoBehaviour
     {
         yield return transform.DOMove(startPosition, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
         EndOfTurnTrigger?.Invoke(this);
-        BattleSystem.system.EndOfTurnTrigger.Invoke(this, timeValue);
+        BattleSystem.System.EndOfTurnTrigger.Invoke(this, timeValue);
     }
 
     public virtual void TakeDamage(float damage)
@@ -322,12 +335,14 @@ public class Unit : MonoBehaviour
             bufferedDamage = 0;
             return;
         }
-        currentHP -= (int)damage;
+
+        StartCoroutine(BattleSystem.System.DisplayDamageNumber((int)Mathf.Ceil(damage)));
+        currentHP -= (int)Mathf.Ceil(damage);
         currentHP = Mathf.Clamp(currentHP, 0, maxHP);
         //TODO: maybe an event here as well?
         if (currentHP <= 0)
         {
-            BattleSystem.system.DeathOfUnit(this);
+            BattleSystem.System.DeathOfUnit(this);
             gameObject.SetActive(false);
         }
     }
@@ -353,7 +368,7 @@ public class Unit : MonoBehaviour
     public void CalculateHUDValues(Button left = null, Button right = null)
     {
         hudValues.text = $"{name}\nHP: {currentHP}/{maxHP}\nSP: {currentSP}/{maxSP}";
-        hudCanvas.gameObject.transform.LookAt(BattleSystem.system.battleCamera.gameObject.transform.position);
+        hudCanvas.gameObject.transform.LookAt(BattleSystem.System.battleCamera.gameObject.transform.position);
         var navigation = new Navigation();
         if (left != null)
         {

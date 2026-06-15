@@ -66,16 +66,16 @@ public class EnemyUnit : Unit
     private IEnumerator MakeDecision()
     {
         //make actual decisions
-        var random = Random.Range(0, BattleSystem.system.playerUnits.Count);
-        SetCurrentTarget(new List<Unit> { BattleSystem.system.playerUnits[random] });
+        var random = Random.Range(0, BattleSystem.System.playerUnits.Count);
+        SetCurrentTarget(new List<Unit> { BattleSystem.System.playerUnits[random] });
         yield return BasicAttack();
     }
 
     protected override IEnumerator BasicAttack()
     {
-        BattleSystem.system.ShowNewQueuePosition(this, CalculateTimeValue(1f));
+        BattleSystem.System.ShowNewQueuePosition(this, CalculateTimeValue(1f));
         yield return new WaitForSeconds(0.2f);
         yield return base.BasicAttack();
-        BattleSystem.system.AcceptNewQueuePosition(this, CalculateTimeValue(1f));
+        BattleSystem.System.AcceptNewQueuePosition(this, CalculateTimeValue(1f));
     }
 }

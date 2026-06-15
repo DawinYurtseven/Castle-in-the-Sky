@@ -30,9 +30,9 @@ public class Node : MonoBehaviour
                 button.onClick.AddListener(() =>
                 {
                     Map.System.gameObject.SetActive(false);
-                    BattleSystem.system.gameObject.SetActive(true);
-                    BattleSystem.system.enemyUnits.Clear();
-                    BattleSystem.system.playerUnits.Clear();
+                    BattleSystem.System.gameObject.SetActive(true);
+                    BattleSystem.System.enemyUnits.Clear();
+                    BattleSystem.System.playerUnits.Clear();
                     List<EnemyUnit> range = new ();
                     int maxRange = Mathf.Min(level / 2 + 1, 5); // get a specific range of enemies based on the level. work on how to deal with it later
                     int numRange = Random.Range(1,maxRange);
@@ -45,10 +45,10 @@ public class Node : MonoBehaviour
                         enemy.GetComponent<EnemyUnit>().Depth = level;
                         range.Add(enemy.GetComponent<EnemyUnit>());
                     }
-                    BattleSystem.system.playerUnits.AddRange(Map.System.currentPlayerUnits);
-                    BattleSystem.system.enemyUnits.AddRange(range);
+                    BattleSystem.System.playerUnits.AddRange(Map.System.currentPlayerUnits);
+                    BattleSystem.System.enemyUnits.AddRange(range);
                     
-                    BattleSystem.system.StartOfCombat();
+                    BattleSystem.System.StartOfCombat();
                 });
                 break;
             case NodeType.Merchant:

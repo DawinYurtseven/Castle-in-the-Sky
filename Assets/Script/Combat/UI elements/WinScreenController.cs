@@ -218,15 +218,6 @@ public class WinScreenController : MonoBehaviour
             skillButtons[i].GetComponent<Button>().onClick.AddListener(() =>
             {
                 
-                
-                /*others[0].transform.GetChild(0).gameObject.SetActive(false);
-                others[0].transform.GetChild(1).gameObject.SetActive(false); 
-                others[0].transform.GetChild(2).gameObject.SetActive(false);
-            
-                others[1].transform.GetChild(0).gameObject.SetActive(false);
-                others[1].transform.GetChild(1).gameObject.SetActive(false);
-                others[1].transform.GetChild(2).gameObject.SetActive(false);*/
-                
                 //TODO: add case that mainCharacter has too many skills and wants to exchange.
 
                 if (mainCharacter.SkillCount > 5)
@@ -376,7 +367,7 @@ public class WinScreenController : MonoBehaviour
                     mainCharacter.Items.Add(items[i1]);
                 }
 
-                var unit = new List<Unit>(BattleSystem.system.playerUnits);
+                var unit = new List<Unit>(BattleSystem.System.playerUnits);
                 item.Acquire(unit);
                 StartCoroutine(OnTimeClickEvent(itemButtons[i1], others, animator, otherAnimators, () =>
                 {

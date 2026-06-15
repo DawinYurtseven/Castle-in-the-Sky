@@ -8,10 +8,12 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Splines;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class BattleSystem : MonoBehaviour
 {
-    public static BattleSystem system;
+    public static BattleSystem System;
+    private static readonly int Exit = Animator.StringToHash("Exit");
 
     private readonly List<Unit>
         queue = new(); // I will be reordering this queue whenever an action has been done, so no actual queue 
@@ -48,7 +50,7 @@ public class BattleSystem : MonoBehaviour
 
     private void Awake()
     {
-        if (system == null) system = this;
+        if (!System) System = this;
         else Destroy(gameObject);
 
 
@@ -197,8 +199,11 @@ public class BattleSystem : MonoBehaviour
 
     #region Camera and UI
 
-    [SerializeField] private GameObject gameGUI, playerValuePrefab, queueImagePrefab, skillTabPrefab;
+    [Header("UI")]
+    [SerializeField] private GameObject gameGUI, playerValuePrefab, queueImagePrefab;
     private GameObject temporaryImageGameObject;
+    [SerializeField] private GameObject damageDisplay;
+    [SerializeField] private List<GameObject> damgeDisplayAreas;
 
     #region Camera
 
@@ -279,7 +284,7 @@ public class BattleSystem : MonoBehaviour
 
                         playerUnits[i].CalculateHUDValues(left, right);
                     }
-                    if (targetUnit == null || targetUnit is  EnemyUnit)
+                    if (!targetUnit || targetUnit is  EnemyUnit)
                     {
                         foreach (var t in playerUnits.Where(t => t.HP > 0))
                         {
@@ -339,7 +344,7 @@ public class BattleSystem : MonoBehaviour
                     var interpolatedPosition = Vector3.Lerp(enemyUnits[0].transform.position,
                         enemyUnits[^1].transform.position, index / ((float)enemyUnits.Count + 1));
                     target.LookAt(interpolatedPosition);
-                    target.eulerAngles =  new Vector3(target.eulerAngles.x, target.eulerAngles.y, zAxis);if (targetUnit == null || targetUnit is not EnemyUnit)
+                    target.eulerAngles =  new Vector3(target.eulerAngles.x, target.eulerAngles.y, zAxis);if (!targetUnit || targetUnit is not EnemyUnit)
                     {
                         foreach (var t in enemyUnits.Where(t => t.HP > 0))
                         {
@@ -381,7 +386,7 @@ public class BattleSystem : MonoBehaviour
                     playerUnits[i].CalculateHUDValues(left, right);
                 }
                 
-                if (targetUnit == null || targetUnit is not EnemyUnit)
+                if (!targetUnit || targetUnit is not EnemyUnit)
                 {
                     foreach (var t in enemyUnits.Where(t => t.HP > 0))
                     {
@@ -494,14 +499,14 @@ public class BattleSystem : MonoBehaviour
             }
         }
 
-        if (temporaryImageGameObject != null)
+        if (temporaryImageGameObject)
             temporaryImageGameObject?.GetComponent<RectTransform>()?.DOLocalMove(new(-385 + index * 115, 0, 0), 0.2f)
                 .SetEase(Ease.OutExpo).OnComplete(() => temporaryImageGameObject = null);
     }
 
     public void FreeNewQueuePosition()
     {
-        if (temporaryImageGameObject != null)
+        if (temporaryImageGameObject)
             temporaryImageGameObject.transform
                 .DOLocalMove(new(-1000, temporaryImageGameObject.transform.localPosition.y, 0), 0.2f)
                 .SetEase(Ease.OutExpo).OnComplete(() => DestroyImmediate(temporaryImageGameObject));
@@ -553,6 +558,145 @@ public class BattleSystem : MonoBehaviour
 
     #endregion
 
+    #region Damage Ui
+
+    private int displayIndex;    
+    public IEnumerator DisplayDamageNumber(int damage)
+    {
+        
+        var temp = TrySpawnDamageDisplay();
+        temp.GetComponentInChildren<TMP_Text>().text = damage.ToString();
+        
+        var animator = temp.GetComponent<Animator>();
+        yield return null;
+
+        yield return new WaitUntil(() =>
+            animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator.IsInTransition(0));
+        yield return new WaitForSeconds(0.2f);
+        animator.SetTrigger(Exit);
+        yield return null;
+        yield return new WaitUntil(() =>
+            animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && animator.IsInTransition(0));
+        spawnedObjects.Remove(temp.GetComponent<RectTransform>());
+        Destroy(temp);
+    }
+    
+    private readonly List<RectTransform> spawnedObjects = new List<RectTransform>();
+
+    /// <summary>
+    /// Call this method whenever you want to spawn a new object.
+    /// </summary>
+    private GameObject TrySpawnDamageDisplay()
+    {
+        var spawnArea = damgeDisplayAreas[displayIndex].GetComponent<RectTransform>();
+        displayIndex = (displayIndex + 1) % damgeDisplayAreas.Count;
+
+        // 1. Get the local boundaries of the spawn area
+        var corners = new Vector3[4];
+        spawnArea.GetLocalCorners(corners);
+        
+        // corners[0] is bottom-left, corners[2] is top-right
+        var minX = corners[0].x;
+        var maxX = corners[2].x;
+        var minY = corners[0].y;
+        var maxY = corners[2].y;
+
+        // Get the size of the prefab's RectTransform to handle edge padding and overlap logic
+        RectTransform prefabRect = damageDisplay.GetComponent<RectTransform>();
+
+        var prefabWidth = prefabRect.rect.width;
+        var prefabHeight = prefabRect.rect.height;
+        var totalObjectArea = prefabWidth * prefabHeight;
+
+        // Pad the boundaries so the spawned object doesn't bleed past the edges of the panel
+        minX += prefabWidth / 2f;
+        maxX -= prefabWidth / 2f;
+        minY += prefabHeight / 2f;
+        maxY -= prefabHeight / 2f;
+
+        // 2. Try to find a valid, non-overlapping position
+        for (var i = 0; i < 20; i++)
+        {
+            var randomX = Random.Range(minX, maxX);
+            var randomY = Random.Range(minY, maxY);
+            var potentialLocalPos = new Vector3(randomX, randomY, 0f);
+
+            // Create a temporary Rect representing where the new object would be
+            var newObjRect = new Rect(
+                potentialLocalPos.x - (prefabWidth / 2f),
+                potentialLocalPos.y - (prefabHeight / 2f),
+                prefabWidth,
+                prefabHeight
+            );
+
+            // 3. Check for overlaps against all successfully spawned objects
+            if (!IsOverlapping(newObjRect, totalObjectArea))
+            {
+                // Success! Instantiate and position the object
+                var newSpawn = Instantiate(damageDisplay, spawnArea);
+                var spawnRect = newSpawn.GetComponent<RectTransform>();
+                
+                // Force anchors to center to make localPosition placement predictable
+                spawnRect.anchorMin = new Vector2(0.5f, 0.5f);
+                spawnRect.anchorMax = new Vector2(0.5f, 0.5f);
+                spawnRect.anchoredPosition = potentialLocalPos;
+
+                // Add to our tracking list
+                spawnedObjects.Add(spawnRect);
+                return newSpawn; 
+            }
+        }
+
+        Debug.LogWarning("Could not find a non-overlapping spot after max attempts. Panel might be too full!");
+        return null;
+    }
+
+    /// <summary>
+    /// Helper method using Rect.Overlaps to see if the new rect hits any existing rects
+    /// </summary>
+    private bool IsOverlapping(Rect newRect, float totalObjectArea)
+    {
+        foreach (RectTransform existingRT in spawnedObjects)
+        {
+            if (existingRT == null) continue;
+
+            Rect existingRect = new Rect(
+                existingRT.anchoredPosition.x - (existingRT.rect.width / 2f),
+                existingRT.anchoredPosition.y - (existingRT.rect.height / 2f),
+                existingRT.rect.width,
+                existingRT.rect.height
+            );
+
+            // If they don't touch at all, skip the math
+            if (!newRect.Overlaps(existingRect)) continue;
+
+            // Calculate the boundaries of the intersection rectangle
+            float intersectionMinX = Mathf.Max(newRect.xMin, existingRect.xMin);
+            float intersectionMaxX = Mathf.Min(newRect.xMax, existingRect.xMax);
+            float intersectionMinY = Mathf.Max(newRect.yMin, existingRect.yMin);
+            float intersectionMaxY = Mathf.Min(newRect.yMax, existingRect.yMax);
+
+            // Width and Height of the overlapping intersection area
+            float overlapWidth = intersectionMaxX - intersectionMinX;
+            float overlapHeight = intersectionMaxY - intersectionMinY;
+
+            // Compute the intersection area
+            float overlapArea = overlapWidth * overlapHeight;
+
+            // Calculate what percentage of the NEW object is being covered
+            float coveragePercentage = overlapArea / totalObjectArea;
+
+            // If it covers more than our allowed limit (e.g., 25%), it's invalid
+            if (coveragePercentage > 0.25f)
+            {
+                return true; 
+            }
+        }
+        return false;
+    }
+
+    #endregion
+
     #endregion
 
     #region Input
@@ -562,7 +706,7 @@ public class BattleSystem : MonoBehaviour
     public void Submit()
     {
         if(combatIsOver) winCanvas.GetComponent<WinScreenController>().Confirm();
-        else if (currentActiveUnit != null && currentActiveUnit is PlayerUnit playerUnit)
+        else if (currentActiveUnit && currentActiveUnit is PlayerUnit playerUnit)
         {
             currentSelectButton?.onClick.Invoke();
             StartCoroutine(playerUnit.Submit(targetUnit));
@@ -571,7 +715,7 @@ public class BattleSystem : MonoBehaviour
 
     public void Cancel()
     {
-        if (currentActiveUnit != null && currentActiveUnit is PlayerUnit playerUnit)
+        if (currentActiveUnit && currentActiveUnit is PlayerUnit playerUnit)
         {
             StartCoroutine(playerUnit.Cancel());
         }
@@ -580,7 +724,7 @@ public class BattleSystem : MonoBehaviour
     public void SkillTab()
     {
         //do on player something-something instead next time
-        if (currentActiveUnit != null && currentActiveUnit is PlayerUnit playerUnit)
+        if (currentActiveUnit && currentActiveUnit is PlayerUnit playerUnit)
         {
             StartCoroutine(playerUnit.SkillTab());
         }
@@ -588,7 +732,7 @@ public class BattleSystem : MonoBehaviour
 
     public void InspectTab()
     {
-        if (currentActiveUnit != null && currentActiveUnit is PlayerUnit playerUnit)
+        if (currentActiveUnit && currentActiveUnit is PlayerUnit playerUnit)
         {
             StartCoroutine(playerUnit.Inspect());
         }
@@ -596,7 +740,7 @@ public class BattleSystem : MonoBehaviour
 
     public void SwitchTab()
     {
-        if (currentActiveUnit != null && currentActiveUnit is PlayerUnit playerUnit)
+        if (currentActiveUnit && currentActiveUnit is PlayerUnit playerUnit)
         {
             StartCoroutine(playerUnit.TabFunctionality());
         }
@@ -606,7 +750,7 @@ public class BattleSystem : MonoBehaviour
     {
         if(combatIsOver) winCanvas.GetComponent<WinScreenController>().Navigate(normalizedInput);
         
-        if (!currentSelectButton || currentSelectButton.interactable || normalizedInput == Vector2.zero) return;
+        if (!currentSelectButton || normalizedInput == Vector2.zero) return;
         var isVertical = Mathf.Abs(normalizedInput.y) > Mathf.Abs(normalizedInput.x);
         Selectable selectable;
         if (isVertical)
@@ -622,27 +766,20 @@ public class BattleSystem : MonoBehaviour
                 : currentSelectButton.navigation.selectOnLeft;
         }
 
-        if (selectable)
+        if (!selectable) return;
+        SetCurrentSelectButton((Button)selectable);
+        //friendly unit
+        if (selectable.transform.parent.transform.parent.TryGetComponent(typeof(Unit), out var unitComponent ))
         {
-            SetCurrentSelectButton((Button)selectable);
-            //friendly unit
-            if (selectable.transform.parent.transform.parent.TryGetComponent(typeof(Unit), out var unitComponent ))
-            {
-                var unit = (Unit)unitComponent.GetComponent(typeof(Unit));
-                if (unit != null)
-                {
-                    targetUnit = unit;
-                }
-            }
+            targetUnit = unitComponent as Unit;
         }
     }
 
     public void TriggerSpecificButtonAction()
     {
-        if (currentSelectButton != null && currentSelectButton.TryGetComponent(typeof(GameButton), out var go))
+        if (currentSelectButton && currentSelectButton.TryGetComponent(typeof(GameButton), out var go))
         {
-            var button = go.GetComponent<GameButton>();
-            button.OnSpecificAction.Invoke();
+            (go as GameButton)?.OnSpecificAction.Invoke();
         }
     }
 
@@ -684,17 +821,15 @@ public class BattleSystem : MonoBehaviour
 
     public void SetCurrentSelectButton(Button button)
     {
-        if (currentSelectButton != null && currentSelectButton.TryGetComponent(typeof(GameButton), out var component))
+        if (currentSelectButton && currentSelectButton.TryGetComponent(typeof(GameButton), out var component))
         {
-            var gameButton = component as GameButton;
-            if (gameButton != null) gameButton.OnDeselectEvent?.Invoke();
+            ( component as GameButton)?.OnDeselectEvent?.Invoke();
         }
         currentSelectButton = button;
         currentSelectButton?.Select();
-        if (currentSelectButton != null && currentSelectButton.TryGetComponent(typeof(GameButton), out component))
+        if (!currentSelectButton || !currentSelectButton.TryGetComponent(typeof(GameButton), out component)) return;
         {
-            var gameButton = component as GameButton;
-            if (gameButton != null) gameButton.OnSelectEvent?.Invoke();
+            (component as GameButton)?.OnSelectEvent?.Invoke();
         }
     }
 
