@@ -122,10 +122,9 @@ public class BattleSystem : MonoBehaviour
             unit.BeginningOfCombat();
         }
         //then order the queue 
-        OrderQueue();
+        OrderQueue(true);
 
         
-        currentActiveUnit = queue[0];
         PopQueue();
         StartCoroutine(currentActiveUnit.BeginningOfTurn());
     }
@@ -145,7 +144,6 @@ public class BattleSystem : MonoBehaviour
         queue.Add(currentUnit);
         OrderQueue();
         //maybe animations or something.
-        currentActiveUnit = queue[0];
         PopQueue();
         StartCoroutine(currentActiveUnit.BeginningOfTurn());
     }
@@ -164,7 +162,6 @@ public class BattleSystem : MonoBehaviour
         else
         {
             queue.Remove(unit);
-            OrderQueue();
             enemyDeaths++;
             if (enemyDeaths == enemyUnits.Count)
             {
@@ -178,6 +175,7 @@ public class BattleSystem : MonoBehaviour
     private void EndOfCombat(bool playerWon)
     {
         //return control to UI element type I guess...
+        ResetQueue();
         combatIsOver = true;
         if (playerWon)
         {
@@ -189,6 +187,7 @@ public class BattleSystem : MonoBehaviour
                 Destroy(enemyUnits[i].gameObject);
             }
             enemyUnits.Clear();
+            playerUnits.Clear();
         }
         else
         {
@@ -440,6 +439,7 @@ public class BattleSystem : MonoBehaviour
         }
 
         playerValues.Clear();
+        //TODO: replace with already existing UI element and make it reset at end of combat.
         foreach (var t in playerUnits)
         {
             var temp = Instantiate(playerValuePrefab, playerValueHorizontalGameObject.transform);
@@ -452,7 +452,11 @@ public class BattleSystem : MonoBehaviour
     #endregion
 
     #region Queue
-
+    
+    //the first 4 are player images, the last 4 are enemy images.
+    //I will be reusing the same objects and just changing the sprite and position instead of instantiating and destroying them all the time
+    [SerializeField] private List<GameObject> queueImages = new ();
+    [SerializeField] private List<Tuple<Unit,GameObject>> queueImageInUse = new ();
     public void ShowNewQueuePosition(Unit unit, float timeValue)
     {
         var index = -1;
@@ -467,9 +471,11 @@ public class BattleSystem : MonoBehaviour
 
         if (index == -1) index = queue.Count;
 
-        temporaryImageGameObject = Instantiate(queueImagePrefab, queueHorizontalGameObject.transform);
-        temporaryImageGameObject.GetComponent<RectTransform>().localPosition = new(-1000, -60, 0);
-        temporaryImageGameObject.GetComponent<RectTransform>()?.DOLocalMove(new(-435 + index * 115, -60, 0), 0.2f)
+        temporaryImageGameObject = queueImageInUse.Find((e) => e.Item1 == unit ).Item2;
+        temporaryImageGameObject.SetActive(true);
+        temporaryImageGameObject.transform.SetSiblingIndex(queue.Count );
+        temporaryImageGameObject.GetComponent<RectTransform>().localPosition = new(-1000, -60, -1);
+        temporaryImageGameObject.GetComponent<RectTransform>()?.DOLocalMove(new(-435 + index * 115, -60, -1), 0.2f)
             .SetEase(Ease.OutExpo);
         temporaryImageGameObject.GetComponent<Image>().sprite = unit.hudImage;
     }
@@ -477,19 +483,17 @@ public class BattleSystem : MonoBehaviour
     public void AcceptNewQueuePosition(Unit unit, float timeValue)
     {
         var index = -1;
-        for (int i = 0; i < queue.Count; i++)
+        for (var i = 0; i < queue.Count; i++)
         {
-            if (queue[i].QueueTimeValue - timeValue > timeValue)
-            {
-                index = i;
-                break;
-            }
+            if (!(queue[i].QueueTimeValue - timeValue > timeValue)) continue;
+            index = i;
+            break;
         }
 
         if (index == -1) index = queue.Count;
         else
         {
-            for (int i = 0; i < queueHorizontalGameObject.transform.childCount; i++)
+            for (var i = 0; i < queueHorizontalGameObject.transform.childCount; i++)
             {
                 var child = queueHorizontalGameObject.transform.GetChild(i);
                 if (child.localPosition.x >= -385 + index * 115)
@@ -509,41 +513,63 @@ public class BattleSystem : MonoBehaviour
         if (temporaryImageGameObject)
             temporaryImageGameObject.transform
                 .DOLocalMove(new(-1000, temporaryImageGameObject.transform.localPosition.y, 0), 0.2f)
-                .SetEase(Ease.OutExpo).OnComplete(() => DestroyImmediate(temporaryImageGameObject));
+                .SetEase(Ease.OutExpo).OnComplete(() =>
+                {
+                    temporaryImageGameObject.SetActive(false);
+                    temporaryImageGameObject = null;
+                });
     }
 
     private void PopQueue()
     {
-        queue.RemoveAt(0);
-        for (int i = 0; i < queueHorizontalGameObject.transform.childCount; i++)
+        currentActiveUnit = queue[0];
+        for (var i = 0; i < queue.Count; i++)
         {
+            var unit = queue[i];
+            var obj = queueImageInUse.Find(tuple => tuple.Item1 == unit).Item2;
             if (i == 0)
             {
-                var child = queueHorizontalGameObject.transform.GetChild(0);
-                queueHorizontalGameObject.transform.GetChild(0)?.DOLocalMove(new(-5000, 0, 0), 0.2f)
-                    .SetEase(Ease.OutExpo).OnComplete(() => DestroyImmediate(child.gameObject));
+                obj.transform.DOLocalMove(new Vector3(-5000, 0, 0), 0.2f)
+                    .SetEase(Ease.OutExpo).OnComplete(() => obj.SetActive(false));
             }
             else
             {
-                queueHorizontalGameObject.transform.GetChild(i).GetComponent<RectTransform>()
-                    ?.DOLocalMove(new(-385 + (i - 1) * 115, 0, 0), 0.2f).SetEase(Ease.OutExpo);
+                obj.transform.DOLocalMove(new Vector3(-385 + (i - 1) * 115, 0, 0), 0.2f).SetEase(Ease.OutExpo);
             }
         }
+        queue.RemoveAt(0);
     }
 
-    private void OrderQueue()
+    private void OrderQueue(bool initialize = false)
     {
-        for (var i = queueHorizontalGameObject.transform.childCount - 1; i >= 0; i--)
+        if (initialize)
         {
-            DestroyImmediate(queueHorizontalGameObject.transform.GetChild(i).gameObject);
+            for (var i = queueImageInUse.Count - 1; i >= 0; i--)
+            {
+                queueImageInUse.RemoveAt(i);
+            }
+
+            foreach (var t in queueImages)
+            {
+                t.SetActive(false);
+            }
+
+            for (var i = 0; i < queue.Count; i++)
+            {
+                var temp = queueImages[i];
+                queueImageInUse.Add(new Tuple<Unit, GameObject>(queue[i], temp));
+                temp.SetActive(true);
+                temp.GetComponent<Image>().sprite = queue[i].hudImage;
+            }
         }
+        
 
         queue.Sort((unit, unit1) => unit.QueueTimeValue <= unit1.QueueTimeValue ? -1 : 1);
         for (int i = 0; i < queue.Count; i++)
         {
-            var temp = Instantiate(queueImagePrefab, queueHorizontalGameObject.transform);
-            temp.GetComponent<RectTransform>().localPosition = new(-385 + i * 115, 0, 0);
-            temp.GetComponent<Image>().sprite = queue[i].hudImage;
+            var temp = queueImageInUse.Find((e) => e.Item1 == queue[i]).Item2;
+            temp.SetActive(true);
+            temp.GetComponent<RectTransform>().localPosition = new Vector3(-385 + i * 115, 0, 0);
         }
     }
 
@@ -552,8 +578,18 @@ public class BattleSystem : MonoBehaviour
         if (queue.Contains(unit))
         {
             queue.Remove(unit);
-            OrderQueue();
+            OrderQueue(true);
         }
+    }
+
+    private void ResetQueue()
+    {
+        foreach (var t in queueImageInUse)
+        {
+            t.Item2.SetActive(false);
+        }
+
+        queueImageInUse.Clear();
     }
 
     #endregion
@@ -632,7 +668,7 @@ public class BattleSystem : MonoBehaviour
             // 3. Check for overlaps against all successfully spawned objects
             if (!IsOverlapping(newObjRect, totalObjectArea))
             {
-                // Success! Instantiate and position the object
+                // found a spot to place the damage numbers. TODO: maybe find a way to not instantiate it all the time?
                 var newSpawn = Instantiate(damageDisplay, spawnArea);
                 var spawnRect = newSpawn.GetComponent<RectTransform>();
                 

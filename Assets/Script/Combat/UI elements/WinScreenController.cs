@@ -446,12 +446,14 @@ public class WinScreenController : MonoBehaviour
     {
         if (withAnimation)
         {
-            for (int i = 0; i < rootButtons.Count; i++)
+            foreach (var t in rootButtons)
             {
-                rootButtons[i].GetComponent<Animator>().SetTrigger(Exit);
-                var length = rootButtons[i].GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.length;
+                t.GetComponent<Animator>().SetTrigger(Exit);
+                yield return null;
+                var length = t.GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.length;
+                Debug.Log(t.GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.name);
                 yield return new WaitForSeconds(length/2f);
-                rootButtons[i].SetActive(false);
+                t.SetActive(false);
             }
         }
         

@@ -336,7 +336,7 @@ public class Unit : MonoBehaviour
             return;
         }
 
-        StartCoroutine(BattleSystem.System.DisplayDamageNumber((int)Mathf.Ceil(damage)));
+        
         currentHP -= (int)Mathf.Ceil(damage);
         currentHP = Mathf.Clamp(currentHP, 0, maxHP);
         //TODO: maybe an event here as well?
@@ -344,6 +344,10 @@ public class Unit : MonoBehaviour
         {
             BattleSystem.System.DeathOfUnit(this);
             gameObject.SetActive(false);
+        }
+        else
+        {
+            StartCoroutine(BattleSystem.System.DisplayDamageNumber((int)Mathf.Ceil(damage)));
         }
     }
 
