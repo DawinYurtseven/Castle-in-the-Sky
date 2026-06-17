@@ -275,7 +275,7 @@ public class Unit : MonoBehaviour
 
         foreach (var t in currentTarget)
         {
-            t.TakeDamage(totalDamage);
+            t?.TakeDamage(totalDamage);
         }
         
     }
@@ -327,6 +327,7 @@ public class Unit : MonoBehaviour
 
     public virtual void TakeDamage(float damage)
     {
+        if(currentHP<= 0) return;
         bufferedDamage = damage;
         ReactionDoneTrigger?.Invoke(this);
         if (blocked)
@@ -343,7 +344,6 @@ public class Unit : MonoBehaviour
         if (currentHP <= 0)
         {
             BattleSystem.System.DeathOfUnit(this);
-            gameObject.SetActive(false);
         }
         else
         {

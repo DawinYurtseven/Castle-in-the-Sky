@@ -303,10 +303,10 @@ public class WinScreenController : MonoBehaviour
     private IEnumerator ClearAllSelectSkillButtons()
     {
         yield return new WaitForSeconds(1f);
-        for (int i = 0; i < skillSelectButtons.Count; i++)
+        foreach (var t in skillSelectButtons)
         {
-            skillSelectButtons[i].GetComponent<Animator>().SetBool(Entered, false);
-            yield return null;
+            t.GetComponent<Animator>().SetBool(Entered, false);
+            yield return new WaitForSeconds(0.1f);
         }
         yield return new WaitForSeconds(0.5f);
         //TODO: exit something something
@@ -421,7 +421,7 @@ public class WinScreenController : MonoBehaviour
         method?.Invoke();
     }
 
-    private IEnumerator InsertTextIntoObject(TMP_Text textObj, string text)
+    private static IEnumerator InsertTextIntoObject(TMP_Text textObj, string text)
     {
         textObj.text = "";
         for (int i = 0; i < text.Length; i++)
@@ -431,11 +431,12 @@ public class WinScreenController : MonoBehaviour
         }
     }
 
-    private IEnumerator ClearTextInObject(TMP_Text textObj)
+    private static IEnumerator ClearTextInObject(TMP_Text textObj)
     {
+        var amount = textObj.text.Length * Time.deltaTime;
         while(textObj.text.Length > 0)
         {
-            textObj.text = textObj.text.Substring(0, textObj.text.Length - 1);
+            textObj.text = textObj.text[..Mathf.Max(0,textObj.text.Length - (int)Mathf.Ceil(amount))];
             yield return null;
         }
     }
@@ -474,33 +475,29 @@ public class WinScreenController : MonoBehaviour
 
     public void Navigate(Vector2 normalizedInput)
     {
-        if (currentSelectButton == null) return;
-        if (normalizedInput != Vector2.zero)
+        if (!currentSelectButton) return;
+        if (normalizedInput == Vector2.zero) return;
+        var isVertical = Mathf.Abs(normalizedInput.y) > Mathf.Abs(normalizedInput.x);
+        Selectable selectable;
+        if (isVertical)
         {
-            bool isVertical = Mathf.Abs(normalizedInput.y) > Mathf.Abs(normalizedInput.x);
-            Selectable selectable;
-            if (isVertical)
-            {
-                selectable = normalizedInput.y > 0
-                    ? currentSelectButton.navigation.selectOnUp
-                    : currentSelectButton.navigation.selectOnDown;
-            }
-            else
-            {
-                selectable = normalizedInput.x > 0
-                    ? currentSelectButton.navigation.selectOnRight
-                    : currentSelectButton.navigation.selectOnLeft;
-            }
+            selectable = normalizedInput.y > 0
+                ? currentSelectButton.navigation.selectOnUp
+                : currentSelectButton.navigation.selectOnDown;
+        }
+        else
+        {
+            selectable = normalizedInput.x > 0
+                ? currentSelectButton.navigation.selectOnRight
+                : currentSelectButton.navigation.selectOnLeft;
+        }
 
-            if (selectable != null)
-            {
-                currentSelectButton = (Button)selectable;
-                currentSelectButton?.Select();
-                if (currentSelectButton != null)
-                {
-                    //think about what to put here if needed be
-                }
-            }
+        if (selectable == null) return;
+        currentSelectButton = (Button)selectable;
+        currentSelectButton?.Select();
+        if (currentSelectButton != null)
+        {
+            //think about what to put here if needed be
         }
     }
 

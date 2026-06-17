@@ -150,6 +150,7 @@ public class BattleSystem : MonoBehaviour
 
     public void DeathOfUnit(Unit unit)
     {
+        unit.gameObject.SetActive(false);
         RemoveUnitFromQueue(unit);
         if (unit is PlayerUnit)
         {
@@ -177,6 +178,7 @@ public class BattleSystem : MonoBehaviour
         //return control to UI element type I guess...
         ResetQueue();
         combatIsOver = true;
+        gameGUI.SetActive(false);
         if (playerWon)
         {
             //main character always the first object
@@ -427,8 +429,11 @@ public class BattleSystem : MonoBehaviour
 
     public void UpdatePlayerValues(PlayerUnit playerUnit)
     {
-        var index = playerUnits.IndexOf(playerUnit);
-        playerValues[index].GetComponentInChildren<TextMeshProUGUI>().text = $"HP:{playerUnit.HP}\nSP:{playerUnit.SP}";
+        if (!combatIsOver)
+        {
+            var index = playerUnits.IndexOf(playerUnit);
+            playerValues[index].GetComponentInChildren<TextMeshProUGUI>().text = $"HP:{playerUnit.HP}\nSP:{playerUnit.SP}";
+        }
     }
 
     private void SetAllPlayerValues()

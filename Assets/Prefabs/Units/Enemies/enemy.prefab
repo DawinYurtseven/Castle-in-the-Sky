@@ -690,10 +690,10 @@ MonoBehaviour:
   selected: {fileID: 8067291542539566122}
   hudImage: {fileID: 21300000, guid: 2c085ed23db89c04db90fc2aa97cfb08, type: 3}
   hudValues: {fileID: 0}
-  strCurve: 1
-  conCurve: 2
-  spdCurve: 0.5
-  intCurve: 0.5
+  strCurve: 0.5
+  conCurve: 1
+  spdCurve: 0.2
+  intCurve: 0.2
   lckCurve: 1
 --- !u!95 &283987941849479572
 Animator:
