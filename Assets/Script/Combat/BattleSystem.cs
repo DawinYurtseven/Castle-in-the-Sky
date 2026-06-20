@@ -70,6 +70,7 @@ public class BattleSystem : MonoBehaviour
         queue.Clear();
         playerDeaths = 0;
         enemyDeaths = 0;
+        gameGUI.SetActive(true);
     }
 
     public void StartOfCombat()

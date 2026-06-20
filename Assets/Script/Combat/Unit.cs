@@ -4,6 +4,7 @@ using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -105,11 +106,10 @@ public class Unit : MonoBehaviour
     #region Skills
     
     [Header("Skills")] 
-    [SerializeField] protected List<SkillNames> skillNames = new();
-    protected readonly List<Skill> Skills= new();
+    [SerializeReference, SubclassSelector] public List<Skill> skills= new();
     internal Skill SelectedSkill;
-    public int SkillCount => Skills.Count;
-    public Skill GetSkill(int index) => Skills[index];
+    public int SkillCount => skills.Count;
+    public Skill GetSkill(int index) => skills[index];
 
     //TODO: Same for skills.
 
@@ -158,10 +158,6 @@ public class Unit : MonoBehaviour
     internal virtual void Awake()
     {
         animator = GetComponent<Animator>();
-        foreach (var skillname in skillNames)
-        {
-            Skills.Add(Skill.GetSkill(skillname));
-        }
     }
 
     private void Start()

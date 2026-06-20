@@ -85,14 +85,14 @@ public class PlayerUnit : Unit
 
     public void AddSkill(Skill skill, int i = -1)
     {
-        if (i != -1 && i < Skills.Count)
+        if (i != -1 && i < skills.Count)
         {
-            Skills.RemoveAt(i);
-            Skills.Insert(i, skill);
+            skills.RemoveAt(i);
+            skills.Insert(i, skill);
         }
-        var foundName = Skills.Find((e) => e.name.Equals(skill.name));
-        if (foundName.name == SkillNames.none && skill.name != SkillNames.none)
-            Skills.Add(skill);
+        var foundName = skills.Find((e) => e.skillName.Equals(skill.skillName));
+        if (foundName == null)
+            skills.Add(skill);
     }
 
     #endregion
@@ -100,7 +100,7 @@ public class PlayerUnit : Unit
     public override void BeginningOfCombat()
     {
         base.BeginningOfCombat();
-        playerCombatUiController.SetButtonInfos(Skills, this);
+        playerCombatUiController.SetButtonInfos(skills, this);
     }
 
     protected override IEnumerator BasicAttack()
@@ -352,7 +352,7 @@ public class PlayerUnit : Unit
         if (inAnim|| !isTurn) yield break;
         inAnim = true;
         var state = stateStack.Peek();
-        if (state == CombatState.Skill && Skills.Count > 3)
+        if (state == CombatState.Skill && skills.Count > 3)
         {
             // do some change camera position and enable other skill tab.
             bool left = cameraPosition == 2;

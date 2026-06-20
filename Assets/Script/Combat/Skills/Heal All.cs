@@ -1,11 +1,11 @@
 using System.Collections;
 using UnityEngine;
 
+[System.Serializable]
 public class HealAll : Skill
 {
     public HealAll()
     {
-        name = SkillNames.HealAll;
         skillName = "Heal All";
         skillDescription = "Heal all allies with a flat increase"; //TODO: physical damage?
         skillCost = 5;
