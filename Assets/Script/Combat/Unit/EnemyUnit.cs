@@ -18,6 +18,17 @@ public class EnemyUnit : Unit
         ScaleStats();
         base.BeginningOfCombat();
     }
+    
+    public int Level { get; set; }
+
+    internal void ScaleStats()
+    {
+        Strength = Mathf.CeilToInt(strCurve * Level);
+        Constitution = Mathf.CeilToInt(conCurve * Level);
+        Speed = Mathf.CeilToInt(spdCurve * Level);
+        Intelligence = Mathf.CeilToInt(intCurve * Level);
+        Luck = Mathf.CeilToInt(lckCurve * Level);
+    }
 
     /// <summary>
     /// we want to make something like a scaling. So that when they are instantiated, given with a level,
@@ -32,19 +43,7 @@ public class EnemyUnit : Unit
     /// </summary>
     
     
-    [Header("Scaling Curves")]
-    [SerializeField] private float strCurve, conCurve, spdCurve, intCurve, lckCurve;  
     
-    public int Depth { get; set; }
-
-    private void ScaleStats()
-    {
-        Strength = Mathf.CeilToInt(strCurve * Depth);
-        Constitution = Mathf.CeilToInt(conCurve * Depth);
-        Speed = Mathf.CeilToInt(spdCurve * Depth);
-        Intelligence = Mathf.CeilToInt(intCurve * Depth);
-        Luck = Mathf.CeilToInt(lckCurve * Depth);
-    }
     
     public override IEnumerator BeginningOfTurn()
     {
@@ -66,16 +65,16 @@ public class EnemyUnit : Unit
     private IEnumerator MakeDecision()
     {
         //make actual decisions
-        var random = Random.Range(0, BattleSystem.System.playerUnits.Count);
-        SetCurrentTarget(new List<Unit> { BattleSystem.System.playerUnits[random] });
+        var random = Random.Range(0, BattleSystem.system.playerUnits.Count);
+        SetCurrentTarget(new List<Unit> { BattleSystem.system.playerUnits[random] });
         yield return BasicAttack();
     }
 
     protected override IEnumerator BasicAttack()
     {
-        BattleSystem.System.ShowNewQueuePosition(this, CalculateTimeValue(1f));
+        BattleSystem.system.ShowNewQueuePosition(this, CalculateTimeValue(1f));
         yield return new WaitForSeconds(0.2f);
         yield return base.BasicAttack();
-        BattleSystem.System.AcceptNewQueuePosition(this, CalculateTimeValue(1f));
+        BattleSystem.system.AcceptNewQueuePosition(this, CalculateTimeValue(1f));
     }
 }

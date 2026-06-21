@@ -1,15 +1,14 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.Serialization;
 
-public enum SkillTypes
+public enum SkillTarget
 {
-    Damage,
-    Buff,
-    Debuff,
-    Heal
+    Enemy,
+    Ally,
+    EnemyAll,
+    AllyAll,
 }
 
 public enum SkillNames
@@ -30,11 +29,9 @@ public abstract class Skill
     public int skillCost;
     public float timeValue;
 
-    [Header("Skill type and action")] public SkillTypes type = SkillTypes.Damage;
-    public bool targetOne;
+    [FormerlySerializedAs("type")] [Header("Skill type and action")] public SkillTarget target = SkillTarget.Enemy;
     public float affectValue;
     public string animationName;
-    public int userTargetPoint; //-1 is to stand still, 0 is to go to target and 1 is infront of all
     public int turnEffect;
     public float additionalCritChance;
     public float additionalCritAddition;
@@ -49,6 +46,7 @@ public abstract class Skill
         };
     }
 
+    //TODO: add animations to the units for the skill and try that out. but for now, not needed
     public abstract bool Execute(Unit unit);
     
     public static Skill GetRandomSkill(List<Skill> exclude = null)

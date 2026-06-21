@@ -537,6 +537,11 @@ MonoBehaviour:
   speed: 2
   intelligence: 2
   luck: 2
+  strCurve: 1
+  conCurve: 1
+  spdCurve: 1
+  intCurve: 1
+  lckCurve: 1
   maxHP: 0
   currentHP: 0
   maxSP: 0
@@ -545,12 +550,12 @@ MonoBehaviour:
   critChance: 0
   damageAddition: 0
   damageMultiplier: 0
-  currentTarget: []
   repeated: 0
   blocked: 0
   bufferedDamage: 0
   skills:
-  - rid: 585577263829352540
+  - rid: 585577263829352554
+  currentTarget: []
   positionTargets:
   - {fileID: 1402062872345055723}
   cameraTargets:
@@ -569,21 +574,20 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 585577263829352540
-      type: {class: GrandSlash, ns: , asm: Assembly-CSharp}
+    - rid: 585577263829352554
+      type: {class: ApplyBurn, ns: , asm: Assembly-CSharp}
       data:
-        skillName: Grand Slash
-        skillDescription: Slash through all available enemies with Physical damage
-        skillCost: 3
-        timeValue: 1.5
-        type: 0
-        targetOne: 0
-        affectValue: 2.5
-        animationName: GrandSlash_Animation
-        userTargetPoint: 0
-        turnEffect: 0
-        additionalCritChance: 10
-        additionalCritAddition: 4
+        skillName: Apply Burn
+        skillDescription: deal a small amount of damage that burns the target for
+          3 turns at the end of your end step
+        skillCost: 4
+        timeValue: 0.6
+        target: 0
+        affectValue: 0.1
+        animationName: applyBurn_Animation
+        turnEffect: 3
+        additionalCritChance: 20
+        additionalCritAddition: 10
 --- !u!95 &1527140618842933570
 Animator:
   serializedVersion: 7

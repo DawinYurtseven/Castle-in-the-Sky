@@ -12,7 +12,7 @@ using Random = UnityEngine.Random;
 
 public class BattleSystem : MonoBehaviour
 {
-    public static BattleSystem System;
+    public static BattleSystem system;
     private static readonly int Exit = Animator.StringToHash("Exit");
 
     private readonly List<Unit>
@@ -50,7 +50,7 @@ public class BattleSystem : MonoBehaviour
 
     private void Awake()
     {
-        if (!System) System = this;
+        if (!system) system = this;
         else Destroy(gameObject);
 
 
@@ -66,11 +66,18 @@ public class BattleSystem : MonoBehaviour
     private void ResetCombatState()
     {
         combatIsOver = false;
-        EndOfTurnTrigger = null;
         queue.Clear();
         playerDeaths = 0;
         enemyDeaths = 0;
         gameGUI.SetActive(true);
+        foreach (var area in damageDisplayAreas)
+        {
+            for (var i = area.transform.childCount - 1; i >= 0; i--)
+            {
+                Destroy(area.transform.GetChild(i).gameObject);
+            }
+        }
+        activeDisplayCount = 0;
     }
 
     public void StartOfCombat()
@@ -112,7 +119,10 @@ public class BattleSystem : MonoBehaviour
 
         SetAllPlayerValues();
 
-        EndOfTurnTrigger += EndOfTurn;
+        EndOfTurnTrigger = (t, f) =>
+        {
+            StartCoroutine(EndOfTurn(t, f));
+        };
         
         //first, order all the units based on their 'speed' stat
         queue.AddRange(playerUnits);
@@ -133,9 +143,11 @@ public class BattleSystem : MonoBehaviour
 
     private bool combatIsOver;
 
-    void EndOfTurn(Unit currentUnit, float timeValue)
+    IEnumerator EndOfTurn(Unit currentUnit, float timeValue)
     {
-        if (combatIsOver) return;
+        //TODO: think about other things you should wait for before starting with the next turn
+        yield return new WaitUntil(() => activeDisplayCount == 0);
+        if (combatIsOver) yield break;
         foreach (var unit in queue)
         {
             unit.PassTimeValue(timeValue);
@@ -205,7 +217,7 @@ public class BattleSystem : MonoBehaviour
     [SerializeField] private GameObject gameGUI, playerValuePrefab, queueImagePrefab;
     private GameObject temporaryImageGameObject;
     [SerializeField] private GameObject damageDisplay;
-    [SerializeField] private List<GameObject> damgeDisplayAreas;
+    [SerializeField] private List<GameObject> damageDisplayAreas;
 
     #region Camera
 
@@ -462,7 +474,7 @@ public class BattleSystem : MonoBehaviour
     //the first 4 are player images, the last 4 are enemy images.
     //I will be reusing the same objects and just changing the sprite and position instead of instantiating and destroying them all the time
     [SerializeField] private List<GameObject> queueImages = new ();
-    [SerializeField] private List<Tuple<Unit,GameObject>> queueImageInUse = new ();
+    private readonly List<Tuple<Unit,GameObject>> queueImageInUse = new ();
     public void ShowNewQueuePosition(Unit unit, float timeValue)
     {
         var index = -1;
@@ -602,11 +614,14 @@ public class BattleSystem : MonoBehaviour
 
     #region Damage Ui
 
-    private int displayIndex;    
+    private int displayIndex;
+    private int activeDisplayCount;
     public IEnumerator DisplayDamageNumber(int damage)
     {
         
         var temp = TrySpawnDamageDisplay();
+        if (!temp) yield break;
+        activeDisplayCount++;
         temp.GetComponentInChildren<TMP_Text>().text = damage.ToString();
         
         var animator = temp.GetComponent<Animator>();
@@ -621,6 +636,7 @@ public class BattleSystem : MonoBehaviour
             animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && animator.IsInTransition(0));
         spawnedObjects.Remove(temp.GetComponent<RectTransform>());
         Destroy(temp);
+        activeDisplayCount--;
     }
     
     private readonly List<RectTransform> spawnedObjects = new List<RectTransform>();
@@ -630,8 +646,8 @@ public class BattleSystem : MonoBehaviour
     /// </summary>
     private GameObject TrySpawnDamageDisplay()
     {
-        var spawnArea = damgeDisplayAreas[displayIndex].GetComponent<RectTransform>();
-        displayIndex = (displayIndex + 1) % damgeDisplayAreas.Count;
+        var spawnArea = damageDisplayAreas[displayIndex].GetComponent<RectTransform>();
+        displayIndex = (displayIndex + 1) % damageDisplayAreas.Count;
 
         // 1. Get the local boundaries of the spawn area
         var corners = new Vector3[4];
@@ -648,7 +664,6 @@ public class BattleSystem : MonoBehaviour
 
         var prefabWidth = prefabRect.rect.width;
         var prefabHeight = prefabRect.rect.height;
-        var totalObjectArea = prefabWidth * prefabHeight;
 
         // Pad the boundaries so the spawned object doesn't bleed past the edges of the panel
         minX += prefabWidth / 2f;
@@ -657,84 +672,23 @@ public class BattleSystem : MonoBehaviour
         maxY -= prefabHeight / 2f;
 
         // 2. Try to find a valid, non-overlapping position
-        for (var i = 0; i < 20; i++)
-        {
-            var randomX = Random.Range(minX, maxX);
-            var randomY = Random.Range(minY, maxY);
-            var potentialLocalPos = new Vector3(randomX, randomY, 0f);
+       
+        var randomX = Random.Range(minX, maxX);
+        var randomY = Random.Range(minY, maxY);
 
-            // Create a temporary Rect representing where the new object would be
-            var newObjRect = new Rect(
-                potentialLocalPos.x - (prefabWidth / 2f),
-                potentialLocalPos.y - (prefabHeight / 2f),
-                prefabWidth,
-                prefabHeight
-            );
+        // Create a temporary Rect representing where the new object would be
 
-            // 3. Check for overlaps against all successfully spawned objects
-            if (!IsOverlapping(newObjRect, totalObjectArea))
-            {
-                // found a spot to place the damage numbers. TODO: maybe find a way to not instantiate it all the time?
-                var newSpawn = Instantiate(damageDisplay, spawnArea);
-                var spawnRect = newSpawn.GetComponent<RectTransform>();
+        var newSpawn = Instantiate(damageDisplay, spawnArea);
+        var spawnRect = newSpawn.GetComponent<RectTransform>();
                 
-                // Force anchors to center to make localPosition placement predictable
-                spawnRect.anchorMin = new Vector2(0.5f, 0.5f);
-                spawnRect.anchorMax = new Vector2(0.5f, 0.5f);
-                spawnRect.anchoredPosition = potentialLocalPos;
+        // Force anchors to center to make localPosition placement predictable
+        spawnRect.anchorMin = new Vector2(0.5f, 0.5f);
+        spawnRect.anchorMax = new Vector2(0.5f, 0.5f);
+        spawnRect.anchoredPosition = new Vector3(randomX, randomY, 0f);;
 
-                // Add to our tracking list
-                spawnedObjects.Add(spawnRect);
-                return newSpawn; 
-            }
-        }
-
-        Debug.LogWarning("Could not find a non-overlapping spot after max attempts. Panel might be too full!");
-        return null;
-    }
-
-    /// <summary>
-    /// Helper method using Rect.Overlaps to see if the new rect hits any existing rects
-    /// </summary>
-    private bool IsOverlapping(Rect newRect, float totalObjectArea)
-    {
-        foreach (RectTransform existingRT in spawnedObjects)
-        {
-            if (existingRT == null) continue;
-
-            Rect existingRect = new Rect(
-                existingRT.anchoredPosition.x - (existingRT.rect.width / 2f),
-                existingRT.anchoredPosition.y - (existingRT.rect.height / 2f),
-                existingRT.rect.width,
-                existingRT.rect.height
-            );
-
-            // If they don't touch at all, skip the math
-            if (!newRect.Overlaps(existingRect)) continue;
-
-            // Calculate the boundaries of the intersection rectangle
-            float intersectionMinX = Mathf.Max(newRect.xMin, existingRect.xMin);
-            float intersectionMaxX = Mathf.Min(newRect.xMax, existingRect.xMax);
-            float intersectionMinY = Mathf.Max(newRect.yMin, existingRect.yMin);
-            float intersectionMaxY = Mathf.Min(newRect.yMax, existingRect.yMax);
-
-            // Width and Height of the overlapping intersection area
-            float overlapWidth = intersectionMaxX - intersectionMinX;
-            float overlapHeight = intersectionMaxY - intersectionMinY;
-
-            // Compute the intersection area
-            float overlapArea = overlapWidth * overlapHeight;
-
-            // Calculate what percentage of the NEW object is being covered
-            float coveragePercentage = overlapArea / totalObjectArea;
-
-            // If it covers more than our allowed limit (e.g., 25%), it's invalid
-            if (coveragePercentage > 0.25f)
-            {
-                return true; 
-            }
-        }
-        return false;
+        // Add to our tracking list
+        spawnedObjects.Add(spawnRect);
+        return newSpawn; 
     }
 
     #endregion

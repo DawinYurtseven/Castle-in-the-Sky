@@ -15,7 +15,7 @@ public class WinScreenController : MonoBehaviour
     private static readonly int FinishedEntering = Animator.StringToHash("FinishedEntering");
     private static readonly int Entered = Animator.StringToHash("Entered");
     [SerializeField] public PlayerUnit mainCharacter;
-    [SerializeField] private List<GameObject> rootButtons,statButtons,skillButtons,skillSelectButtons,itemButtons;
+    [SerializeField] private List<GameObject> rootButtons,statButtons,skillButtons,skillSelectButtons,itemButtons,charGrowth;
 
     private RectTransform rectTransform;
     private Button currentSelectButton;
@@ -30,7 +30,40 @@ public class WinScreenController : MonoBehaviour
     {
         //TODO: make sure to reset all skills, stat icons and so on
         yield return ClearAllButtons(false);
-         
+        
+        //TODO: make also for currency count
+
+        
+        for (var i = 0; i < Map.system.currentPlayerUnits.Count; i++)
+        {
+            var curPlayer = Map.system.currentPlayerUnits[i];
+            var tempStats = new int[]
+            {
+                curPlayer.Strength,
+                curPlayer.Constitution,
+                curPlayer.Speed,
+                curPlayer.Intelligence,
+                curPlayer.Luck
+            };
+            curPlayer.AddStatLevel(1);
+            charGrowth[i].GetComponent<Animator>().Play($"Panel Open");
+            var growth = charGrowth[i].GetComponent<CharacterGrowth>();
+            growth.statTexts.Clear();
+            growth.statTexts.Add($"Strength: {tempStats[0]} => {curPlayer.Strength}");
+            growth.statTexts.Add($"Constitution: {tempStats[1]} => {curPlayer.Constitution}");
+            growth.statTexts.Add($"Speed: {tempStats[2]} => {curPlayer.Speed}");
+            growth.statTexts.Add($"Intelligence: {tempStats[3]} => {curPlayer.Intelligence}");
+            growth.statTexts.Add($"Luck: {tempStats[4]} => {curPlayer.Luck}");
+            growth.profile.sprite = curPlayer.hudImage;
+            charGrowth[i].SetActive(true);
+        }
+        
+        var anim = charGrowth[Map.system.currentPlayerUnits.Count-1].GetComponent<Animator>();
+        yield return null;
+        yield return new WaitUntil(() => anim.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !anim.IsInTransition(0));
+ 
+        
+        
         rootButtons[0].transform.localPosition = new Vector3(screenWidth * 1.5f, screenHeight * 0.25f, 0);
         rootButtons[0].SetActive(true);
         rootButtons[0].GetComponent<Animator>().SetTrigger(Enter);
@@ -166,14 +199,14 @@ public class WinScreenController : MonoBehaviour
         {
             if (allocatable == 0) 
             {
-                Map.System.ReturnToMap();
+                Map.system.ReturnToMap();
                 gameObject.SetActive(false);
             }
            
         });
     }
     
-    private List<Animator> skillButtonAnims = new List<Animator>();
+    private readonly List<Animator> skillButtonAnims = new();
     private IEnumerator OnSkills()
     {
         yield return ClearAllButtons();
@@ -227,7 +260,7 @@ public class WinScreenController : MonoBehaviour
                     mainCharacter.AddSkill(skills[i1]);
                     StartCoroutine(OnTimeClickEvent( skillButtons[i1], others, animator, otherAnimators, () =>
                     {
-                        Map.System.ReturnToMap();
+                        Map.system.ReturnToMap();
                         gameObject.SetActive(false);
                     }));
                 }
@@ -310,7 +343,7 @@ public class WinScreenController : MonoBehaviour
         }
         yield return new WaitForSeconds(0.5f);
         //TODO: exit something something
-        Map.System.ReturnToMap();
+        Map.system.ReturnToMap();
         gameObject.SetActive(false);
     }
 
@@ -367,11 +400,11 @@ public class WinScreenController : MonoBehaviour
                     mainCharacter.Items.Add(items[i1]);
                 }
 
-                var unit = new List<Unit>(BattleSystem.System.playerUnits);
+                var unit = new List<Unit>(Map.system.currentPlayerUnits);
                 item.Acquire(unit);
                 StartCoroutine(OnTimeClickEvent(itemButtons[i1], others, animator, otherAnimators, () =>
                 {
-                    Map.System.ReturnToMap();
+                    Map.system.ReturnToMap();
                     gameObject.SetActive(false);
                 }));
 
@@ -445,6 +478,10 @@ public class WinScreenController : MonoBehaviour
     //TODO: Why are you doing this with code when you can do this with animations.
     private IEnumerator ClearAllButtons(bool withAnimation = true)
     {
+        foreach (var g in charGrowth)
+        {
+            g.SetActive(false);
+        }
         if (withAnimation)
         {
             foreach (var t in rootButtons)
@@ -452,8 +489,7 @@ public class WinScreenController : MonoBehaviour
                 t.GetComponent<Animator>().SetTrigger(Exit);
                 yield return null;
                 var length = t.GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.length;
-                Debug.Log(t.GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.name);
-                yield return new WaitForSeconds(length/2f);
+                yield return new WaitForSeconds(length/4f);
                 t.SetActive(false);
             }
         }

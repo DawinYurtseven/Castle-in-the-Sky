@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -68,10 +69,22 @@ public class Unit : MonoBehaviour
         set => luck = value;
     }
 
+    [Header("Scaling Curves")] 
+    [SerializeField] internal float strCurve;
+    [SerializeField] internal float conCurve;
+    [SerializeField] internal float spdCurve;
+    [SerializeField] internal float intCurve;
+    [SerializeField] internal float lckCurve;  
+    
+
     /// <summary>
     /// These are the stats that are calculated from the base stats and can not be influence directly from outside.
     /// </summary>
-    public int maxHP,currentHP,maxSP, currentSP;
+    [Header("Temporary Stats")] 
+    public int maxHP;
+    public int currentHP;
+    public int maxSP;
+    public int currentSP;
 
     public int HP => currentHP;
     public int SP => currentSP;
@@ -82,11 +95,9 @@ public class Unit : MonoBehaviour
         damageAddition,
         damageMultiplier; //these are for the damage calculation and critical hits.
 
-    private float timeValue; //this stat is the bread and butter of this combat system. 
     private const float ConstantReduction = 0.3f; //this stat is the bread and butter of this combat system. 
 
-    public float QueueTimeValue => timeValue;
-    public List<Unit> currentTarget;
+    public float QueueTimeValue { get; private set; }
 
     #endregion
 
@@ -96,6 +107,7 @@ public class Unit : MonoBehaviour
     //TODO: Look at after implementing items. For now, think of it as a dictionary of <items,int> where the int is the amount of that item the unit has. 
 
     public bool repeated;
+
     public bool blocked;
     public float bufferedDamage;
 
@@ -104,9 +116,10 @@ public class Unit : MonoBehaviour
     #endregion
 
     #region Skills
-    
+
     [Header("Skills")] 
     [SerializeReference, SubclassSelector] public List<Skill> skills= new();
+
     internal Skill SelectedSkill;
     public int SkillCount => skills.Count;
     public Skill GetSkill(int index) => skills[index];
@@ -116,13 +129,15 @@ public class Unit : MonoBehaviour
     #endregion
 
     #region Components
-    
+
+    public List<Unit> currentTarget;
+
     /// <summary>
     /// 0- base target for other units to go to when performing a 1-1 action
     /// </summary>
     ///
     [Header("Components")] 
-    [SerializeField] protected Transform[] positionTargets;
+    [SerializeField] internal Transform[] positionTargets;
     /// <summary>
     /// 0 - base 
     /// </summary>
@@ -169,7 +184,7 @@ public class Unit : MonoBehaviour
     {
         selected.GetComponent<GameButton>().OnSelectEvent = () =>
         {
-            BattleSystem.System.SetSelection(this);
+            BattleSystem.system.SetSelection(this);
         };
     }
 
@@ -181,7 +196,7 @@ public class Unit : MonoBehaviour
             target.transform.rotation.eulerAngles.y +180f,
             0
         );
-        BattleSystem.System.SetSelection(this);
+        BattleSystem.system.SetSelection(this);
     }
 
     private void CalculateStats(bool reset = false)
@@ -219,15 +234,15 @@ public class Unit : MonoBehaviour
 
     public void PassTimeValue(float passedTime)
     {
-        timeValue -= passedTime;
+        QueueTimeValue -= passedTime;
     }
 
     //TODO: Think about hwhat can be done to affect the damage on unit
 
     protected virtual IEnumerator BasicAttack()
     {
-        timeValue += CalculateTimeValue(1f);
-        BattleSystem.System.AcceptNewQueuePosition(this, timeValue);
+        QueueTimeValue += CalculateTimeValue(1f);
+        BattleSystem.system.AcceptNewQueuePosition(this, QueueTimeValue);
         
         do
         {
@@ -238,7 +253,7 @@ public class Unit : MonoBehaviour
             BasicAttackTrigger?.Invoke(this);
 
             //move object towards target
-            yield return BattleSystem.System.MoveCamera(null, BattleSystem.CameraTargets.Empty);
+            yield return BattleSystem.system.MoveCamera(null, BattleSystem.CameraTargets.Empty);
             yield return transform.DOMove(currentTarget[0].positionTargets[0].position, 0.2f).SetEase(Ease.InExpo)
                 .WaitForCompletion();
             //TODO: Do some anime shit 
@@ -247,11 +262,11 @@ public class Unit : MonoBehaviour
             yield return null;
             while(!(animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator.IsInTransition(0)))
             {
-                BattleSystem.System.battleCamera.transform.position = cameraTargets[0].position;
-                BattleSystem.System.battleCamera.transform.rotation = cameraTargets[0].rotation;
+                BattleSystem.system.battleCamera.transform.position = cameraTargets[0].position;
+                BattleSystem.system.battleCamera.transform.rotation = cameraTargets[0].rotation;
                 yield return null;
             }
-            yield return BattleSystem.System.MoveCamera(null, BattleSystem.CameraTargets.Empty);
+            yield return BattleSystem.system.MoveCamera(null, BattleSystem.CameraTargets.Empty);
             yield return transform.DOMove(startPosition, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
         } while (repeated && currentTarget[0].currentHP > 0);
 
@@ -278,14 +293,14 @@ public class Unit : MonoBehaviour
 
     protected virtual IEnumerator SkillUsage() //change this later
     {
-        timeValue += CalculateTimeValue(SelectedSkill.timeValue);
+        QueueTimeValue += CalculateTimeValue(SelectedSkill.timeValue);
         currentSP -= SelectedSkill.skillCost;
         //TODO: make skill cost cut with a global function
         bool validAction;
         do
         {
             ActionTakenTrigger?.Invoke(this);
-            SkillUsageTrigger?.Invoke(this,SelectedSkill.type);
+            SkillUsageTrigger?.Invoke(this,SelectedSkill.target);
             validAction = SelectedSkill.Execute(this);
             
             yield return new WaitForSeconds(0.2f);
@@ -302,14 +317,14 @@ public class Unit : MonoBehaviour
         startPosition = transform.position;
 
         //calculate time value at the beginning of combat
-        timeValue = CalculateTimeValue(2f);
+        QueueTimeValue = CalculateTimeValue(2f);
         //prep shit here, maybe take this out later when battle system can call these.
         BeginningOfCombatTrigger?.Invoke(this);
     }
 
     public virtual IEnumerator BeginningOfTurn()
     {
-        timeValue = 0;
+        QueueTimeValue = 0;
         yield return null;
         BeginningOfTurnTrigger?.Invoke(this);
     }
@@ -318,7 +333,7 @@ public class Unit : MonoBehaviour
     {
         yield return transform.DOMove(startPosition, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
         EndOfTurnTrigger?.Invoke(this);
-        BattleSystem.System.EndOfTurnTrigger.Invoke(this, timeValue);
+        BattleSystem.system.EndOfTurnTrigger.Invoke(this, QueueTimeValue);
     }
 
     public virtual void TakeDamage(float damage)
@@ -339,17 +354,17 @@ public class Unit : MonoBehaviour
         //TODO: maybe an event here as well?
         if (currentHP <= 0)
         {
-            BattleSystem.System.DeathOfUnit(this);
+            BattleSystem.system.DeathOfUnit(this);
         }
         else
         {
-            StartCoroutine(BattleSystem.System.DisplayDamageNumber((int)Mathf.Ceil(damage)));
+            StartCoroutine(BattleSystem.system.DisplayDamageNumber((int)Mathf.Ceil(damage)));
         }
     }
 
     public void SelectHUD(bool active, Transform toLookAt = null)
     {
-        if (toLookAt != null)
+        if (toLookAt)
             hudCanvas.transform.rotation = Quaternion.Euler
             (
                 0,
@@ -368,7 +383,7 @@ public class Unit : MonoBehaviour
     public void CalculateHUDValues(Button left = null, Button right = null)
     {
         hudValues.text = $"{name}\nHP: {currentHP}/{maxHP}\nSP: {currentSP}/{maxSP}";
-        hudCanvas.gameObject.transform.LookAt(BattleSystem.System.battleCamera.gameObject.transform.position);
+        hudCanvas.gameObject.transform.LookAt(BattleSystem.system.battleCamera.gameObject.transform.position);
         var navigation = new Navigation();
         if (left != null)
         {

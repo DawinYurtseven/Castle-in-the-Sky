@@ -10,11 +10,9 @@ public class GrandSlash : Skill
         skillDescription = "Slash through all available enemies with Physical damage"; //TODO: physical damage?
         skillCost = 3;
         timeValue = 1.5f;
-        type = SkillTypes.Damage;
-        targetOne = false;
+        target = SkillTarget.EnemyAll;
         affectValue =2.5f;
         animationName = "GrandSlash_Animation";
-        userTargetPoint = 0;
         turnEffect = 0;
         additionalCritChance = 10;
         additionalCritAddition = 4;
@@ -27,10 +25,6 @@ public class GrandSlash : Skill
         var totalDamage = Random.Range(0, 100) < unit.critChance + additionalCritChance
             ? baseDamage * ((unit.critAmount + additionalCritAddition) / 100)
             : baseDamage;
-
-        //TODO: name your parameters ALL BETTER!
-        List<Unit> targetList = new ();
-        targetList.AddRange(unit.currentTarget);
                     
         foreach (var targetUnit in unit.currentTarget)
         {
@@ -38,10 +32,6 @@ public class GrandSlash : Skill
             if (targetUnit.currentHP > 0)
             {
                 validAction = true;
-            }
-            else
-            {
-                targetList.Remove(unit);
             }
         }
         Debug.Log("GrandSlash and HEEEEEELP!!!!");

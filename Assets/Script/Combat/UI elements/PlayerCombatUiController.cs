@@ -131,7 +131,7 @@ public class PlayerCombatUiController : MonoBehaviour
                 if(playerUnit.currentSP < skills[i].skillCost)
                     skillButtonGameObjects[i].GetComponent<Button>().interactable = false;
             }
-            BattleSystem.System.SetCurrentSelectButton(skillButtonGameObjects[0].GetComponent<Button>());
+            BattleSystem.system.SetCurrentSelectButton(skillButtonGameObjects[0].GetComponent<Button>());
         }
         else
         {
@@ -144,7 +144,7 @@ public class PlayerCombatUiController : MonoBehaviour
             {
                 t.gameObject.SetActive(false);
             }
-            BattleSystem.System.DeselectButton();
+            BattleSystem.system.DeselectButton();
 
             transform.rotation = initialTransformRotation;
         }
@@ -156,7 +156,7 @@ public class PlayerCombatUiController : MonoBehaviour
         for (var i = left ?3: 0; i <( left ?  6 : 3); i++)
         {
             if (skills.Count == i) break;
-            if(i == 0 || i == 3) BattleSystem.System.SetCurrentSelectButton(skillButtonGameObjects[i].GetComponent<Button>());
+            if(i == 0 || i == 3) BattleSystem.system.SetCurrentSelectButton(skillButtonGameObjects[i].GetComponent<Button>());
 
             if (unit.currentSP < skills[i].skillCost)
                 skillButtonGameObjects[i].GetComponent<Button>().interactable = false;

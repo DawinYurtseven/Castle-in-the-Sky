@@ -29,26 +29,26 @@ public class Node : MonoBehaviour
                 //I WANNA FIIIIIIIGHT~!!! WITH MY LIFE ON THE LIIIIINE!!!
                 button.onClick.AddListener(() =>
                 {
-                    Map.System.gameObject.SetActive(false);
-                    BattleSystem.System.gameObject.SetActive(true);
-                    BattleSystem.System.enemyUnits.Clear();
-                    BattleSystem.System.playerUnits.Clear();
+                    Map.system.gameObject.SetActive(false);
+                    BattleSystem.system.gameObject.SetActive(true);
+                    BattleSystem.system.enemyUnits.Clear();
+                    BattleSystem.system.playerUnits.Clear();
                     List<EnemyUnit> range = new ();
                     int maxRange = Mathf.Min(level / 2 + 1, 5); // get a specific range of enemies based on the level. work on how to deal with it later
                     int numRange = Random.Range(1,maxRange);
                     for (int i = 0; i < numRange; i++)
                     {
                         //Get a better method for this depending on the level.
-                        var random = Random.Range(0, Map.System.enemyUnitAssetList.Count);
-                        var enemy = Instantiate(Map.System.enemyUnitAssetList[random]);
+                        var random = Random.Range(0, Map.system.enemyUnitAssetList.Count);
+                        var enemy = Instantiate(Map.system.enemyUnitAssetList[random]);
                         enemy.gameObject.SetActive(false);
-                        enemy.GetComponent<EnemyUnit>().Depth = level;
+                        enemy.GetComponent<EnemyUnit>().Level = level;
                         range.Add(enemy.GetComponent<EnemyUnit>());
                     }
-                    BattleSystem.System.playerUnits.AddRange(Map.System.currentPlayerUnits);
-                    BattleSystem.System.enemyUnits.AddRange(range);
+                    BattleSystem.system.playerUnits.AddRange(Map.system.currentPlayerUnits);
+                    BattleSystem.system.enemyUnits.AddRange(range);
                     
-                    BattleSystem.System.StartOfCombat();
+                    BattleSystem.system.StartOfCombat();
                 });
                 break;
             case NodeType.Merchant:
