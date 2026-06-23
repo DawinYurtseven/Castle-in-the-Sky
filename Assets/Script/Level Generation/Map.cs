@@ -229,7 +229,7 @@ public class Map : MonoBehaviour
             }
         }
         
-        InputSystemWrapper.instance.SetState(InputSystemWrapper.State.Map);
+        InputSystemWrapper.Instance.SetState(InputSystemWrapper.State.Map);
         foreach (var unit in currentPlayerUnits)
         {
             unit.gameObject.SetActive(false);

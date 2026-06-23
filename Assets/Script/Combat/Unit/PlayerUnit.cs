@@ -6,6 +6,13 @@ using UnityEngine;
 
 public class PlayerUnit : Unit
 {
+    #region Actor
+    
+    [Header("Actor")]
+    public Actor Actor;
+
+    #endregion
+    
     #region Components
 
     /// for the cameraTargets from the unit base class

@@ -223,8 +223,6 @@ public class Unit : MonoBehaviour
             maxSP = intelligence * 5;
             currentSP = Mathf.CeilToInt(percentSP * maxSP);
         }
-
-        damageMultiplier = 1;
     }
 
     internal float CalculateTimeValue(float newTimeValue)

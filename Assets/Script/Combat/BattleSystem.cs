@@ -82,7 +82,7 @@ public class BattleSystem : MonoBehaviour
 
     public void StartOfCombat()
     {
-        InputSystemWrapper.instance.SetState(InputSystemWrapper.State.Combat);
+        InputSystemWrapper.Instance.SetState(InputSystemWrapper.State.Combat);
         ResetCombatState();
         
         for(int i = 0; i < playerUnits.Count; i++)

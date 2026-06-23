@@ -21,13 +21,16 @@ public class EnemyUnit : Unit
     
     public int Level { get; set; }
 
-    internal void ScaleStats()
+    //Scale stats on a slight increasing curve. That way, the scale at the beginning is easy and later gets harder.
+    private void ScaleStats()
     {
-        Strength = Mathf.CeilToInt(strCurve * Level);
-        Constitution = Mathf.CeilToInt(conCurve * Level);
-        Speed = Mathf.CeilToInt(spdCurve * Level);
-        Intelligence = Mathf.CeilToInt(intCurve * Level);
-        Luck = Mathf.CeilToInt(lckCurve * Level);
+        var roundedCalculation = Mathf.RoundToInt(Level * Mathf.Log(Level + 1, 2) / 2);
+        if (roundedCalculation == 0) roundedCalculation = 1;
+        Strength = Mathf.CeilToInt(strCurve * roundedCalculation);
+        Constitution = Mathf.CeilToInt(conCurve * roundedCalculation);
+        Speed = Mathf.CeilToInt(spdCurve * roundedCalculation);
+        Intelligence = Mathf.CeilToInt(intCurve * roundedCalculation);
+        Luck = Mathf.CeilToInt(lckCurve * roundedCalculation);
     }
 
     /// <summary>
