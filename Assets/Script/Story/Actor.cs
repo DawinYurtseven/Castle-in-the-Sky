@@ -1,9 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
-public class Actor
+[CreateAssetMenu]
+public class Actor : ScriptableObject
 {
-    public List<string> Scenes;
-    
-    
+    public List<Sentence> scenes;
+    public string actorName;
+
+    public int currentProgress = 0;
+    public Image defaultImage;
+
 }

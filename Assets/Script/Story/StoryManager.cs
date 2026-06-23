@@ -10,24 +10,90 @@ public class StoryManager : MonoBehaviour
     [SerializeField] private Image actorOne, actorTwo, continueButton;
     [SerializeField] private TMP_Text bubbleText, actorNameText;
     [SerializeField] private List<Button> multipleChoiceButtons;
-    [SerializeField] private GameObject timer;
-    
+    [SerializeField] private GameObject choicesPanel, timer;
+    [SerializeField] private Color active, nonActive;
     private Button currentSelectButton;
     
     private List<Actor> actors;
     
+    private Sentence currentSentence;
+    private bool multipleChoiceActive;
+
     /// <summary>
     /// This class is meant to be loaded when entering a story node.
     /// it will take the story part that would be next for the given actor and returns a JSON file that can
     /// be read
     /// </summary>
     /// <param name="actor"></param>
-    public void GetNextStoryPart(Actor actor){}
+    public void GetNextStoryPart(Actor actor)
+    {
+        if (actor.scenes.Count == 0)
+        {
+            Debug.Log("No more story parts for this actor");
+            return;
+        }
+        currentSentence = actor.scenes[actor.currentProgress];
+        var sprite  = currentSentence.actorImage.sprite ? currentSentence.actorImage.sprite : actor.defaultImage.sprite;
+        if (currentSentence.leftImage) {
+            actorOne.GetComponent<Image>().sprite = sprite;
+            actorOne.GetComponent<Image>().color = active;
+            actorTwo.GetComponent<Image>().color = nonActive;
+        } else {
+            actorTwo.GetComponent<Image>().sprite = sprite;
+            actorTwo.GetComponent<Image>().color = active;
+            actorOne.GetComponent<Image>().color = nonActive;
+        }
+        bubbleText.text = currentSentence.text;
+        actorNameText.text = currentSentence.actor.actorName;
+    }
 
 
     public void GoToNextLine()
     {
-        
+        switch (currentSentence.multipleChoiceSentences.Count)
+        {
+            case 0:
+                Debug.Log("No more lines");
+                return;
+            case 1:
+                currentSentence = currentSentence.multipleChoiceSentences[0];
+                var sprite = currentSentence.actorImage.sprite ? currentSentence.actorImage.sprite : currentSentence.actor.defaultImage.sprite;
+                if (currentSentence.leftImage) {
+                    actorOne.GetComponent<Image>().sprite = sprite;
+                    actorOne.GetComponent<Image>().color = active;
+                    actorTwo.GetComponent<Image>().color = nonActive;
+                } else {
+                    actorTwo.GetComponent<Image>().sprite = sprite;
+                    actorTwo.GetComponent<Image>().color = active;
+                    actorOne.GetComponent<Image>().color = nonActive;
+                }
+                bubbleText.text = currentSentence.text;
+                actorNameText.text = currentSentence.actor.actorName;
+                break;
+            default:
+                multipleChoiceActive = true;
+                choicesPanel.SetActive(true);
+                //timer.SetActive(true);
+                for (var i = 0; i < multipleChoiceButtons.Count; i++)
+                {
+                    if (i >= currentSentence.multipleChoiceSentences.Count) continue;
+                    multipleChoiceButtons[i].gameObject.SetActive(true);
+                    multipleChoiceButtons[i].GetComponentInChildren<TMP_Text>().text =
+                        currentSentence.multipleChoiceSentences[i].text;
+                    multipleChoiceButtons[i].onClick.RemoveAllListeners();
+                    var index = i;
+                    multipleChoiceButtons[i].onClick.AddListener(() =>
+                    {
+                        currentSentence = currentSentence.multipleChoiceSentences[index];
+                        multipleChoiceActive = false;
+                        choicesPanel.SetActive(false);
+                        GoToNextLine();
+                        //timer.SetActive(false);
+                    });
+                }
+
+                break;
+        }
     }
 
 
@@ -35,7 +101,14 @@ public class StoryManager : MonoBehaviour
 
     public void Submit()
     {
-        currentSelectButton?.onClick?.Invoke();
+        if (currentSelectButton && multipleChoiceActive)
+            currentSelectButton?.onClick?.Invoke();
+        else
+        {
+            Debug.Log("here with the story");
+            GoToNextLine();
+        }
+            
     }
     
     public void Navigate(Vector2 normalizedInput)
@@ -78,10 +151,14 @@ public class StoryManager : MonoBehaviour
     #endregion
 }
 
+
+[System.Serializable]
 public struct Sentence
 {
-    public AudioClip Audio;
-    public string Text;
-    public Image ActorImage;
+    public Actor actor;
+    public AudioClip audio;
+    public string text;
+    public Image actorImage;
+    public bool leftImage;
     public List<Sentence> multipleChoiceSentences;
 }
