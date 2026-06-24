@@ -28,14 +28,14 @@ public class StoryManager : MonoBehaviour
     /// <param name="actor"></param>
     public void GetNextStoryPart(Actor actor)
     {
-        if (actor.Scenes.Count == 0)
+        if (actor.scenes.Count == 0)
         {
             Debug.Log("No more story parts for this actor");
             return;
         }
-        currentStoryPart = actor.Scenes[actor.currentProgress].sentences;
+        currentStoryPart = actor.scenes[actor.currentProgress].sentences;
         currentSentence = currentStoryPart[0];
-        var sprite  = currentSentence.actorSprite ? currentSentence.actorSprite : actor.defaultImage.sprite;
+        var sprite  = currentSentence.actorSprite ? currentSentence.actorSprite : actor.defaultSprite;
         if (currentSentence.leftImage) {
             actorOne.GetComponent<Image>().sprite = sprite;
             actorOne.GetComponent<Image>().color = active;
@@ -59,7 +59,7 @@ public class StoryManager : MonoBehaviour
                 return;
             case 1:
                 currentSentence = currentStoryPart[currentSentence.choiceBranchIDs[0]];
-                var sprite = currentSentence.actorSprite ? currentSentence.actorSprite : currentSentence.actor.defaultImage.sprite;
+                var sprite = currentSentence.actorSprite ? currentSentence.actorSprite : currentSentence.actor.defaultSprite;
                 if (currentSentence.leftImage) {
                     actorOne.GetComponent<Image>().sprite = sprite;
                     actorOne.GetComponent<Image>().color = active;

@@ -5,11 +5,11 @@ using UnityEngine.UI;
 [CreateAssetMenu]
 public class Actor : ScriptableObject
 {
-    public List<Dialogue> Scenes;
+    public List<Dialogue> scenes;
     public string actorName;
 
     public int currentProgress = 0;
-    public Image defaultImage;
+    public Sprite defaultSprite;
 
 }
 [System.Serializable]
