@@ -1,14 +1,14 @@
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.Serialization;
 
-public enum SkillTypes
+public enum SkillTarget
 {
-    Damage,
-    Buff,
-    Debuff,
-    Heal
+    Enemy,
+    Ally,
+    EnemyAll,
+    AllyAll,
 }
 
 public enum SkillNames
@@ -23,56 +23,50 @@ public enum SkillNames
 [System.Serializable]
 public abstract class Skill
 {
-    public SkillNames name; 
     
     [Header("Skill Info")] public string skillName;
     public string skillDescription;
     public int skillCost;
     public float timeValue;
-    
-    public Image skillNameImg;
-    public Image skillDescriptionImg;
 
-    [Header("Skill type and action")] public SkillTypes type = SkillTypes.Damage;
-    public bool targetOne;
+    [FormerlySerializedAs("type")] [Header("Skill type and action")] public SkillTarget target = SkillTarget.Enemy;
     public float affectValue;
     public string animationName;
-    public int userTargetPoint; //-1 is to stand still, 0 is to go to target and 1 is infront of all
     public int turnEffect;
     public float additionalCritChance;
     public float additionalCritAddition;
 
     public static Skill GetSkill(SkillNames skillName)
     {
-        switch (skillName)
+        return skillName switch
         {
-            case SkillNames.GrandSlash:
-                return new GrandSlash();
-            case SkillNames.HealAll:
-                return new HealAll();
-            default:
-                return null;
-        }
+            SkillNames.GrandSlash => new GrandSlash(),
+            SkillNames.HealAll => new HealAll(),
+            _ => null
+        };
     }
 
+    //TODO: add animations to the units for the skill and try that out. but for now, not needed
     public abstract bool Execute(Unit unit);
     
     public static Skill GetRandomSkill(List<Skill> exclude = null)
     {
-        List<Skill> items = new List<Skill>()
+        var skills = new List<Skill>()
         {
             new GrandSlash(),
             new HealAll(),
         };
         if (exclude != null)
         {
-            foreach (var item in exclude)
+            foreach (var skill in from skill in exclude let i = skills.Find((x) => x.GetType() == skill.GetType()) select skill)
             {
-                var i = items.Find((x) => x.name == item.name);
-                items.Remove(item);
+                skills.Remove(skill);
             }
         }
-        var index = Random.Range(0, items.Count);
-        return items[index] != null ? items[index] : new GrandSlash();
+        var index = Random.Range(0, skills.Count);
+        return skills[index] != null ? skills[index] : new GrandSlash();
     }
 }
+
+// Simple attribute marker
+public class SubclassSelectorAttribute : PropertyAttribute { }

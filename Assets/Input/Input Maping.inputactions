@@ -59,6 +59,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Right Shoulder",
+                    "type": "Button",
+                    "id": "8f7bb67d-2605-4c0e-aa42-61ef8f5ac274",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -334,6 +343,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "Pause",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a5bb07a5-281c-4fed-8d8b-e7794dbd3cc4",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";mouse and keyboard",
+                    "action": "Right Shoulder",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a702f6ae-7cda-4960-9c46-4336fee8ebd3",
+                    "path": "<Gamepad>/rightShoulder",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";controller",
+                    "action": "Right Shoulder",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

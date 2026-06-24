@@ -11,9 +11,28 @@ public class EnemyUnit : Unit
         base.Awake();
         hudValues = GetComponentInChildren<TextMeshProUGUI>(true);
         selected = GetComponentInChildren<Button>(true);
+    }
+
+    public override void BeginningOfCombat()
+    {
         ScaleStats();
+        base.BeginningOfCombat();
     }
     
+    public int Level { get; set; }
+
+    //Scale stats on a slight increasing curve. That way, the scale at the beginning is easy and later gets harder.
+    private void ScaleStats()
+    {
+        var roundedCalculation = Mathf.RoundToInt(Level * Mathf.Log(Level + 1, 2) / 2);
+        if (roundedCalculation == 0) roundedCalculation = 1;
+        Strength = Mathf.CeilToInt(strCurve * roundedCalculation);
+        Constitution = Mathf.CeilToInt(conCurve * roundedCalculation);
+        Speed = Mathf.CeilToInt(spdCurve * roundedCalculation);
+        Intelligence = Mathf.CeilToInt(intCurve * roundedCalculation);
+        Luck = Mathf.CeilToInt(lckCurve * roundedCalculation);
+    }
+
     /// <summary>
     /// we want to make something like a scaling. So that when they are instantiated, given with a level,
     /// scale to the appropriate state. This can be either with skills they have to unlock at a certain level and/or
@@ -27,19 +46,7 @@ public class EnemyUnit : Unit
     /// </summary>
     
     
-    [Header("Scaling Curves")]
-    [SerializeField] private float strCurve, conCurve, spdCurve, intCurve, lckCurve;  
     
-    public int Depth { get; set; }
-
-    private void ScaleStats()
-    {
-        Strength = Mathf.CeilToInt(strCurve * Depth) + 1;
-        Constitution = Mathf.CeilToInt(conCurve * Depth)+ 1;
-        Speed = Mathf.CeilToInt(spdCurve * Depth) + 1;
-        Intelligence = Mathf.CeilToInt(intCurve * Depth) + 1;
-        Luck = Mathf.CeilToInt(lckCurve * Depth) + 1;
-    }
     
     public override IEnumerator BeginningOfTurn()
     {

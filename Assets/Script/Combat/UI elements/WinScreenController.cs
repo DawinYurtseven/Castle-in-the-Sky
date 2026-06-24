@@ -15,7 +15,7 @@ public class WinScreenController : MonoBehaviour
     private static readonly int FinishedEntering = Animator.StringToHash("FinishedEntering");
     private static readonly int Entered = Animator.StringToHash("Entered");
     [SerializeField] public PlayerUnit mainCharacter;
-    [SerializeField] private List<GameObject> rootButtons,statButtons,skillButtons,skillSelectButtons,itemButtons;
+    [SerializeField] private List<GameObject> rootButtons,statButtons,skillButtons,skillSelectButtons,itemButtons,charGrowth;
 
     private RectTransform rectTransform;
     private Button currentSelectButton;
@@ -30,7 +30,40 @@ public class WinScreenController : MonoBehaviour
     {
         //TODO: make sure to reset all skills, stat icons and so on
         yield return ClearAllButtons(false);
-         
+        
+        //TODO: make also for currency count
+
+        
+        for (var i = 0; i < Map.system.currentPlayerUnits.Count; i++)
+        {
+            var curPlayer = Map.system.currentPlayerUnits[i];
+            var tempStats = new int[]
+            {
+                curPlayer.Strength,
+                curPlayer.Constitution,
+                curPlayer.Speed,
+                curPlayer.Intelligence,
+                curPlayer.Luck
+            };
+            curPlayer.AddStatLevel(1);
+            charGrowth[i].GetComponent<Animator>().Play($"Panel Open");
+            var growth = charGrowth[i].GetComponent<CharacterGrowth>();
+            growth.statTexts.Clear();
+            growth.statTexts.Add($"Strength: {tempStats[0]} => {curPlayer.Strength}");
+            growth.statTexts.Add($"Constitution: {tempStats[1]} => {curPlayer.Constitution}");
+            growth.statTexts.Add($"Speed: {tempStats[2]} => {curPlayer.Speed}");
+            growth.statTexts.Add($"Intelligence: {tempStats[3]} => {curPlayer.Intelligence}");
+            growth.statTexts.Add($"Luck: {tempStats[4]} => {curPlayer.Luck}");
+            growth.profile.sprite = curPlayer.hudImage;
+            charGrowth[i].SetActive(true);
+        }
+        
+        var anim = charGrowth[Map.system.currentPlayerUnits.Count-1].GetComponent<Animator>();
+        yield return null;
+        yield return new WaitUntil(() => anim.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !anim.IsInTransition(0));
+ 
+        
+        
         rootButtons[0].transform.localPosition = new Vector3(screenWidth * 1.5f, screenHeight * 0.25f, 0);
         rootButtons[0].SetActive(true);
         rootButtons[0].GetComponent<Animator>().SetTrigger(Enter);
@@ -166,14 +199,14 @@ public class WinScreenController : MonoBehaviour
         {
             if (allocatable == 0) 
             {
-                Map.System.ReturnToMap();
+                Map.system.ReturnToMap();
                 gameObject.SetActive(false);
             }
            
         });
     }
     
-    private List<Animator> skillButtonAnims = new List<Animator>();
+    private readonly List<Animator> skillButtonAnims = new();
     private IEnumerator OnSkills()
     {
         yield return ClearAllButtons();
@@ -218,15 +251,6 @@ public class WinScreenController : MonoBehaviour
             skillButtons[i].GetComponent<Button>().onClick.AddListener(() =>
             {
                 
-                
-                /*others[0].transform.GetChild(0).gameObject.SetActive(false);
-                others[0].transform.GetChild(1).gameObject.SetActive(false); 
-                others[0].transform.GetChild(2).gameObject.SetActive(false);
-            
-                others[1].transform.GetChild(0).gameObject.SetActive(false);
-                others[1].transform.GetChild(1).gameObject.SetActive(false);
-                others[1].transform.GetChild(2).gameObject.SetActive(false);*/
-                
                 //TODO: add case that mainCharacter has too many skills and wants to exchange.
 
                 if (mainCharacter.SkillCount > 5)
@@ -236,7 +260,7 @@ public class WinScreenController : MonoBehaviour
                     mainCharacter.AddSkill(skills[i1]);
                     StartCoroutine(OnTimeClickEvent( skillButtons[i1], others, animator, otherAnimators, () =>
                     {
-                        Map.System.ReturnToMap();
+                        Map.system.ReturnToMap();
                         gameObject.SetActive(false);
                     }));
                 }
@@ -312,14 +336,14 @@ public class WinScreenController : MonoBehaviour
     private IEnumerator ClearAllSelectSkillButtons()
     {
         yield return new WaitForSeconds(1f);
-        for (int i = 0; i < skillSelectButtons.Count; i++)
+        foreach (var t in skillSelectButtons)
         {
-            skillSelectButtons[i].GetComponent<Animator>().SetBool(Entered, false);
-            yield return null;
+            t.GetComponent<Animator>().SetBool(Entered, false);
+            yield return new WaitForSeconds(0.1f);
         }
         yield return new WaitForSeconds(0.5f);
         //TODO: exit something something
-        Map.System.ReturnToMap();
+        Map.system.ReturnToMap();
         gameObject.SetActive(false);
     }
 
@@ -376,11 +400,11 @@ public class WinScreenController : MonoBehaviour
                     mainCharacter.Items.Add(items[i1]);
                 }
 
-                var unit = new List<Unit>(BattleSystem.system.playerUnits);
+                var unit = new List<Unit>(Map.system.currentPlayerUnits);
                 item.Acquire(unit);
                 StartCoroutine(OnTimeClickEvent(itemButtons[i1], others, animator, otherAnimators, () =>
                 {
-                    Map.System.ReturnToMap();
+                    Map.system.ReturnToMap();
                     gameObject.SetActive(false);
                 }));
 
@@ -430,7 +454,7 @@ public class WinScreenController : MonoBehaviour
         method?.Invoke();
     }
 
-    private IEnumerator InsertTextIntoObject(TMP_Text textObj, string text)
+    private static IEnumerator InsertTextIntoObject(TMP_Text textObj, string text)
     {
         textObj.text = "";
         for (int i = 0; i < text.Length; i++)
@@ -440,11 +464,12 @@ public class WinScreenController : MonoBehaviour
         }
     }
 
-    private IEnumerator ClearTextInObject(TMP_Text textObj)
+    private static IEnumerator ClearTextInObject(TMP_Text textObj)
     {
+        var amount = textObj.text.Length * Time.deltaTime;
         while(textObj.text.Length > 0)
         {
-            textObj.text = textObj.text.Substring(0, textObj.text.Length - 1);
+            textObj.text = textObj.text[..Mathf.Max(0,textObj.text.Length - (int)Mathf.Ceil(amount))];
             yield return null;
         }
     }
@@ -453,14 +478,19 @@ public class WinScreenController : MonoBehaviour
     //TODO: Why are you doing this with code when you can do this with animations.
     private IEnumerator ClearAllButtons(bool withAnimation = true)
     {
+        foreach (var g in charGrowth)
+        {
+            g.SetActive(false);
+        }
         if (withAnimation)
         {
-            for (int i = 0; i < rootButtons.Count; i++)
+            foreach (var t in rootButtons)
             {
-                rootButtons[i].GetComponent<Animator>().SetTrigger(Exit);
-                var length = rootButtons[i].GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.length;
-                yield return new WaitForSeconds(length/2f);
-                rootButtons[i].SetActive(false);
+                t.GetComponent<Animator>().SetTrigger(Exit);
+                yield return null;
+                var length = t.GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.length;
+                yield return new WaitForSeconds(length/4f);
+                t.SetActive(false);
             }
         }
         
@@ -481,33 +511,29 @@ public class WinScreenController : MonoBehaviour
 
     public void Navigate(Vector2 normalizedInput)
     {
-        if (currentSelectButton == null) return;
-        if (normalizedInput != Vector2.zero)
+        if (!currentSelectButton) return;
+        if (normalizedInput == Vector2.zero) return;
+        var isVertical = Mathf.Abs(normalizedInput.y) > Mathf.Abs(normalizedInput.x);
+        Selectable selectable;
+        if (isVertical)
         {
-            bool isVertical = Mathf.Abs(normalizedInput.y) > Mathf.Abs(normalizedInput.x);
-            Selectable selectable;
-            if (isVertical)
-            {
-                selectable = normalizedInput.y > 0
-                    ? currentSelectButton.navigation.selectOnUp
-                    : currentSelectButton.navigation.selectOnDown;
-            }
-            else
-            {
-                selectable = normalizedInput.x > 0
-                    ? currentSelectButton.navigation.selectOnRight
-                    : currentSelectButton.navigation.selectOnLeft;
-            }
+            selectable = normalizedInput.y > 0
+                ? currentSelectButton.navigation.selectOnUp
+                : currentSelectButton.navigation.selectOnDown;
+        }
+        else
+        {
+            selectable = normalizedInput.x > 0
+                ? currentSelectButton.navigation.selectOnRight
+                : currentSelectButton.navigation.selectOnLeft;
+        }
 
-            if (selectable != null)
-            {
-                currentSelectButton = (Button)selectable;
-                currentSelectButton?.Select();
-                if (currentSelectButton != null)
-                {
-                    //think about what to put here if needed be
-                }
-            }
+        if (selectable == null) return;
+        currentSelectButton = (Button)selectable;
+        currentSelectButton?.Select();
+        if (currentSelectButton != null)
+        {
+            //think about what to put here if needed be
         }
     }
 

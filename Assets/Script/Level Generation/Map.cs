@@ -7,14 +7,14 @@ using Random = UnityEngine.Random;
 
 public class Map : MonoBehaviour
 {
-    public static Map System;
+    public static Map system;
     public List<EnemyUnit> enemyUnitAssetList = new();
     public List<PlayerUnit> playerUnitAssetList;
 
     public List<PlayerUnit> currentPlayerUnits;
 
-    public List<Node> nodes = new List<Node>(); 
-    private List<List<Node>> layers = new List<List<Node>>();
+    public List<Node> nodes = new(); 
+    private readonly List<List<Node>> layers = new();
     public Node currentNode;
 
     [SerializeField] private List<GameObject> systems = new();
@@ -26,17 +26,18 @@ public class Map : MonoBehaviour
 
     private Camera mainCamera;
     private Vector3 cameraStartPos, cameraStartRot;
+    
+    //TODO: add currency to the game so a merchant can work. maybe also make this added to a total outside the run?
+    public int money;
 
     private void Awake()
     {
-        if (!System) System = this;
+        if (!system) system = this;
         else Destroy(this);
         mainCamera = Camera.main;
-        if (mainCamera != null)
-        {
-            cameraStartPos = mainCamera.transform.position;
-            cameraStartRot = mainCamera.transform.rotation.eulerAngles;
-        }
+        if (!mainCamera) return;
+        cameraStartPos = mainCamera.transform.position;
+        cameraStartRot = mainCamera.transform.rotation.eulerAngles;
     }
 
     private void Start()
@@ -47,9 +48,9 @@ public class Map : MonoBehaviour
 
 
     //TODO: make 4 in a row less prominent
-    public void GameStart(List<PlayerUnit> playerUnits)
+    private void GameStart(List<PlayerUnit> playerUnits)
     {
-        for (int i = 0; i < playerUnits.Count; i++)
+        for (var i = 0; i < playerUnits.Count; i++)
         {
             var temp = Instantiate(playerUnits[i]);
             temp.gameObject.SetActive(false);
@@ -58,30 +59,30 @@ public class Map : MonoBehaviour
 
         nodes.Clear();
 
-        for (int i = 0; i < levelDepth; i++)
+        for (var i = 0; i < levelDepth; i++)
         {
             layers.Add(new List<Node>());
 
             // Determine how many nodes are in this specific layer
-            int nodesInLayer = 1;
+            var nodesInLayer = 1;
             if (i > 0 && i < levelDepth - 1)
             {
-                nodesInLayer = Random.Range(2, 4); // 2 to 3 nodes wide for middle layers
+                nodesInLayer = Random.Range(2, 5); // 2 to 3 nodes wide for middle layers
             }
 
-            for (int j = 0; j < nodesInLayer; j++)
+            for (var j = 0; j < nodesInLayer; j++)
             {
-                Vector3 spawnPos = startPos;
+                var spawnPos = startPos;
                 spawnPos.z += depth * i;
 
                 // Handle horizontal spacing dynamically based on the node count
                 if (nodesInLayer > 1)
                 {
-                    float segmentWidth = width * 2 / (nodesInLayer + 1);
-                    spawnPos.x = startPos.x - (width) + (segmentWidth * (j + 1));
+                    var segmentWidth = width * 2 / (nodesInLayer + 1);
+                    spawnPos.x = startPos.x - width + (segmentWidth * (j + 1));
                 }
 
-                Node newNode = Instantiate(nodePrefab, spawnPos, Quaternion.identity, mapGameObject.transform)
+                var newNode = Instantiate(nodePrefab, spawnPos, Quaternion.identity, mapGameObject.transform)
                     .GetComponent<Node>();
                 layers[i].Add(newNode);
                 newNode.level = i + 1;
@@ -107,7 +108,7 @@ public class Map : MonoBehaviour
         }
 
         // 2. Connect the layers together
-        ConnectLayers(layers);
+        ConnectLayers();
 
         currentNode = layers[0][0]; // Start node
         currentNode.GetComponent<Button>().interactable = true;
@@ -115,20 +116,21 @@ public class Map : MonoBehaviour
     }
 
 
-    private void ConnectLayers(List<List<Node>> layers)
+    //Todo: check conditions and maybe adjust them for better preference/better performance
+    private void ConnectLayers()
     {
-        for (int i = 0; i < layers.Count - 1; i++)
+        for (var i = 0; i < layers.Count - 1; i++)
         {
-            List<Node> currentLayer = layers[i];
-            List<Node> nextLayer = layers[i + 1];
+            var currentLayer = layers[i];
+            var nextLayer = layers[i + 1];
 
-            int nextLayerCount = nextLayer.Count;
-            int currentLayerCount = currentLayer.Count;
+            var nextLayerCount = nextLayer.Count;
+            var currentLayerCount = currentLayer.Count;
 
             // Track the furthest left index in the next layer we can connect to
-            int nextLayerIndexPointer = 0;
+            var nextLayerIndexPointer = 0;
 
-            for (int j = 0; j < currentLayerCount; j++)
+            for (var j = 0; j < currentLayerCount; j++)
             { 
                 //prevent overshooting the index
                 if (nextLayerIndexPointer == nextLayerCount) nextLayerIndexPointer--;
@@ -162,7 +164,7 @@ public class Map : MonoBehaviour
                 
                 
                 var initialIndex = nextLayerIndexPointer;
-                Node connectNode = currentLayer[j];
+                var connectNode = currentLayer[j];
                 
  
                 // Enforce at least one connection forward
@@ -212,14 +214,14 @@ public class Map : MonoBehaviour
 
         var lastNodeNav = new Navigation
         {
-            selectOnDown = layers[levelDepth - 2][(layers[levelDepth - 2].Count / 2)].GetComponent<Button>()
+            selectOnDown = layers[levelDepth - 2][layers[levelDepth - 2].Count / 2].GetComponent<Button>()
         };
         layers[^1][0].GetComponent<Button>().navigation = lastNodeNav;
     }
 
     public void ReturnToMap()
     {
-        if (currentNode != null)
+        if (currentNode)
         {
             foreach (var node in layers[currentNode.level - 1])
             {
@@ -227,7 +229,7 @@ public class Map : MonoBehaviour
             }
         }
         
-        InputSystemWrapper.instance.SetState(InputSystemWrapper.State.Map);
+        InputSystemWrapper.Instance.SetState(InputSystemWrapper.State.Map);
         foreach (var unit in currentPlayerUnits)
         {
             unit.gameObject.SetActive(false);
@@ -235,7 +237,7 @@ public class Map : MonoBehaviour
 
         mainCamera.transform.DOMove(cameraStartPos, 0.2f).SetEase(Ease.OutExpo);
         mainCamera.transform.DORotate(cameraStartRot, 0.2f).SetEase(Ease.OutExpo);
-        foreach (GameObject go in systems)
+        foreach (var go in systems)
         {
             go.SetActive(false);
         }
@@ -280,7 +282,6 @@ public class Map : MonoBehaviour
                 }
             }
             closestNormalized = (closest.transform.position - currentSelectButton.transform.position).normalized;
-            Debug.Log(Vector3.Distance(closestNormalized, direction));
             if (Vector3.Distance(closestNormalized, direction) > Math.Sqrt(2)) return;
             
             selectable = closest.GetComponent<Button>();

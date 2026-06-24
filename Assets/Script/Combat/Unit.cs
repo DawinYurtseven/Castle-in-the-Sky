@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -67,10 +69,22 @@ public class Unit : MonoBehaviour
         set => luck = value;
     }
 
+    [Header("Scaling Curves")] 
+    [SerializeField] internal float strCurve;
+    [SerializeField] internal float conCurve;
+    [SerializeField] internal float spdCurve;
+    [SerializeField] internal float intCurve;
+    [SerializeField] internal float lckCurve;  
+    
+
     /// <summary>
     /// These are the stats that are calculated from the base stats and can not be influence directly from outside.
     /// </summary>
-    public int maxHP,currentHP,maxSP, currentSP;
+    [Header("Temporary Stats")] 
+    public int maxHP;
+    public int currentHP;
+    public int maxSP;
+    public int currentSP;
 
     public int HP => currentHP;
     public int SP => currentSP;
@@ -81,11 +95,9 @@ public class Unit : MonoBehaviour
         damageAddition,
         damageMultiplier; //these are for the damage calculation and critical hits.
 
-    private float timeValue; //this stat is the bread and butter of this combat system. 
     private const float ConstantReduction = 0.3f; //this stat is the bread and butter of this combat system. 
 
-    public float QueueTimeValue => timeValue;
-    public List<Unit> currentTarget;
+    public float QueueTimeValue { get; private set; }
 
     #endregion
 
@@ -95,6 +107,7 @@ public class Unit : MonoBehaviour
     //TODO: Look at after implementing items. For now, think of it as a dictionary of <items,int> where the int is the amount of that item the unit has. 
 
     public bool repeated;
+
     public bool blocked;
     public float bufferedDamage;
 
@@ -103,25 +116,31 @@ public class Unit : MonoBehaviour
     #endregion
 
     #region Skills
-    
+
     [Header("Skills")] 
-    [SerializeField] protected List<SkillNames> skills = new();
+    [SerializeReference, SubclassSelector] public List<Skill> skills= new();
+
     internal Skill SelectedSkill;
     public int SkillCount => skills.Count;
-    public Skill GetSkill(int index) => Skill.GetSkill(skills[index]);
+    public Skill GetSkill(int index) => skills[index];
 
     //TODO: Same for skills.
 
     #endregion
 
     #region Components
-    
+
+    public List<Unit> currentTarget;
+
     /// <summary>
     /// 0- base target for other units to go to when performing a 1-1 action
     /// </summary>
     ///
     [Header("Components")] 
-    [SerializeField] protected Transform[] positionTargets;
+    [SerializeField] internal Transform[] positionTargets;
+    /// <summary>
+    /// 0 - base 
+    /// </summary>
     [SerializeField] public Transform[] cameraTargets;
 
     [SerializeField] internal Animator animator;
@@ -204,8 +223,6 @@ public class Unit : MonoBehaviour
             maxSP = intelligence * 5;
             currentSP = Mathf.CeilToInt(percentSP * maxSP);
         }
-
-        damageMultiplier = 1;
     }
 
     internal float CalculateTimeValue(float newTimeValue)
@@ -215,15 +232,15 @@ public class Unit : MonoBehaviour
 
     public void PassTimeValue(float passedTime)
     {
-        timeValue -= passedTime;
+        QueueTimeValue -= passedTime;
     }
 
     //TODO: Think about hwhat can be done to affect the damage on unit
 
     protected virtual IEnumerator BasicAttack()
     {
-        timeValue += CalculateTimeValue(1f);
-        BattleSystem.system.AcceptNewQueuePosition(this, timeValue);
+        QueueTimeValue += CalculateTimeValue(1f);
+        BattleSystem.system.AcceptNewQueuePosition(this, QueueTimeValue);
         
         do
         {
@@ -232,9 +249,6 @@ public class Unit : MonoBehaviour
             
             ActionTakenTrigger?.Invoke(this);
             BasicAttackTrigger?.Invoke(this);
-
-            var baseDamage = (strength + damageAddition) * damageMultiplier;
-            var totalDamage = Random.Range(0, 100) < critChance ? baseDamage * critAmount / 100 : baseDamage;
 
             //move object towards target
             yield return BattleSystem.system.MoveCamera(null, BattleSystem.CameraTargets.Empty);
@@ -250,8 +264,6 @@ public class Unit : MonoBehaviour
                 BattleSystem.system.battleCamera.transform.rotation = cameraTargets[0].rotation;
                 yield return null;
             }
-
-            currentTarget[0].TakeDamage(totalDamage);// change with animation events
             yield return BattleSystem.system.MoveCamera(null, BattleSystem.CameraTargets.Empty);
             yield return transform.DOMove(startPosition, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
         } while (repeated && currentTarget[0].currentHP > 0);
@@ -259,16 +271,34 @@ public class Unit : MonoBehaviour
         yield return EndTurn();
     }
 
+    ///This is for the Animation trigger to enter a float between (0, 1] to split the damage to the attack if multiple hits exists. 
+    ///The total value of the split should be 1,
+    /// so if there are 2 hits, the first one can pass 0.6 and the second one can pass 0.4,
+    /// if there are 3 hits, the split can be 0.5, 0.3 and 0.2 and so on as example.
+    ///
+    /// This function should also have the damage calculation for the attack, so crits are individually calculated and not from one action
+    public void DealDamage(float split)
+    {
+        var baseDamage = (strength + damageAddition) * damageMultiplier * split;
+        var totalDamage = Random.Range(0, 100) < critChance ? baseDamage * critAmount / 100 : baseDamage;
+
+        foreach (var t in currentTarget)
+        {
+            t?.TakeDamage(totalDamage);
+        }
+        
+    }
+
     protected virtual IEnumerator SkillUsage() //change this later
     {
-        timeValue += CalculateTimeValue(SelectedSkill.timeValue);
+        QueueTimeValue += CalculateTimeValue(SelectedSkill.timeValue);
         currentSP -= SelectedSkill.skillCost;
         //TODO: make skill cost cut with a global function
         bool validAction;
         do
         {
             ActionTakenTrigger?.Invoke(this);
-            SkillUsageTrigger?.Invoke(this,SelectedSkill.type);
+            SkillUsageTrigger?.Invoke(this,SelectedSkill.target);
             validAction = SelectedSkill.Execute(this);
             
             yield return new WaitForSeconds(0.2f);
@@ -277,7 +307,7 @@ public class Unit : MonoBehaviour
         yield return EndTurn();
     }
 
-    public void BeginningOfCombat()
+    public virtual void BeginningOfCombat()
     {
         CalculateStats(true);
 
@@ -285,14 +315,14 @@ public class Unit : MonoBehaviour
         startPosition = transform.position;
 
         //calculate time value at the beginning of combat
-        timeValue = CalculateTimeValue(2f);
+        QueueTimeValue = CalculateTimeValue(2f);
         //prep shit here, maybe take this out later when battle system can call these.
         BeginningOfCombatTrigger?.Invoke(this);
     }
 
     public virtual IEnumerator BeginningOfTurn()
     {
-        timeValue = 0;
+        QueueTimeValue = 0;
         yield return null;
         BeginningOfTurnTrigger?.Invoke(this);
     }
@@ -301,11 +331,12 @@ public class Unit : MonoBehaviour
     {
         yield return transform.DOMove(startPosition, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
         EndOfTurnTrigger?.Invoke(this);
-        BattleSystem.system.EndOfTurnTrigger.Invoke(this, timeValue);
+        BattleSystem.system.EndOfTurnTrigger.Invoke(this, QueueTimeValue);
     }
 
     public virtual void TakeDamage(float damage)
     {
+        if(currentHP<= 0) return;
         bufferedDamage = damage;
         ReactionDoneTrigger?.Invoke(this);
         if (blocked)
@@ -314,19 +345,24 @@ public class Unit : MonoBehaviour
             bufferedDamage = 0;
             return;
         }
-        currentHP -= (int)damage;
+
+        
+        currentHP -= (int)Mathf.Ceil(damage);
         currentHP = Mathf.Clamp(currentHP, 0, maxHP);
         //TODO: maybe an event here as well?
         if (currentHP <= 0)
         {
             BattleSystem.system.DeathOfUnit(this);
-            gameObject.SetActive(false);
+        }
+        else
+        {
+            StartCoroutine(BattleSystem.system.DisplayDamageNumber((int)Mathf.Ceil(damage)));
         }
     }
 
     public void SelectHUD(bool active, Transform toLookAt = null)
     {
-        if (toLookAt != null)
+        if (toLookAt)
             hudCanvas.transform.rotation = Quaternion.Euler
             (
                 0,

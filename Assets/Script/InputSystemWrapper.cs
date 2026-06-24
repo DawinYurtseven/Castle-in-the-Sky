@@ -1,14 +1,14 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Serialization;
 
 public class InputSystemWrapper : MonoBehaviour
 {
-    public static InputSystemWrapper instance;
+    public static InputSystemWrapper Instance;
 
     private void Awake()
     {
-        instance = this;
+        Instance = this;
     }
     public enum State
     {
@@ -20,16 +20,14 @@ public class InputSystemWrapper : MonoBehaviour
 
     private State state;
 
-    public void SetState(State state)
+    public void SetState(State nextState)
     {
-        previousState = this.state;
-        this.state = state;
+        state = nextState;
     }
-
-    public State previousState;
 
     [SerializeField] private BattleSystem battleSystem;
     [SerializeField] private Map map;
+    [SerializeField] private StoryManager storyManager;
 
     public void Submit(InputAction.CallbackContext context)
     {
@@ -45,7 +43,10 @@ public class InputSystemWrapper : MonoBehaviour
             case State.Menu:
                 break;
             case State.Dialogue:
+                storyManager.Submit();
                 break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 
@@ -60,6 +61,11 @@ public class InputSystemWrapper : MonoBehaviour
             case State.Map:
                 map.Cancel();
                 break;
+            case State.Menu:
+            case State.Dialogue:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 
@@ -71,6 +77,12 @@ public class InputSystemWrapper : MonoBehaviour
             case State.Combat:
                 battleSystem.SkillTab();
                 break;
+            case State.Map:
+            case State.Menu:
+            case State.Dialogue:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 
@@ -82,6 +94,29 @@ public class InputSystemWrapper : MonoBehaviour
             case State.Combat:
                 battleSystem.InspectTab();
                 break;
+            case State.Map:
+            case State.Menu:
+            case State.Dialogue:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    public void RightShoulderButton(InputAction.CallbackContext context)
+    {
+        if (!context.performed) return;
+        switch (state)
+        {
+            case State.Combat:
+                battleSystem.SwitchTab();
+                break;
+            case State.Map:
+            case State.Menu:
+            case State.Dialogue:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 
@@ -98,9 +133,9 @@ public class InputSystemWrapper : MonoBehaviour
         var dir = context.ReadValue<Vector2>();
         if (dir != Vector2.zero)
         {
-            bool isVertical = Mathf.Abs(dir.y) > Mathf.Abs(dir.x);
-            bool same = false;
-            var temp = Vector2.zero;
+            var isVertical = Mathf.Abs(dir.y) > Mathf.Abs(dir.x);
+            bool same;
+            Vector2 temp;
             if (isVertical)
             {
                 same = dir.y > 0 ? previousDirection == Vector2.up : previousDirection == Vector2.down;
@@ -117,17 +152,27 @@ public class InputSystemWrapper : MonoBehaviour
         switch (state)
         {
             case State.Combat:
-                battleSystem.Navigate(context.ReadValue<Vector2>());
+                battleSystem.Navigate(dir);
                 break;
             case State.Map:
-                map.Navigate(context.ReadValue<Vector2>());
+                map.Navigate(dir);
                 break;
+            case State.Dialogue:
+                storyManager.Navigate(dir);
+                break;
+            case State.Menu:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 
     public void Pause(InputAction.CallbackContext context)
     {
-        if (!context.performed) return;
+        if (context.performed)
+        {
+            Debug.Log("yo, what?");
+        }
         //TODO: Universal pause button? 
     }
     

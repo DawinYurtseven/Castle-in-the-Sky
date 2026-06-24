@@ -29,7 +29,7 @@ public class Node : MonoBehaviour
                 //I WANNA FIIIIIIIGHT~!!! WITH MY LIFE ON THE LIIIIINE!!!
                 button.onClick.AddListener(() =>
                 {
-                    Map.System.gameObject.SetActive(false);
+                    Map.system.gameObject.SetActive(false);
                     BattleSystem.system.gameObject.SetActive(true);
                     BattleSystem.system.enemyUnits.Clear();
                     BattleSystem.system.playerUnits.Clear();
@@ -39,10 +39,13 @@ public class Node : MonoBehaviour
                     for (int i = 0; i < numRange; i++)
                     {
                         //Get a better method for this depending on the level.
-                        var random = Random.Range(0, Map.System.enemyUnitAssetList.Count);
-                        range.Add(Map.System.enemyUnitAssetList[random]);
+                        var random = Random.Range(0, Map.system.enemyUnitAssetList.Count);
+                        var enemy = Instantiate(Map.system.enemyUnitAssetList[random]);
+                        enemy.gameObject.SetActive(false);
+                        enemy.GetComponent<EnemyUnit>().Level = level;
+                        range.Add(enemy.GetComponent<EnemyUnit>());
                     }
-                    BattleSystem.system.playerUnits.AddRange(Map.System.currentPlayerUnits);
+                    BattleSystem.system.playerUnits.AddRange(Map.system.currentPlayerUnits);
                     BattleSystem.system.enemyUnits.AddRange(range);
                     
                     BattleSystem.system.StartOfCombat();
