@@ -16,6 +16,7 @@ public class StoryManager : MonoBehaviour
     
     private List<Actor> actors;
     
+    private List<Sentence> currentStoryPart;
     private Sentence currentSentence;
     private bool multipleChoiceActive;
 
@@ -27,13 +28,14 @@ public class StoryManager : MonoBehaviour
     /// <param name="actor"></param>
     public void GetNextStoryPart(Actor actor)
     {
-        if (actor.scenes.Count == 0)
+        if (actor.Scenes.Count == 0)
         {
             Debug.Log("No more story parts for this actor");
             return;
         }
-        currentSentence = actor.scenes[actor.currentProgress];
-        var sprite  = currentSentence.actorImage.sprite ? currentSentence.actorImage.sprite : actor.defaultImage.sprite;
+        currentStoryPart = actor.Scenes[actor.currentProgress].sentences;
+        currentSentence = currentStoryPart[0];
+        var sprite  = currentSentence.actorSprite ? currentSentence.actorSprite : actor.defaultImage.sprite;
         if (currentSentence.leftImage) {
             actorOne.GetComponent<Image>().sprite = sprite;
             actorOne.GetComponent<Image>().color = active;
@@ -48,16 +50,16 @@ public class StoryManager : MonoBehaviour
     }
 
 
-    public void GoToNextLine()
+    private void GoToNextLine()
     {
-        switch (currentSentence.multipleChoiceSentences.Count)
+        switch (currentSentence.choiceBranchIDs.Count)
         {
             case 0:
                 Debug.Log("No more lines");
                 return;
             case 1:
-                currentSentence = currentSentence.multipleChoiceSentences[0];
-                var sprite = currentSentence.actorImage.sprite ? currentSentence.actorImage.sprite : currentSentence.actor.defaultImage.sprite;
+                currentSentence = currentStoryPart[currentSentence.choiceBranchIDs[0]];
+                var sprite = currentSentence.actorSprite ? currentSentence.actorSprite : currentSentence.actor.defaultImage.sprite;
                 if (currentSentence.leftImage) {
                     actorOne.GetComponent<Image>().sprite = sprite;
                     actorOne.GetComponent<Image>().color = active;
@@ -76,21 +78,22 @@ public class StoryManager : MonoBehaviour
                 //timer.SetActive(true);
                 for (var i = 0; i < multipleChoiceButtons.Count; i++)
                 {
-                    if (i >= currentSentence.multipleChoiceSentences.Count) continue;
+                    if (i >= currentSentence.choiceBranchIDs.Count) continue;
                     multipleChoiceButtons[i].gameObject.SetActive(true);
                     multipleChoiceButtons[i].GetComponentInChildren<TMP_Text>().text =
-                        currentSentence.multipleChoiceSentences[i].text;
+                        currentStoryPart[currentSentence.choiceBranchIDs[i]].text;
                     multipleChoiceButtons[i].onClick.RemoveAllListeners();
                     var index = i;
                     multipleChoiceButtons[i].onClick.AddListener(() =>
                     {
-                        currentSentence = currentSentence.multipleChoiceSentences[index];
+                        currentSentence = currentStoryPart[currentSentence.choiceBranchIDs[index]];
                         multipleChoiceActive = false;
                         choicesPanel.SetActive(false);
                         GoToNextLine();
                         //timer.SetActive(false);
                     });
                 }
+                SetCurrentSelectButton(multipleChoiceButtons[0]);
 
                 break;
         }
@@ -155,10 +158,14 @@ public class StoryManager : MonoBehaviour
 [System.Serializable]
 public struct Sentence
 {
+    public int id; // Unique ID for this sentence
     public Actor actor;
     public AudioClip audio;
-    public string text;
-    public Image actorImage;
+    [TextArea(3, 5)] public string text;
+    public Sprite actorSprite;
     public bool leftImage;
-    public List<Sentence> multipleChoiceSentences;
+    
+    // Instead of storing the actual Sentence objects, 
+    // store the IDs of the sentences this choice leads to.
+    public List<int> choiceBranchIDs; 
 }

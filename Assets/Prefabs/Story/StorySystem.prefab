@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 4339606269768870385}
   - component: {fileID: 2284876115180653383}
   m_Layer: 0
-  m_Name: Right
+  m_Name: down
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -93,13 +93,13 @@ MonoBehaviour:
     m_Mode: 4
     m_WrapAround: 0
     m_SelectOnUp: {fileID: 5593981122014843002}
-    m_SelectOnDown: {fileID: 0}
-    m_SelectOnLeft: {fileID: 8765033458241281221}
+    m_SelectOnDown: {fileID: 8765033458241281221}
+    m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_HighlightedColor: {r: 0.9622642, g: 0.7821777, b: 0.17853324, a: 1}
     m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
     m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
@@ -711,7 +711,7 @@ GameObject:
   - component: {fileID: 8628145231768306350}
   - component: {fileID: 5593981122014843002}
   m_Layer: 0
-  m_Name: Up
+  m_Name: middle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -790,14 +790,14 @@ MonoBehaviour:
   m_Navigation:
     m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
-    m_SelectOnLeft: {fileID: 8765033458241281221}
-    m_SelectOnRight: {fileID: 2284876115180653383}
+    m_SelectOnUp: {fileID: 8765033458241281221}
+    m_SelectOnDown: {fileID: 2284876115180653383}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_HighlightedColor: {r: 0.9622642, g: 0.7821777, b: 0.17853324, a: 1}
     m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
     m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
@@ -1047,7 +1047,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &5566148050293415423
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1063,8 +1063,8 @@ RectTransform:
   - {fileID: 1114521581987865340}
   - {fileID: 5996941846183142245}
   - {fileID: 2355137740496180698}
-  - {fileID: 8089414406636225546}
   - {fileID: 1004441658880411529}
+  - {fileID: 8089414406636225546}
   m_Father: {fileID: 5581787104852528107}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
@@ -1477,7 +1477,10 @@ MonoBehaviour:
   - {fileID: 8765033458241281221}
   - {fileID: 2284876115180653383}
   - {fileID: 5593981122014843002}
+  choicesPanel: {fileID: 5076640447143920822}
   timer: {fileID: 0}
+  active: {r: 1, g: 1, b: 1, a: 1}
+  nonActive: {r: 1, g: 1, b: 1, a: 0.8}
 --- !u!1 &7816062760862703988
 GameObject:
   m_ObjectHideFlags: 0
@@ -1566,7 +1569,7 @@ GameObject:
   - component: {fileID: 3051745250913611895}
   - component: {fileID: 8765033458241281221}
   m_Layer: 0
-  m_Name: Left
+  m_Name: Up
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1645,14 +1648,14 @@ MonoBehaviour:
   m_Navigation:
     m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 5593981122014843002}
-    m_SelectOnDown: {fileID: 0}
+    m_SelectOnUp: {fileID: 2284876115180653383}
+    m_SelectOnDown: {fileID: 5593981122014843002}
     m_SelectOnLeft: {fileID: 0}
-    m_SelectOnRight: {fileID: 2284876115180653383}
+    m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9622642, g: 0.7821777, b: 0.17853324, a: 1}
     m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
     m_SelectedColor: {r: 1, g: 1, b: 1, a: 1}
     m_DisabledColor: {r: 1, g: 1, b: 1, a: 0.5019608}
