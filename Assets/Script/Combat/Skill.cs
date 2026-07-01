@@ -13,9 +13,9 @@ public enum SkillTarget
 
 public enum SkillNames
 {
-    none,
     GrandSlash,
-    HealAll
+    HealAll,
+    ApplyBurn
 }
 
 //TODO: Make it class based
@@ -35,6 +35,7 @@ public abstract class Skill
     public int turnEffect;
     public float additionalCritChance;
     public float additionalCritAddition;
+    public int boost;
 
     public static Skill GetSkill(SkillNames skillName)
     {
@@ -42,6 +43,7 @@ public abstract class Skill
         {
             SkillNames.GrandSlash => new GrandSlash(),
             SkillNames.HealAll => new HealAll(),
+            SkillNames.ApplyBurn => new ApplyBurn(),
             _ => null
         };
     }
@@ -55,6 +57,7 @@ public abstract class Skill
         {
             new GrandSlash(),
             new HealAll(),
+            new ApplyBurn(),
         };
         if (exclude != null)
         {

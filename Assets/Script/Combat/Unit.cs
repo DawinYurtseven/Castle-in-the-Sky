@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using DG.Tweening;
+using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -93,7 +94,7 @@ public class Unit : MonoBehaviour
         critAmount,
         critChance,
         damageAddition,
-        damageMultiplier; //these are for the damage calculation and critical hits.
+        damageMultiplier = 1f; //these are for the damage calculation and critical hits.
 
     private const float ConstantReduction = 0.3f; //this stat is the bread and butter of this combat system. 
 
@@ -153,6 +154,9 @@ public class Unit : MonoBehaviour
     //image for Queue and player values
     public Sprite hudImage;
     public TextMeshProUGUI hudValues;
+    
+    //this dictionary is to count how many status effect and of what type they are so that skills/effects that count them can work
+    public Dictionary<StatusEffect, int> StatusCounts = new();
 
     #endregion
 
@@ -223,6 +227,12 @@ public class Unit : MonoBehaviour
             maxSP = intelligence * 5;
             currentSP = Mathf.CeilToInt(percentSP * maxSP);
         }
+
+        if (reset)
+        {
+            damageMultiplier = 1f;
+            damageAddition = 0f;
+        }
     }
 
     internal float CalculateTimeValue(float newTimeValue)
@@ -280,7 +290,7 @@ public class Unit : MonoBehaviour
     public void DealDamage(float split)
     {
         var baseDamage = (strength + damageAddition) * damageMultiplier * split;
-        var totalDamage = Random.Range(0, 100) < critChance ? baseDamage * critAmount / 100 : baseDamage;
+        var totalDamage = Random.Range(0, 100) < critChance ? baseDamage * (1f + (critAmount/100)) : baseDamage;
 
         foreach (var t in currentTarget)
         {

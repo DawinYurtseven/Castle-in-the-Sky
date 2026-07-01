@@ -103,7 +103,6 @@ public class Map : MonoBehaviour
 
                     currentNode = newNode;
                 });
-                newNode.CreateNode();
             }
         }
 
@@ -210,6 +209,19 @@ public class Map : MonoBehaviour
                     nextLayerIndexPointer++;
                 }
             }
+
+            foreach (var node in currentLayer)
+            {
+                if (node.previousNodes.Count == 1 && node.nextNodes.Count == 1)
+                {
+                    node.boost = node.previousNodes[0].boost + 1;
+                }
+                else
+                {
+                    node.boost = 1;
+                }
+                node.CreateNode();
+            }
         }
 
         var lastNodeNav = new Navigation
@@ -262,42 +274,35 @@ public class Map : MonoBehaviour
     public void Navigate(Vector2 normalizedInput)
     {
         if (currentSelectButton == null) return;
-        if (normalizedInput != Vector2.zero)
+        if (normalizedInput == Vector2.zero) return;
+        var node = currentSelectButton.GetComponent<Node>().nextNodes;
+        node.AddRange(currentSelectButton.GetComponent<Node>().previousNodes);
+        var direction = new Vector3(normalizedInput.x, 0, normalizedInput.y);
+        var closest = node[0];
+        Vector3 closestNormalized;
+        for (var i = 1; i < node.Count; i++)
         {
-            Selectable selectable;
-            var node = currentSelectButton.GetComponent<Node>().nextNodes;
-            node.AddRange(currentSelectButton.GetComponent<Node>().previousNodes);
-            var direction = new Vector3(normalizedInput.x, 0, normalizedInput.y);
-            var closest = node[0];
-            Vector3 closestNormalized;
-            Vector3 nextNodeNormalized;
-            for (var i = 1; i < node.Count; i++)
-            {
-                closestNormalized = (closest.transform.position - currentSelectButton.transform.position).normalized;
-                nextNodeNormalized = (node[i].transform.position - currentSelectButton.transform.position).normalized;
-                if (Vector3.Distance(direction, closestNormalized) >
-                    Vector3.Distance(direction, nextNodeNormalized))
-                {
-                    closest = node[i];
-                }
-            }
             closestNormalized = (closest.transform.position - currentSelectButton.transform.position).normalized;
-            if (Vector3.Distance(closestNormalized, direction) > Math.Sqrt(2)) return;
-            
-            selectable = closest.GetComponent<Button>();
-
-            if (selectable != null)
+            var nextNodeNormalized = (node[i].transform.position - currentSelectButton.transform.position).normalized;
+            if (Vector3.Distance(direction, closestNormalized) >
+                Vector3.Distance(direction, nextNodeNormalized))
             {
-                currentSelectButton = (Button)selectable;
-                currentSelectButton?.Select();
-                if (currentSelectButton != null)
-                {
-                    mapGameObject.transform.DOKill();
-                    mapGameObject.transform.DOMove(-currentSelectButton.transform.localPosition, 0.3f)
-                        .SetEase(Ease.OutExpo);
-                }
+                closest = node[i];
             }
         }
+        closestNormalized = (closest.transform.position - currentSelectButton.transform.position).normalized;
+        if (Vector3.Distance(closestNormalized, direction) > Math.Sqrt(2)) return;
+            
+        Selectable selectable = closest.GetComponent<Button>();
+
+        if (selectable == null) return;
+        currentNode = selectable.GetComponent<Node>();
+        currentSelectButton = (Button)selectable;
+        currentSelectButton?.Select();
+        if (currentSelectButton == null) return;
+        mapGameObject.transform.DOKill();
+        mapGameObject.transform.DOMove(-currentSelectButton.transform.localPosition, 0.3f)
+            .SetEase(Ease.OutExpo);
     }
 
     #endregion

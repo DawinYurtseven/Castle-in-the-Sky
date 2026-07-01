@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,17 +16,29 @@ public class Node : MonoBehaviour
     public List<Node> previousNodes = new List<Node>();
     public List<Node> nextNodes = new List<Node>();
     public NodeType type;
-    public int level, width;
+    public int level;
+    public int boost; // incrementally boost of bonuses that increases depending on the previous boosts and connectivity
     
     public GameObject lineRendererPrefab;
+    public TMP_Text boostText;
+    
+    [SerializeField] private Sprite combatSprite, merchantSprite, storySprite;
+    [SerializeField] private Image nodeIcon;
     
     public void CreateNode()
     {
+        if(boost >1 )
+            boostText.text = boost.ToString();
+        else 
+            boostText.gameObject.SetActive(false);
         var button = GetComponent<Button>();
         //Create assets based on the type of the node. 
         switch (type)
         {
             case NodeType.Battle:
+                nodeIcon.sprite = combatSprite;
+                nodeIcon.rectTransform.rotation = Quaternion.Euler(30, 0, -45);
+                nodeIcon.rectTransform.sizeDelta = new Vector2(nodeIcon.rectTransform.sizeDelta.x, nodeIcon.rectTransform.sizeDelta.y * 2); 
                 //I WANNA FIIIIIIIGHT~!!! WITH MY LIFE ON THE LIIIIINE!!!
                 button.onClick.AddListener(() =>
                 {
