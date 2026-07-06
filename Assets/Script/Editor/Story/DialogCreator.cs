@@ -1,4 +1,8 @@
+
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
+using UnityEditor.Rendering;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -302,8 +306,13 @@ public class DialogCreator : EditorWindow
         }
     }
 
+    private SerializedProperty currentSentence; // Tracks the currently selected sentence for editing
+    private List<int> selectedChoices = new ();
+
     private void LoadDialogueEditorView()
     {
+        currentSentence = null;
+        selectedChoices.Clear();
         contentContainer.Clear();
         serializedActor.Update();
 
@@ -362,18 +371,31 @@ public class DialogCreator : EditorWindow
 
             // Standard auto-increment settings
             var newSentence = sentencesProp.GetArrayElementAtIndex(newIndex);
+
+            
+            try
+            {
+                if (currentSentence?.FindPropertyRelative("choiceBranchIDs") != null && currentSentence.FindPropertyRelative("choiceBranchIDs").arraySize == 0)
+                {
+                    currentSentence.FindPropertyRelative("choiceBranchIDs").arraySize = 1;
+                    currentSentence.FindPropertyRelative("choiceBranchIDs").GetArrayElementAtIndex(0).intValue =
+                        newIndex; // Default to no next sentence
+                }else if (currentSentence?.FindPropertyRelative("choiceBranchIDs") != null &&
+                          currentSentence.FindPropertyRelative("choiceBranchIDs").arraySize == 3)
+                {
+                    Debug.LogWarning("Current sentence is a multiple choice prompt, adding new sentence seems bullshit");
+                    return;
+                }
+            }
+            catch
+            {
+                Debug.Log("Don't just delete from the data, use the fucking tool!");
+            }
+
+            currentSentence = newSentence;
             newSentence.FindPropertyRelative("id").intValue = newIndex;
             newSentence.FindPropertyRelative("text").stringValue = "New regular dialogue line...";
             newSentence.FindPropertyRelative("leftImage").boolValue = true; // Default left alignment
-            
-            //add this sentence to previous sentence's choiceBranchIDs if it exists
-            if (newIndex > 0)
-            {
-                var previousSentence = sentencesProp.GetArrayElementAtIndex(newIndex - 1);
-                var choiceBranchIDsProp = previousSentence.FindPropertyRelative("choiceBranchIDs");
-                choiceBranchIDsProp.arraySize++;
-                choiceBranchIDsProp.GetArrayElementAtIndex(choiceBranchIDsProp.arraySize - 1    ).intValue = newIndex;
-            }
 
             serializedActor.ApplyModifiedProperties();
             RefreshSentenceList();
@@ -395,15 +417,50 @@ public class DialogCreator : EditorWindow
         var addChoiceButton = new Button(() =>
         {
             serializedActor.Update();
+            if (currentSentence == null)
+            {
+                var sentences = serializedActor.FindProperty("scenes").GetArrayElementAtIndex(selectedDialogueIndex)
+                    .FindPropertyRelative("sentences");
+                if (sentences.arraySize == 0)
+                {
+                    //add some text here idfk
+                    return;
+                }
+
+                currentSentence = sentences.GetArrayElementAtIndex(sentences.arraySize - 1);
+            }
+
+            var choiceBranchIDsProp = currentSentence.FindPropertyRelative("choiceBranchIDs");
+            choiceBranchIDsProp.arraySize = 3;
             var newIndex = sentencesProp.arraySize;
             sentencesProp.InsertArrayElementAtIndex(newIndex);
+            choiceBranchIDsProp.GetArrayElementAtIndex(0).intValue = sentencesProp.arraySize - 1;
 
-            var newSentence = sentencesProp.GetArrayElementAtIndex(newIndex);
-            newSentence.FindPropertyRelative("id").intValue = newIndex;
-            newSentence.FindPropertyRelative("text").stringValue = "Branching choice prompt question...";
-            newSentence.FindPropertyRelative("leftImage").boolValue = true;
+            var choiceOne = sentencesProp.GetArrayElementAtIndex(newIndex);
+            choiceOne.FindPropertyRelative("id").intValue = newIndex - 1;
+            choiceOne.FindPropertyRelative("text").stringValue = "Branching choice prompt question...";
+            choiceOne.FindPropertyRelative("leftImage").boolValue = true;
+            choiceOne.FindPropertyRelative("choiceBranchIDs").arraySize = 0;
 
-            // Note: For choice handling, you can use your choiceBranchIDs array here later
+            newIndex = sentencesProp.arraySize;
+            sentencesProp.InsertArrayElementAtIndex(newIndex);
+            choiceBranchIDsProp.GetArrayElementAtIndex(1).intValue = sentencesProp.arraySize - 1;
+
+            var choiceTwo = sentencesProp.GetArrayElementAtIndex(newIndex);
+            choiceTwo.FindPropertyRelative("id").intValue = newIndex - 1;
+            choiceTwo.FindPropertyRelative("text").stringValue = "Branching choice prompt question...";
+            choiceTwo.FindPropertyRelative("leftImage").boolValue = true;
+            choiceTwo.FindPropertyRelative("choiceBranchIDs").arraySize = 0;
+
+            newIndex = sentencesProp.arraySize;
+            sentencesProp.InsertArrayElementAtIndex(newIndex);
+            choiceBranchIDsProp.GetArrayElementAtIndex(2).intValue = sentencesProp.arraySize - 1;
+
+            var choiceThree = sentencesProp.GetArrayElementAtIndex(newIndex);
+            choiceThree.FindPropertyRelative("id").intValue = newIndex - 1;
+            choiceThree.FindPropertyRelative("text").stringValue = "Branching choice prompt question...";
+            choiceThree.FindPropertyRelative("leftImage").boolValue = true;
+            choiceThree.FindPropertyRelative("choiceBranchIDs").arraySize = 0;
 
             serializedActor.ApplyModifiedProperties();
             RefreshSentenceList();
@@ -464,166 +521,450 @@ public class DialogCreator : EditorWindow
                     { style = { color = Color.gray, marginTop = 10, unityTextAlign = TextAnchor.MiddleCenter } });
                 return;
             }
-
-            for (var i = 0; i < sentencesProp.arraySize; i++)
+            
+            bool hasNext = true;
+            var nextIndex = 0;
+            do
             {
-                var sentenceProp = sentencesProp.GetArrayElementAtIndex(i);
+                var sentenceProp = sentencesProp.GetArrayElementAtIndex(nextIndex);
+                currentSentence = sentenceProp;
+                var choiceAmount = sentenceProp.FindPropertyRelative("choiceBranchIDs")
+                    .arraySize;
                 var textProp = sentenceProp.FindPropertyRelative("text");
-                var leftImageProp = sentenceProp.FindPropertyRelative("leftImage");
-                var index = i;
+                        var leftImageProp = sentenceProp.FindPropertyRelative("leftImage");
+                
+                        // Create a wrapper box representing a chat message bubble row
+                        var messageRow = new VisualElement
+                        {
+                            style =
+                            {
+                                marginBottom = 8,
+                                flexDirection = FlexDirection.Row,
+                                // --- CHAT ALIGNMENT LOGIC ---
+                                // Based on the 'leftImage' bool, shift the bubble to the left or right side of the screen
+                                justifyContent = leftImageProp.boolValue
+                                    ? Justify.FlexStart
+                                    : // Align Left
+                                    Justify.FlexEnd
+                            }
+                        };
+                        // Align Right
+                        // The actual bubble container holding properties
+                        var bubble = new VisualElement
+                        {
+                            style =
+                            {
+                                width = Length.Percent(70), // Chat bubbles usually take up most but not all width
+                                backgroundColor = leftImageProp.boolValue
+                                    ? new Color(0.2f, 0.25f, 0.3f)
+                                    : new Color(0.25f, 0.3f, 0.2f),
+                                paddingTop = 6,
+                                paddingBottom = 6,
+                                paddingLeft = 6,
+                                paddingRight = 6,
+                                borderBottomLeftRadius = 4,
+                                borderBottomRightRadius = 4,
+                                borderTopLeftRadius = 4,
+                                borderTopRightRadius = 4,
+                            }
+                        };
 
-                // Create a wrapper box representing a chat message bubble row
-                var messageRow = new VisualElement
+                        // Mini top row inside the bubble for quick settings and deletion
+                        var bubbleHeader = new VisualElement
+                        {
+                            style =
+                            {
+                                flexDirection = FlexDirection.Row,
+                                justifyContent = Justify.SpaceBetween,
+                                alignItems = Align.Center, // Align items vertically in the middle
+                                marginBottom = 4
+                            }
+                        };
+
+                        // Left side of the header: ID and Side Toggle
+                        var headerLeftGroup = new VisualElement
+                        {
+                            style =
+                            {
+                                flexDirection = FlexDirection.Row,
+                                alignItems = Align.Center
+                            }
+                        };
+
+                        var idLabel = new Label($"ID: {sentenceProp.FindPropertyRelative("id").intValue}  ")
+                        {
+                            style =
+                            {
+                                unityFontStyleAndWeight = FontStyle.Bold,
+                                color = Color.white
+                            }
+                        };
+                        headerLeftGroup.Add(idLabel);
+
+                        var sideToggleButton = new Button(() =>
+                        {
+                            leftImageProp.boolValue = !leftImageProp.boolValue;
+                            serializedActor.ApplyModifiedProperties();
+                            RefreshSentenceList();
+                        })
+                        {
+                            text = leftImageProp.boolValue ? "◀ Left Side" : "Right Side ▶",
+                            style =
+                            {
+                                fontSize = 10,
+                                paddingBottom = 2,
+                                paddingTop = 2,
+                                paddingRight = 2,
+                                paddingLeft = 2,
+                            }
+                        };
+                        headerLeftGroup.Add(sideToggleButton);
+                        bubbleHeader.Add(headerLeftGroup);
+
+                        // Right side of the header: The "X" Delete Button
+                        var index = nextIndex;
+                        var deleteButton = new Button(() =>
+                        {
+                            serializedActor.Update();
+                            var lastId = currentSentence.FindPropertyRelative("id").intValue;
+                            var replaceCurrentSelect = lastId ==  sentencesProp.GetArrayElementAtIndex(index).FindPropertyRelative("id").intValue;
+                            var oldSize = sentencesProp.arraySize;
+                            sentencesProp.DeleteArrayElementAtIndex(index);
+
+                            // If Unity cleared the content instead of removing the index slot, delete it again
+                            if (sentencesProp.arraySize == oldSize)
+                            {
+                                sentencesProp.DeleteArrayElementAtIndex(index);
+                            }
+
+                            // Optional Best Practice: Clean up IDs so they remain sequential (0, 1, 2...) after a deletion
+                            //TODO: fix this so that the sentences also point to the next one help
+                            for (var k = 0; k < sentencesProp.arraySize; k++)
+                            {
+                                sentencesProp.GetArrayElementAtIndex(k).FindPropertyRelative("id").intValue = k;
+                            }
+
+                            if (sentencesProp.arraySize == 0)
+                                currentSentence = null;
+                            else if (replaceCurrentSelect)
+                            {
+                                for (int i = 0; i < sentencesProp.arraySize; i++)
+                                {
+                                    if (sentencesProp.GetArrayElementAtIndex(i).FindPropertyRelative("choiceBranchIDs")
+                                            .arraySize == 1 && sentencesProp.GetArrayElementAtIndex(i)
+                                            .FindPropertyRelative("choiceBranchIDs").GetArrayElementAtIndex(0)
+                                            .intValue == lastId)
+                                    {
+                                        sentencesProp.GetArrayElementAtIndex(i).FindPropertyRelative("choiceBranchIDs")
+                                            .arraySize = 0;
+                                        if (selectedChoices.Contains(i))
+                                        {
+                                            selectedChoices.Remove(i);
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                            
+
+                            serializedActor.ApplyModifiedProperties();
+                            RefreshSentenceList(); // Redraw everything cleanly
+                        })
+                        {
+                            text = "X",
+                            style =
+                            {
+                                unityFontStyleAndWeight = FontStyle.Bold,
+                                backgroundColor = new Color(0.6f, 0.15f, 0.15f), // Red alert styling
+                                color = Color.white,
+                                paddingLeft = 6, paddingRight = 6,
+                                paddingTop = 2, paddingBottom = 2,
+                                borderTopLeftRadius = 2, borderTopRightRadius = 2,
+                                borderBottomLeftRadius = 2, borderBottomRightRadius = 2
+                            }
+                        };
+                        bubbleHeader.Add(deleteButton);
+
+                        // Add the completed header to the bubble
+                        bubble.Add(bubbleHeader);
+
+                        // The editable Text Area for the dialogue phrase
+                        var textField = new PropertyField(textProp, "Text");
+                        textField.Bind(serializedActor);
+                        bubble.Add(textField);
+
+                        // Add fields for Actor, Audio, Sprite data containers
+                        var speakerField = new PropertyField(sentenceProp.FindPropertyRelative("actor"), "Speaker");
+                        var audioField = new PropertyField(sentenceProp.FindPropertyRelative("audio"), "Audio Clip");
+                        var spriteField = new PropertyField(sentenceProp.FindPropertyRelative("actorSprite"), "Sprite");
+
+                        speakerField.Bind(serializedActor);
+                        audioField.Bind(serializedActor);
+                        spriteField.Bind(serializedActor);
+
+                        bubble.Add(speakerField);
+                        bubble.Add(audioField);
+                        bubble.Add(spriteField);
+
+                        messageRow.Add(bubble);
+                        chatScrollView.Add(messageRow);
+                switch (choiceAmount)
                 {
-                    style =
+                    case 1:
                     {
-                        marginBottom = 8,
-                        flexDirection = FlexDirection.Row,
-                        // --- CHAT ALIGNMENT LOGIC ---
-                        // Based on the 'leftImage' bool, shift the bubble to the left or right side of the screen
-                        justifyContent = leftImageProp.boolValue
-                            ? Justify.FlexStart
-                            : // Align Left
-                            Justify.FlexEnd
+                        
+                        choiceAmount = sentencesProp.GetArrayElementAtIndex(nextIndex)
+                            .FindPropertyRelative("choiceBranchIDs")
+                            .arraySize;
+                        if (choiceAmount == 0)
+                        {
+                            hasNext = false;
+                            break;
+                        }
+                        nextIndex = sentencesProp.GetArrayElementAtIndex(nextIndex)
+                            .FindPropertyRelative("choiceBranchIDs").GetArrayElementAtIndex(0).intValue;
+
+
+                        break;
                     }
-                };
+                    case 3:
+                        var branchListProp = sentenceProp.FindPropertyRelative("choiceBranchIDs");
 
-                // Align Right
+                        // --- MAIN OUTER ROW ---
+                        var choicesRow = new VisualElement
+                        {
+                            style =
+                            {
+                                marginBottom = 12,
+                                flexDirection = FlexDirection.Row,
+                                justifyContent = Justify.Center // Center the block in the chat timeline
+                            }
+                        };
 
-                // The actual bubble container holding properties
-                var bubble = new VisualElement
-                {
-                    style =
-                    {
-                        width = Length.Percent(70), // Chat bubbles usually take up most but not all width
-                        backgroundColor = leftImageProp.boolValue
-                            ? new Color(0.2f, 0.25f, 0.3f)
-                            : new Color(0.25f, 0.3f, 0.2f),
-                        paddingTop = 6,
-                        paddingBottom = 6,
-                        paddingLeft = 6,
-                        paddingRight = 6,
-                        borderBottomLeftRadius = 4,
-                        borderBottomRightRadius = 4,
-                        borderTopLeftRadius = 4,
-                        borderTopRightRadius = 4,
-                    }
-                };
+                        // --- MAIN COMBINED BUBBLE WRAPPER ---
+                        var choicesBubble = new VisualElement
+                        {
+                            style =
+                            {
+                                width = Length.Percent(90), // Wide layout to give room to the 3 horizontal panels
+                                backgroundColor = new Color(0.18f, 0.18f, 0.25f, 1f), // Deep indigo theme for choices
+                                paddingBottom = 8,
+                                paddingTop = 8,
+                                paddingLeft = 8,
+                                paddingRight = 8,
+                                borderBottomLeftRadius= 6,
+                                borderBottomRightRadius = 6,
+                                borderTopRightRadius = 6,
+                                borderTopLeftRadius = 6,
+                                borderBottomWidth= 1,
+                                borderTopWidth = 1,
+                                borderLeftWidth = 1,
+                                borderRightWidth = 1,
+                                borderBottomColor = new Color(0.4f, 0.4f, 0.6f, 1f),
+                                borderTopColor = new Color(0.4f, 0.4f, 0.6f, 1f),
+                                borderLeftColor = new Color(0.4f, 0.4f, 0.6f, 1f),
+                                borderRightColor = new Color(0.4f, 0.4f, 0.6f, 1f)
+                            }
+                        };
 
-                // Mini top row inside the bubble for quick settings and deletion
-                var bubbleHeader = new VisualElement
-                {
-                    style =
-                    {
-                        flexDirection = FlexDirection.Row,
-                        justifyContent = Justify.SpaceBetween,
-                        alignItems = Align.Center, // Align items vertically in the middle
-                        marginBottom = 4
-                    }
-                };
+                        // --- HEADER PANEL (ID & Global Delete) ---
+                        var choicesHeader = new VisualElement
+                        {
+                            style =
+                            {
+                                flexDirection = FlexDirection.Row,
+                                justifyContent = Justify.SpaceBetween,
+                                alignItems = Align.Center,
+                                marginBottom = 6
+                            }
+                        };
 
-                // Left side of the header: ID and Side Toggle
-                var headerLeftGroup = new VisualElement
-                {
-                    style =
-                    {
-                        flexDirection = FlexDirection.Row,
-                        alignItems = Align.Center
-                    }
-                };
+                        var multiIdLabel =
+                            new Label($"Choice Block ID: {sentenceProp.FindPropertyRelative("id").intValue}")
+                            {
+                                style = { unityFontStyleAndWeight = FontStyle.Bold, color = Color.cyan }
+                            };
+                        choicesHeader.Add(multiIdLabel);
 
-                var idLabel = new Label($"ID: {sentenceProp.FindPropertyRelative("id").intValue}  ")
-                {
-                    style =
-                    {
-                        unityFontStyleAndWeight = FontStyle.Bold,
-                        color = Color.white
-                    }
-                };
-                headerLeftGroup.Add(idLabel);
+                        // Global X Button to drop the entire branching block node
+                        var globalIndex = nextIndex;
+                        var choiceDeleteButton = new Button(() =>
+                        {
+                            if (EditorUtility.DisplayDialog("Delete Choice Node", "Wipe out this entire branch?", "Yes",
+                                    "No"))
+                            {
+                                serializedActor.Update();
+                                var oldSize = sentencesProp.arraySize;
+                                sentencesProp.DeleteArrayElementAtIndex(globalIndex);
+                                if (sentencesProp.arraySize == oldSize)
+                                    sentencesProp.DeleteArrayElementAtIndex(globalIndex);
 
-                var sideToggleButton = new Button(() =>
-                {
-                    leftImageProp.boolValue = !leftImageProp.boolValue;
-                    serializedActor.ApplyModifiedProperties();
-                    RefreshSentenceList();
-                })
-                {
-                    text = leftImageProp.boolValue ? "◀ Left Side" : "Right Side ▶",
-                    style =
-                    {
-                        fontSize = 10, 
-                        paddingBottom = 2,
-                        paddingTop = 2,
-                        paddingRight =  2,
-                        paddingLeft = 2,
-                    }
-                };
-                headerLeftGroup.Add(sideToggleButton);
-                bubbleHeader.Add(headerLeftGroup);
+                                // Execute the pointer repair script from Part 1
+                                for (int i = 0; i < sentencesProp.arraySize; i++)
+                                {
+                                    var cProp = sentencesProp.GetArrayElementAtIndex(i);
+                                    cProp.FindPropertyRelative("id").intValue = i;
+                                    var bList = cProp.FindPropertyRelative("choiceBranchIDs");
+                                    for (int b = bList.arraySize - 1; b >= 0; b--)
+                                    {
+                                        int tID = bList.GetArrayElementAtIndex(b).intValue;
+                                        if (tID == globalIndex) bList.DeleteArrayElementAtIndex(b);
+                                        else if (tID > globalIndex) bList.GetArrayElementAtIndex(b).intValue = tID - 1;
+                                    }
+                                }
 
-                // Right side of the header: The "X" Delete Button
-                var deleteButton = new Button(() =>
-                {
-                    serializedActor.Update();
+                                serializedActor.ApplyModifiedProperties();
+                                RefreshSentenceList();
+                            }
+                        })
+                        {
+                            text = "X",
+                            style =
+                            {
+                                unityFontStyleAndWeight = FontStyle.Bold,
+                                backgroundColor = new Color(0.6f, 0.15f, 0.15f), color = Color.white
+                            }
+                        };
+                        choicesHeader.Add(choiceDeleteButton);
+                        choicesBubble.Add(choicesHeader);
 
-                    var oldSize = sentencesProp.arraySize;
-                    sentencesProp.DeleteArrayElementAtIndex(index);
+                        // Spacer
+                        var spaceDivider = new VisualElement { style = { height = 8 } };
+                        choicesBubble.Add(spaceDivider);
 
-                    // If Unity cleared the content instead of removing the index slot, delete it again
-                    if (sentencesProp.arraySize == oldSize)
-                    {
-                        sentencesProp.DeleteArrayElementAtIndex(index);
-                    }
+                        // --- HORIZONTAL BUTTON ROW ---
+                        var buttonsContainer = new VisualElement
+                        {
+                            style =
+                            {
+                                flexDirection = FlexDirection.Row,
+                                justifyContent = Justify.SpaceBetween
+                            }
+                        };
 
-                    // Optional Best Practice: Clean up IDs so they remain sequential (0, 1, 2...) after a deletion
-                    for (var k = 0; k < sentencesProp.arraySize; k++)
-                    {
-                        sentencesProp.GetArrayElementAtIndex(k).FindPropertyRelative("id").intValue = k;
-                    }
+                        var idList = new List<int>();
+                        
 
-                    serializedActor.ApplyModifiedProperties();
-                    RefreshSentenceList(); // Redraw everything cleanly
-                })
-                {
-                    text = "X",
-                    style =
-                    {
-                        unityFontStyleAndWeight = FontStyle.Bold,
-                        backgroundColor = new Color(0.6f, 0.15f, 0.15f), // Red alert styling
-                        color = Color.white,
-                        paddingLeft = 6, paddingRight = 6,
-                        paddingTop = 2, paddingBottom = 2,
-                        borderTopLeftRadius = 2, borderTopRightRadius = 2,
-                        borderBottomLeftRadius = 2, borderBottomRightRadius = 2
-                    }
-                };
-                bubbleHeader.Add(deleteButton);
+                        // Generate the 3 horizontal columns
+                        for (int c = 0; c < 3; c++)
+                        {
+                            int choiceIndex = c;
+                            int bondedSentenceIndex = branchListProp.GetArrayElementAtIndex(choiceIndex).intValue;
+                            idList.Add(bondedSentenceIndex);
+                            
+                            // Grab the actual sentence property that this button link points to
+                            var subSentenceProp = sentencesProp.GetArrayElementAtIndex(bondedSentenceIndex);
+                            var subTextProp = subSentenceProp.FindPropertyRelative("text");
 
-                // Add the completed header to the bubble
-                bubble.Add(bubbleHeader);
+                            // Vertical panel representing one choice route
+                            var singleChoiceColumn = new VisualElement
+                            {
+                                style =
+                                {
+                                    width = Length.Percent(31), // Fits 3 columns comfortably with spacing margins
+                                    backgroundColor = new Color(0.25f, 0.25f, 0.35f, 1f),
+                                    paddingBottom = 6,
+                                    paddingTop = 6,
+                                    paddingLeft = 6,
+                                    paddingRight = 6,
+                                    borderBottomLeftRadius = 4,
+                                    borderBottomRightRadius = 4,
+                                    borderTopLeftRadius = 4,
+                                    borderTopRightRadius = 4,
+                                    
+                                }
+                            };
+                            var size = sentencesProp.GetArrayElementAtIndex(bondedSentenceIndex)
+                                .FindPropertyRelative("choiceBranchIDs").arraySize;
+                            var pointingText = size == 0 ? " (has no pointedID)" : $" (Points to ID: {sentencesProp.GetArrayElementAtIndex(bondedSentenceIndex).FindPropertyRelative("choiceBranchIDs").GetArrayElementAtIndex(0).intValue})";
+                            var choiceMarkerLabel =
+                                new Label($"Route {choiceIndex + 1} {pointingText}")
+                                {
+                                    style =
+                                    {
+                                        fontSize = 10, unityFontStyleAndWeight = FontStyle.Bold, color = Color.gray,
+                                        marginBottom = 4
+                                    }
+                                };
+                            singleChoiceColumn.Add(choiceMarkerLabel);
 
-                // The editable Text Area for the dialogue phrase
-                var textField = new PropertyField(textProp, "Text");
-                textField.Bind(serializedActor);
-                bubble.Add(textField);
+                            // Editable text input field belonging directly to that target route sentence
+                            var routeTextField = new PropertyField(subTextProp, "Option Text");
+                            routeTextField.Bind(serializedActor);
+                            singleChoiceColumn.Add(routeTextField);
+                            
+                            
+                            // Selection Button to allow the designer to click down this path inside the tool!
+                            var routeButton = new Button(() =>
+                            {
+                                //TODO: add this choice to selected to continue onwards with the list
 
-                // Add fields for Actor, Audio, Sprite data containers
-                var speakerField = new PropertyField(sentenceProp.FindPropertyRelative("actor"), "Speaker");
-                var audioField = new PropertyField(sentenceProp.FindPropertyRelative("audio"), "Audio Clip");
-                var spriteField = new PropertyField(sentenceProp.FindPropertyRelative("actorSprite"), "Sprite");
+                                foreach (var id in idList)
+                                {
+                                    selectedChoices.Remove(id);
+                                }
+                                selectedChoices.Add(bondedSentenceIndex);
+                                int newIndex;
 
-                speakerField.Bind(serializedActor);
-                audioField.Bind(serializedActor);
-                spriteField.Bind(serializedActor);
+                                if (sentencesProp.GetArrayElementAtIndex(bondedSentenceIndex)
+                                        .FindPropertyRelative("choiceBranchIDs").arraySize == 0)
+                                {
+                                    serializedActor.Update();
+                                    newIndex = sentencesProp.arraySize;
+                                    sentencesProp.InsertArrayElementAtIndex(newIndex);
 
-                bubble.Add(speakerField);
-                bubble.Add(audioField);
-                bubble.Add(spriteField);
+                                    // Standard auto-increment settings
+                                    var newSentence = sentencesProp.GetArrayElementAtIndex(newIndex);
 
-                messageRow.Add(bubble);
-                chatScrollView.Add(messageRow);
-            }
+                                    sentencesProp.GetArrayElementAtIndex(bondedSentenceIndex).FindPropertyRelative("choiceBranchIDs").arraySize = 1;
+                                    sentencesProp.GetArrayElementAtIndex(bondedSentenceIndex).FindPropertyRelative("choiceBranchIDs").GetArrayElementAtIndex(0).intValue = newIndex;
+
+                                    currentSentence = newSentence;
+                                    newSentence.FindPropertyRelative("id").intValue = newIndex;
+                                    newSentence.FindPropertyRelative("text").stringValue = "New regular dialogue line...";
+                                    newSentence.FindPropertyRelative("leftImage").boolValue = true; // Default left alignment
+
+                                    serializedActor.ApplyModifiedProperties();
+                                }
+                                else
+                                {
+                                    newIndex = sentencesProp.GetArrayElementAtIndex(bondedSentenceIndex)
+                                        .FindPropertyRelative("choiceBranchIDs").GetArrayElementAtIndex(0).intValue;
+                                }
+                                
+                                
+                                RefreshSentenceList();
+                                Debug.Log($"Traversing window graph context into path: {newIndex}");
+                                
+                            })
+                            {
+                                text = "Inspect Path ➔",
+                                style =
+                                {
+                                    marginTop = 6, fontSize = 10, backgroundColor = new Color(0.15f, 0.3f, 0.15f)
+                                }
+                            };
+                            singleChoiceColumn.Add(routeButton);
+
+                            buttonsContainer.Add(singleChoiceColumn);
+                        }
+
+                        choicesBubble.Add(buttonsContainer);
+                        choicesRow.Add(choicesBubble);
+                        chatScrollView.Add(choicesRow);
+
+                        hasNext = false; //break here unless you select a choice to continue
+                        foreach (var id in idList.Where(id => selectedChoices.Contains(id)))
+                        {
+                            hasNext = true;
+                            nextIndex = sentencesProp.GetArrayElementAtIndex(id).FindPropertyRelative("choiceBranchIDs").GetArrayElementAtIndex(0).intValue;
+                        }
+                        break;
+                    default:
+                        hasNext = false;
+                        break;
+                }
+            } while (hasNext);
         }
     }
 

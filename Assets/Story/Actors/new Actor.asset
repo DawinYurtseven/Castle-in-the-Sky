@@ -14,7 +14,56 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Actor
   scenes:
   - dialogueName: New Dialogue 0
-    sentences: []
+    sentences:
+    - id: 0
+      actor: {fileID: 0}
+      audio: {fileID: 0}
+      text: 'Hey! I don''t remember you ever wanting to show up! '
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      choiceBranchIDs: 01000000
+    - id: 1
+      actor: {fileID: 0}
+      audio: {fileID: 0}
+      text: What gives?
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      choiceBranchIDs: 020000000300000004000000
+    - id: 2
+      actor: {fileID: 0}
+      audio: {fileID: 0}
+      text: I just wanted to
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      choiceBranchIDs: 
+    - id: 3
+      actor: {fileID: 0}
+      audio: {fileID: 0}
+      text: Don't know
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      choiceBranchIDs: 
+    - id: 4
+      actor: {fileID: 0}
+      audio: {fileID: 0}
+      text: it was you
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      choiceBranchIDs: 07000000
+    - id: 5
+      actor: {fileID: 0}
+      audio: {fileID: 0}
+      text: Well... You are here and that seems reason enough to me.
+      actorSprite: {fileID: 0}
+      leftImage: 0
+      choiceBranchIDs: 08000000
+    - id: 6
+      actor: {fileID: 0}
+      audio: {fileID: 0}
+      text: 'That is... touching? a bit weird tho, '
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      choiceBranchIDs: 
   actorName: 
   currentProgress: 0
   defaultSprite: {fileID: 0}
