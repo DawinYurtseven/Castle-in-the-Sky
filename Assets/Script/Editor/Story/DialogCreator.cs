@@ -1,8 +1,6 @@
-
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.Rendering;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -178,6 +176,43 @@ public class DialogCreator : EditorWindow
         var progressField = new PropertyField(progressProp, "Current Progress");
         var spriteField = new PropertyField(spriteProp, "Default Sprite");
 
+        // change the whole name of the actor asset when the display name is changed
+        nameField.RegisterCallback<GeometryChangedEvent>(_ => 
+        {
+            // 2. Query inside the PropertyField to find the actual underlying TextField
+            TextField actualTextField = nameField.Q<TextField>();
+
+            if (actualTextField != null)
+            {
+                // 3. Unregister standard callbacks and use FocusOutEvent instead!
+                actualTextField.RegisterCallback<FocusOutEvent>(_ =>
+                {
+                    var newName = actualTextField.value;
+                    if (!currentActor || string.IsNullOrEmpty(newName)) return;
+
+                    var assetPath = AssetDatabase.GetAssetPath(currentActor);
+
+                    if (string.IsNullOrEmpty(assetPath)) return;
+                    var result = AssetDatabase.RenameAsset(assetPath, newName.Trim());
+
+                    if (!string.IsNullOrEmpty(result))
+                    {
+                        Debug.LogWarning($"Failed to rename asset: {result}");
+                    }
+                    else
+                    {
+                        AssetDatabase.SaveAssets();
+                        AssetDatabase.Refresh();
+                    }
+
+                    serializedActor.ApplyModifiedProperties();
+                });
+            }
+        });
+
+        
+        
+
         // Bind them so modifications save to the asset file
         nameField.Bind(serializedActor);
         progressField.Bind(serializedActor);
@@ -239,7 +274,7 @@ public class DialogCreator : EditorWindow
             scenesProp.InsertArrayElementAtIndex(newIndex);
 
             // Give it a temporary default name
-            SerializedProperty newDialogue = scenesProp.GetArrayElementAtIndex(newIndex);
+            var newDialogue = scenesProp.GetArrayElementAtIndex(newIndex);
             newDialogue.FindPropertyRelative("dialogueName").stringValue = $"New Dialogue {newIndex}";
 
             serializedActor.ApplyModifiedProperties();
@@ -285,7 +320,6 @@ public class DialogCreator : EditorWindow
 
                 var dialogueButton = new Button(() =>
                 {
-                    Debug.Log($"Clicked Dialogue Index: {index} ({displayName})");
                     // Future step: Load this specific dialogue's flat sentence list!
                     selectedDialogueIndex = index;
                     LoadDialogueEditorView();
@@ -307,7 +341,7 @@ public class DialogCreator : EditorWindow
     }
 
     private SerializedProperty currentSentence; // Tracks the currently selected sentence for editing
-    private List<int> selectedChoices = new ();
+    private readonly List<int> selectedChoices = new ();
 
     private void LoadDialogueEditorView()
     {
@@ -323,20 +357,27 @@ public class DialogCreator : EditorWindow
         var dialogueNameProp = currentDialogueProp.FindPropertyRelative("dialogueName");
 
         // --- HEADER ---
-        Label headerLabel = new Label($"Editing Dialogue: {dialogueNameProp.stringValue}")
+        var dialogueNameField = new TextField("Dialogue Name")
         {
+            value = dialogueNameProp.stringValue,
             style =
             {
-                unityFontStyleAndWeight = FontStyle.Bold,
-                fontSize = 14,
                 marginBottom = 10,
-                color = Color.white
+                fontSize = 14,
+                unityFontStyleAndWeight = FontStyle.Bold,
+                color = Color.white,
             }
         };
-        contentContainer.Add(headerLabel);
 
-        // --- CHAT TIMELINE CONTAINER ---
-        ScrollView chatScrollView = new ScrollView(ScrollViewMode.Vertical)
+        dialogueNameField.BindProperty(dialogueNameProp);
+        dialogueNameField.RegisterValueChangedCallback(_ =>
+        {
+            serializedActor.ApplyModifiedProperties();
+        });
+
+        contentContainer.Add(dialogueNameField);
+
+        var chatScrollView = new ScrollView(ScrollViewMode.Vertical)
         {
             style =
             {
@@ -353,8 +394,8 @@ public class DialogCreator : EditorWindow
 
         RefreshSentenceList();
 
-        // --- BOTTOM NAVIGATION BUTTON PANEL ---
-        VisualElement controlPanel = new VisualElement
+
+        var controlPanel = new VisualElement
         {
             style =
             {
@@ -363,7 +404,7 @@ public class DialogCreator : EditorWindow
             }
         };
 
-        Button addSentenceButton = new Button(() =>
+        var addSentenceButton = new Button(() =>
         {
             serializedActor.Update();
             var newIndex = sentencesProp.arraySize;
@@ -389,7 +430,7 @@ public class DialogCreator : EditorWindow
             }
             catch
             {
-                Debug.Log("Don't just delete from the data, use the fucking tool!");
+                Debug.LogError("Don't just delete from the data, use the fucking tool!");
             }
 
             currentSentence = newSentence;
@@ -479,15 +520,52 @@ public class DialogCreator : EditorWindow
             }
         };
 
-        Button backButton = new Button(() =>
+        var mergeButton = new Button(() =>
         {
-            // Save state and return to the primary actor screen layout
-            selectedDialogueIndex = -1;
-            contentContainer.Clear();
-            contentContainer.Add(ActorText());
+            serializedActor.Update();
+            if (currentSentence == null)
+            {
+                Debug.LogWarning("No current sentence selected to merge from.");
+                return;
+            }
+
+            // Create a new sentence that will serve as the merge point
+            var newIndex = sentencesProp.arraySize;
+            sentencesProp.InsertArrayElementAtIndex(newIndex);
+            var mergeSentence = sentencesProp.GetArrayElementAtIndex(newIndex);
+            mergeSentence.FindPropertyRelative("id").intValue = newIndex;
+            mergeSentence.FindPropertyRelative("text").stringValue = "Merged dialogue point...";
+            mergeSentence.FindPropertyRelative("leftImage").boolValue = true;
+            mergeSentence.FindPropertyRelative("choiceBranchIDs").arraySize = 0;
+
+            int count = 0;
+            // Update all branches that are stoped to point to the new merge sentence
+            for (var i = 0; i < sentencesProp.arraySize - 1; i++)
+            {
+                var sentenceProp = sentencesProp.GetArrayElementAtIndex(i);
+                var choiceBranchIDsProp = sentenceProp.FindPropertyRelative("choiceBranchIDs");
+
+                if (choiceBranchIDsProp.arraySize != 0) continue;
+                count++;
+                choiceBranchIDsProp.arraySize = 1;
+                choiceBranchIDsProp.GetArrayElementAtIndex(0).intValue = newIndex;
+            }
+
+            switch (count)
+            {
+                case 1:
+                    Debug.LogWarning("Ayo, you know you could have just said new sentence, right?");
+                    break;
+                case 0:
+                    Debug.LogError("there must be a circle! be careful, this is probably a mistake");
+                    break;
+            }
+
+            serializedActor.ApplyModifiedProperties();
+            RefreshSentenceList();
         })
         {
-            text = "Back",
+            text = "Add Merger Sentence",
             style =
             {
                 flexGrow = 1,
@@ -502,7 +580,7 @@ public class DialogCreator : EditorWindow
 
         controlPanel.Add(addSentenceButton);
         controlPanel.Add(addChoiceButton);
-        controlPanel.Add(backButton);
+        controlPanel.Add(mergeButton);
         contentContainer.Add(controlPanel);
 
         // Track data updates
@@ -638,31 +716,51 @@ public class DialogCreator : EditorWindow
                             }
 
                             // Optional Best Practice: Clean up IDs so they remain sequential (0, 1, 2...) after a deletion
-                            //TODO: fix this so that the sentences also point to the next one help
+                            //TODO: check if all choices are deleted
                             for (var k = 0; k < sentencesProp.arraySize; k++)
                             {
-                                sentencesProp.GetArrayElementAtIndex(k).FindPropertyRelative("id").intValue = k;
+                                var prop = sentencesProp.GetArrayElementAtIndex(k);
+                                prop.FindPropertyRelative("id").intValue = k;
+                                if (prop.FindPropertyRelative("choiceBranchIDs")
+                                        .arraySize <= 0) continue;
+                                for(var o = 0; o < prop.FindPropertyRelative("choiceBranchIDs").arraySize; o++)
+                                {
+                                    if (prop.FindPropertyRelative("choiceBranchIDs").GetArrayElementAtIndex(o)
+                                            .intValue == index)
+                                    {
+                                        prop.FindPropertyRelative("choiceBranchIDs").DeleteArrayElementAtIndex(o);
+                                        if(selectedChoices.Contains(k))
+                                            selectedChoices.Remove(k);
+                                        break;
+                                    }
+                                    else if (prop.FindPropertyRelative("choiceBranchIDs").GetArrayElementAtIndex(o)
+                                            .intValue > index)
+                                    {
+                                        prop.FindPropertyRelative("choiceBranchIDs").GetArrayElementAtIndex(o)
+                                            .intValue--;
+                                    }
+                                }
                             }
+                            
+                            
 
                             if (sentencesProp.arraySize == 0)
                                 currentSentence = null;
                             else if (replaceCurrentSelect)
                             {
-                                for (int i = 0; i < sentencesProp.arraySize; i++)
+                                for (var i = 0; i < sentencesProp.arraySize; i++)
                                 {
                                     if (sentencesProp.GetArrayElementAtIndex(i).FindPropertyRelative("choiceBranchIDs")
-                                            .arraySize == 1 && sentencesProp.GetArrayElementAtIndex(i)
+                                            .arraySize != 1 || sentencesProp.GetArrayElementAtIndex(i)
                                             .FindPropertyRelative("choiceBranchIDs").GetArrayElementAtIndex(0)
-                                            .intValue == lastId)
+                                            .intValue != lastId) continue;
+                                    sentencesProp.GetArrayElementAtIndex(i).FindPropertyRelative("choiceBranchIDs")
+                                        .arraySize = 0;
+                                    if (selectedChoices.Contains(i))
                                     {
-                                        sentencesProp.GetArrayElementAtIndex(i).FindPropertyRelative("choiceBranchIDs")
-                                            .arraySize = 0;
-                                        if (selectedChoices.Contains(i))
-                                        {
-                                            selectedChoices.Remove(i);
-                                        }
-                                        break;
+                                        selectedChoices.Remove(i);
                                     }
+                                    break;
                                 }
                             }
                             
@@ -766,8 +864,7 @@ public class DialogCreator : EditorWindow
                                 borderRightColor = new Color(0.4f, 0.4f, 0.6f, 1f)
                             }
                         };
-
-                        // --- HEADER PANEL (ID & Global Delete) ---
+                        
                         var choicesHeader = new VisualElement
                         {
                             style =
@@ -790,32 +887,20 @@ public class DialogCreator : EditorWindow
                         var globalIndex = nextIndex;
                         var choiceDeleteButton = new Button(() =>
                         {
-                            if (EditorUtility.DisplayDialog("Delete Choice Node", "Wipe out this entire branch?", "Yes",
-                                    "No"))
-                            {
+                         
                                 serializedActor.Update();
-                                var oldSize = sentencesProp.arraySize;
-                                sentencesProp.DeleteArrayElementAtIndex(globalIndex);
-                                if (sentencesProp.arraySize == oldSize)
-                                    sentencesProp.DeleteArrayElementAtIndex(globalIndex);
-
-                                // Execute the pointer repair script from Part 1
-                                for (int i = 0; i < sentencesProp.arraySize; i++)
+                                for(var i = sentencesProp.arraySize -1 ; i > globalIndex; i--)
                                 {
-                                    var cProp = sentencesProp.GetArrayElementAtIndex(i);
-                                    cProp.FindPropertyRelative("id").intValue = i;
-                                    var bList = cProp.FindPropertyRelative("choiceBranchIDs");
-                                    for (int b = bList.arraySize - 1; b >= 0; b--)
-                                    {
-                                        int tID = bList.GetArrayElementAtIndex(b).intValue;
-                                        if (tID == globalIndex) bList.DeleteArrayElementAtIndex(b);
-                                        else if (tID > globalIndex) bList.GetArrayElementAtIndex(b).intValue = tID - 1;
-                                    }
+                                    if (selectedChoices.Contains(i))
+                                        selectedChoices.Remove(i);
+                                    sentencesProp.DeleteArrayElementAtIndex(i);
                                 }
+                                sentencesProp.GetArrayElementAtIndex(globalIndex).FindPropertyRelative("choiceBranchIDs").arraySize = 0;
+                                currentSentence = sentencesProp.GetArrayElementAtIndex(globalIndex);
 
                                 serializedActor.ApplyModifiedProperties();
                                 RefreshSentenceList();
-                            }
+                            
                         })
                         {
                             text = "X",
@@ -848,21 +933,53 @@ public class DialogCreator : EditorWindow
                         // Generate the 3 horizontal columns
                         for (int c = 0; c < 3; c++)
                         {
-                            int choiceIndex = c;
-                            int bondedSentenceIndex = branchListProp.GetArrayElementAtIndex(choiceIndex).intValue;
+                            var choiceIndex = c;
+                            var bondedSentenceIndex = branchListProp.GetArrayElementAtIndex(choiceIndex).intValue;
                             idList.Add(bondedSentenceIndex);
                             
                             // Grab the actual sentence property that this button link points to
                             var subSentenceProp = sentencesProp.GetArrayElementAtIndex(bondedSentenceIndex);
                             var subTextProp = subSentenceProp.FindPropertyRelative("text");
+                            var subBonusProp = subSentenceProp.FindPropertyRelative("bonus");
 
+                            var highlighted = selectedChoices.Contains(bondedSentenceIndex);
                             // Vertical panel representing one choice route
-                            var singleChoiceColumn = new VisualElement
+                            var singleChoiceColumn = new Button(() =>
+                            {
+                                foreach (var id in idList)
+                                {
+                                    selectedChoices.Remove(id);
+                                }
+                                selectedChoices.Add(bondedSentenceIndex);
+
+                                if (sentencesProp.GetArrayElementAtIndex(bondedSentenceIndex)
+                                        .FindPropertyRelative("choiceBranchIDs").arraySize == 0)
+                                {
+                                    serializedActor.Update();
+                                    var newIndex = sentencesProp.arraySize;
+                                    sentencesProp.InsertArrayElementAtIndex(newIndex);
+
+                                    // Standard auto-increment settings
+                                    var newSentence = sentencesProp.GetArrayElementAtIndex(newIndex);
+
+                                    sentencesProp.GetArrayElementAtIndex(bondedSentenceIndex).FindPropertyRelative("choiceBranchIDs").arraySize = 1;
+                                    sentencesProp.GetArrayElementAtIndex(bondedSentenceIndex).FindPropertyRelative("choiceBranchIDs").GetArrayElementAtIndex(0).intValue = newIndex;
+
+                                    currentSentence = newSentence;
+                                    newSentence.FindPropertyRelative("id").intValue = newIndex;
+                                    newSentence.FindPropertyRelative("text").stringValue = "New regular dialogue line...";
+                                    newSentence.FindPropertyRelative("leftImage").boolValue = true; // Default left alignment
+
+                                    serializedActor.ApplyModifiedProperties();
+                                }
+                                
+                                RefreshSentenceList();
+                            })
                             {
                                 style =
                                 {
                                     width = Length.Percent(31), // Fits 3 columns comfortably with spacing margins
-                                    backgroundColor = new Color(0.25f, 0.25f, 0.35f, 1f),
+                                    backgroundColor = highlighted ? new Color(0.40f, 0.40f, 0.50f) :new Color(0.25f, 0.25f, 0.35f, 1f),
                                     paddingBottom = 6,
                                     paddingTop = 6,
                                     paddingLeft = 6,
@@ -893,59 +1010,10 @@ public class DialogCreator : EditorWindow
                             routeTextField.Bind(serializedActor);
                             singleChoiceColumn.Add(routeTextField);
                             
+                            var bonusField = new PropertyField(subBonusProp, "Bonus");
+                            bonusField.Bind(serializedActor);
+                            singleChoiceColumn.Add(bonusField);
                             
-                            // Selection Button to allow the designer to click down this path inside the tool!
-                            var routeButton = new Button(() =>
-                            {
-                                //TODO: add this choice to selected to continue onwards with the list
-
-                                foreach (var id in idList)
-                                {
-                                    selectedChoices.Remove(id);
-                                }
-                                selectedChoices.Add(bondedSentenceIndex);
-                                int newIndex;
-
-                                if (sentencesProp.GetArrayElementAtIndex(bondedSentenceIndex)
-                                        .FindPropertyRelative("choiceBranchIDs").arraySize == 0)
-                                {
-                                    serializedActor.Update();
-                                    newIndex = sentencesProp.arraySize;
-                                    sentencesProp.InsertArrayElementAtIndex(newIndex);
-
-                                    // Standard auto-increment settings
-                                    var newSentence = sentencesProp.GetArrayElementAtIndex(newIndex);
-
-                                    sentencesProp.GetArrayElementAtIndex(bondedSentenceIndex).FindPropertyRelative("choiceBranchIDs").arraySize = 1;
-                                    sentencesProp.GetArrayElementAtIndex(bondedSentenceIndex).FindPropertyRelative("choiceBranchIDs").GetArrayElementAtIndex(0).intValue = newIndex;
-
-                                    currentSentence = newSentence;
-                                    newSentence.FindPropertyRelative("id").intValue = newIndex;
-                                    newSentence.FindPropertyRelative("text").stringValue = "New regular dialogue line...";
-                                    newSentence.FindPropertyRelative("leftImage").boolValue = true; // Default left alignment
-
-                                    serializedActor.ApplyModifiedProperties();
-                                }
-                                else
-                                {
-                                    newIndex = sentencesProp.GetArrayElementAtIndex(bondedSentenceIndex)
-                                        .FindPropertyRelative("choiceBranchIDs").GetArrayElementAtIndex(0).intValue;
-                                }
-                                
-                                
-                                RefreshSentenceList();
-                                Debug.Log($"Traversing window graph context into path: {newIndex}");
-                                
-                            })
-                            {
-                                text = "Inspect Path ➔",
-                                style =
-                                {
-                                    marginTop = 6, fontSize = 10, backgroundColor = new Color(0.15f, 0.3f, 0.15f)
-                                }
-                            };
-                            singleChoiceColumn.Add(routeButton);
-
                             buttonsContainer.Add(singleChoiceColumn);
                         }
 

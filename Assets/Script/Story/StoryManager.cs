@@ -164,6 +164,8 @@ public struct Sentence
     [TextArea(3, 5)] public string text;
     public Sprite actorSprite;
     public bool leftImage;
+    public float bonus;
+    
     
     // Instead of storing the actual Sentence objects, 
     // store the IDs of the sentences this choice leads to.
