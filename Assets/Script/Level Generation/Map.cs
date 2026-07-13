@@ -104,7 +104,6 @@ public class Map : MonoBehaviour
 
                     currentNode = newNode;
                 });
-                newNode.CreateNode();
             }
         }
         
@@ -266,6 +265,7 @@ public class Map : MonoBehaviour
                 
                 var initialIndex = nextLayerIndexPointer;
                 var connectNode = currentLayer[j];
+                connectNode.CreateNode();
                 
  
                 // Enforce at least one connection forward

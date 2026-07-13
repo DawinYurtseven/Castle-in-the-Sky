@@ -28,7 +28,6 @@ public class Node : MonoBehaviour
     public void CreateNode()
     {
         var button = GetComponent<Button>();
-        button.onClick.RemoveAllListeners();
         //Create assets based on the type of the node. 
         switch (type)
         {
