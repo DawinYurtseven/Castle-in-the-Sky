@@ -127,6 +127,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2638783472489856083, guid: ba9165f4c3df0b2428f78bf071a7e339, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6729700271422929566, guid: ba9165f4c3df0b2428f78bf071a7e339, type: 3}
       propertyPath: m_Name
       value: StorySystem

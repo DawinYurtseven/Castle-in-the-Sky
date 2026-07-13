@@ -11,6 +11,7 @@ public class DialogCreator : EditorWindow
     private Actor currentActor; // Tracks the loaded asset
     private SerializedObject serializedActor;
     private VisualElement contentContainer;
+    private VisualElement buttonPanel;
     private int selectedDialogueIndex = -1;
 
     [MenuItem("Story/Dialog Creator")]
@@ -66,7 +67,7 @@ public class DialogCreator : EditorWindow
         contentContainer = embeddedWindow;
 
         // --- BOTTOM BUTTON PANEL ---
-        VisualElement buttonPanel = new VisualElement
+        buttonPanel = new VisualElement
         {
             style =
             {
@@ -75,38 +76,7 @@ public class DialogCreator : EditorWindow
             }
         };
 
-        var createActorButton = new Button(CreateNewActorAsset)
-        {
-            text = "Create New Actor",
-            style =
-            {
-                flexGrow = 1,
-                marginRight = 5,
-                paddingBottom = 8,
-                paddingTop = 8,
-                paddingLeft = 8,
-                paddingRight = 8,
-                backgroundColor = new Color(0.2f, 0.2f, 0.2f)
-            }
-        };
-
-        var showAllActorsButton = new Button(ListActors)
-        {
-            text = "Show All Actors",
-            style =
-            {
-                flexGrow = 1,
-                marginLeft = 5,
-                paddingBottom = 8,
-                paddingTop = 8,
-                paddingLeft = 8,
-                paddingRight = 8,
-                backgroundColor = new Color(0.2f, 0.2f, 0.2f)
-            }
-        };
-
-        buttonPanel.Add(createActorButton);
-        buttonPanel.Add(showAllActorsButton);
+        ResetButtonPanel();
         root.Add(buttonPanel);
 
         // Initial Load: Show the list of all project actors right away
@@ -140,6 +110,27 @@ public class DialogCreator : EditorWindow
         contentContainer.Add(ActorText());
     }
 
+    private void ResetButtonPanel()
+    {
+        buttonPanel.Clear();
+        var createActorButton = new Button(CreateNewActorAsset)
+        {
+            text = "Create New Actor",
+            style =
+            {
+                flexGrow = 1,
+                marginRight = 5,
+                paddingBottom = 8,
+                paddingTop = 8,
+                paddingLeft = 8,
+                paddingRight = 8,
+                backgroundColor = new Color(0.2f, 0.2f, 0.2f)
+            }
+        };
+        buttonPanel.Add(createActorButton);
+    }
+    
+    private bool filler = false;
     private VisualElement ActorText()
     {
         // Update the serialized object data representation
@@ -258,10 +249,57 @@ public class DialogCreator : EditorWindow
                 paddingTop = 5
             }
         };
-        actorRoot.Add(dialogueScrollView);
 
         // Find our list of Dialogues
         var scenesProp = serializedActor.FindProperty("scenes");
+        var fillerScenesProp = serializedActor.FindProperty("fillerScenes");
+
+        var buttonsContainer = new VisualElement
+        {
+            style =
+            {
+                flexDirection = FlexDirection.Row,
+                justifyContent = Justify.SpaceBetween
+            }
+        };
+
+        var normalScenes = new Button(() =>
+        {
+            filler = false;
+            RefreshDialogueList();
+        })
+        {
+            text = "Normal Scenes",
+            style =
+            {
+                flexGrow = 1,
+                marginRight = 5,
+                paddingTop = 6,
+                paddingBottom = 6,
+                backgroundColor = new Color(0.2f, 0.2f, 0.2f)
+            }
+        };
+        var fillerScenes = new Button(() =>
+        {
+            filler = true;
+            RefreshDialogueList();
+        })
+        {
+            text = "Filler Scenes",
+            style =
+            {
+                flexGrow = 1,
+                marginLeft = 5,
+                paddingTop = 6,
+                paddingBottom = 6,
+                backgroundColor = new Color(0.2f, 0.2f, 0.2f)
+            }
+        };
+
+        buttonsContainer.Add(normalScenes);
+        buttonsContainer.Add(fillerScenes);
+        actorRoot.Add(buttonsContainer);
+        actorRoot.Add(dialogueScrollView);
 
         // Populate list for the first time
         RefreshDialogueList();
@@ -270,11 +308,12 @@ public class DialogCreator : EditorWindow
         Button addDialogueButton = new Button(() =>
         {
             serializedActor.Update();
-            int newIndex = scenesProp.arraySize;
-            scenesProp.InsertArrayElementAtIndex(newIndex);
+            var activeScenesProp = filler ? fillerScenesProp : scenesProp;
+            int newIndex = activeScenesProp.arraySize;
+            activeScenesProp.InsertArrayElementAtIndex(newIndex);
 
             // Give it a temporary default name
-            var newDialogue = scenesProp.GetArrayElementAtIndex(newIndex);
+            var newDialogue = activeScenesProp.GetArrayElementAtIndex(newIndex);
             newDialogue.FindPropertyRelative("dialogueName").stringValue = $"New Dialogue {newIndex}";
 
             serializedActor.ApplyModifiedProperties();
@@ -294,24 +333,50 @@ public class DialogCreator : EditorWindow
 
         // Track changes globally so typing updates the asset in real-time
         actorRoot.RegisterCallback<SerializedPropertyChangeEvent>(ApplyPropertiesCallback);
+        
+        //change the buttons at the bottom
+        buttonPanel.Clear();
+        var backToStart = new Button(() =>
+        {
+            ResetButtonPanel();
+            ListActors();
+        })
+        {
+            text = "Back to Actor List",
+            style =
+            {
+                flexGrow = 1,
+                marginRight = 5,
+                paddingBottom = 8,
+                paddingTop = 8,
+                paddingLeft = 8,
+                paddingRight = 8,
+                backgroundColor = new Color(0.4f, 0.2f, 0.2f)
+            }
+        };
+
+        buttonPanel.Add(backToStart);
 
         return actorRoot;
 
+        
         // Function to populate the scroll view with buttons for each dialogue
         void RefreshDialogueList()
         {
             dialogueScrollView.Clear();
             serializedActor.Update();
+            
+            var activeScenesProp = filler ? fillerScenesProp : scenesProp;
 
-            if (scenesProp.arraySize == 0)
+            if (activeScenesProp.arraySize == 0)
             {
                 dialogueScrollView.Add(new Label("No dialogues added yet.") { style = { color = Color.gray } });
                 return;
             }
 
-            for (var i = 0; i < scenesProp.arraySize; i++)
+            for (var i = 0; i < activeScenesProp.arraySize; i++)
             {
-                var dialogueProp = scenesProp.GetArrayElementAtIndex(i);
+                var dialogueProp = activeScenesProp.GetArrayElementAtIndex(i);
                 var nameProp = dialogueProp.FindPropertyRelative("dialogueName");
 
                 // Fallback display if the user hasn't named the dialogue sequence yet
@@ -322,6 +387,7 @@ public class DialogCreator : EditorWindow
                 {
                     // Future step: Load this specific dialogue's flat sentence list!
                     selectedDialogueIndex = index;
+                    currentDialogue = dialogueProp;
                     LoadDialogueEditorView();
                 })
                 {
@@ -332,14 +398,34 @@ public class DialogCreator : EditorWindow
                         marginBottom = 2,
                         paddingTop = 6,
                         paddingBottom = 6,
-                        backgroundColor = new Color(0.25f, 0.25f, 0.25f)
+                        backgroundColor = new Color(0.25f, 0.25f, 0.25f),
+                        flexDirection = FlexDirection.Row,
+                        justifyContent = Justify.SpaceBetween
                     }
                 };
+                var deleteButton = new Button(() =>
+                {
+                    serializedActor.Update();
+                    activeScenesProp.DeleteArrayElementAtIndex(index);
+                    serializedActor.ApplyModifiedProperties();
+                    RefreshDialogueList(); // Redraw the list after deletion
+                })
+                {
+                    text = "Delete",
+                    style =
+                    {
+                        marginLeft = 5,
+                        backgroundColor = new Color(0.6f, 0.1f, 0.1f)
+                    }
+                };
+                dialogueButton.Add(deleteButton);
                 dialogueScrollView.Add(dialogueButton);
+                
             }
         }
     }
 
+    private SerializedProperty currentDialogue;
     private SerializedProperty currentSentence; // Tracks the currently selected sentence for editing
     private readonly List<int> selectedChoices = new ();
 
@@ -351,8 +437,7 @@ public class DialogCreator : EditorWindow
         serializedActor.Update();
 
         // Grab the specific dialogue sequence we are editing
-        var scenesProp = serializedActor.FindProperty("scenes");
-        var currentDialogueProp = scenesProp.GetArrayElementAtIndex(selectedDialogueIndex);
+        var currentDialogueProp = currentDialogue;
         var sentencesProp = currentDialogueProp.FindPropertyRelative("sentences");
         var dialogueNameProp = currentDialogueProp.FindPropertyRelative("dialogueName");
 
@@ -376,6 +461,100 @@ public class DialogCreator : EditorWindow
         });
 
         contentContainer.Add(dialogueNameField);
+        
+        // add a condition field for the dialogue?
+        
+        // --- CONDITIONS EDITOR ---
+    var conditionsProp = currentDialogueProp.FindPropertyRelative("conditions");
+    if (conditionsProp != null)
+    {
+        var conditionsBox = new VisualElement
+        {
+            style =
+            {
+                marginBottom = 12,
+                paddingBottom = 8,
+                paddingTop = 4,
+                paddingLeft = 8,
+                paddingRight = 8,
+                backgroundColor = new Color(0.15f, 0.15f, 0.15f, 0.6f),
+                borderBottomWidth = 1,
+                borderTopWidth = 1,
+                borderLeftWidth = 1,
+                borderRightWidth = 1,
+                borderBottomColor = new Color(0.25f, 0.25f, 0.25f),
+                borderTopColor = new Color(0.25f, 0.25f, 0.25f),
+                borderLeftColor = new Color(0.25f, 0.25f, 0.25f),
+                borderRightColor = new Color(0.25f, 0.25f, 0.25f),
+            }
+        };
+
+        // Header Row with Title and Add Button
+        var condHeader = new VisualElement { style = { flexDirection = FlexDirection.Row, justifyContent = Justify.SpaceBetween, marginBottom = 6 } };
+        var condTitle = new Label("Required Conditions to Play Scene") { style = { unityFontStyleAndWeight = FontStyle.Bold, color = Color.white, alignSelf = Align.Center } };
+        
+        var addConditionBtn = new Button(() =>
+        {
+            serializedActor.Update();
+            int index = conditionsProp.arraySize;
+            conditionsProp.InsertArrayElementAtIndex(index);
+            
+            // Set some friendly out-of-the-box defaults so it's not blank
+            var newCond = conditionsProp.GetArrayElementAtIndex(index);
+            newCond.FindPropertyRelative("variableKey").stringValue = "variable_name";
+            newCond.FindPropertyRelative("op").enumValueIndex = (int)ConditionOperator.GreaterThanOrEqual;
+            newCond.FindPropertyRelative("targetValue").intValue = 0;
+            
+            serializedActor.ApplyModifiedProperties();
+            LoadDialogueEditorView(); // Clean complete redraw to show the new item row
+        }) 
+        { 
+            text = "+ Add", 
+            style = { paddingLeft = 10, paddingRight = 10, backgroundColor = new Color(0.2f, 0.3f, 0.4f) } 
+        };
+
+        condHeader.Add(condTitle);
+        condHeader.Add(addConditionBtn);
+        conditionsBox.Add(condHeader);
+
+        // Build a custom clean editable row loop for every single condition entry
+        for (int i = 0; i < conditionsProp.arraySize; i++)
+        {
+            int indexToRemove = i; 
+            var conditionItemProp = conditionsProp.GetArrayElementAtIndex(i);
+
+            var row = new VisualElement { style = { flexDirection = FlexDirection.Row, marginBottom = 4 } };
+
+            var keyField = new TextField { style = { flexGrow = 2, marginRight = 4 } };
+            keyField.BindProperty(conditionItemProp.FindPropertyRelative("variableKey"));
+            
+            var opField = new EnumField() { style = { flexGrow = 1, marginRight = 4, maxWidth = 130 } };
+            opField.BindProperty(conditionItemProp.FindPropertyRelative("op"));
+
+            var valField = new IntegerField() { style = { width = 50, marginRight = 6 } };
+            valField.BindProperty(conditionItemProp.FindPropertyRelative("targetValue"));
+
+            var removeBtn = new Button(() =>
+            {
+                serializedActor.Update();
+                conditionsProp.DeleteArrayElementAtIndex(indexToRemove);
+                serializedActor.ApplyModifiedProperties();
+                LoadDialogueEditorView(); // Clean complete redraw
+            }) 
+            { 
+                text = "X", 
+                style = { backgroundColor = new Color(0.45f, 0.15f, 0.15f), color = Color.white } 
+            };
+
+            row.Add(keyField);
+            row.Add(opField);
+            row.Add(valField);
+            row.Add(removeBtn);
+            conditionsBox.Add(row);
+        }
+
+        contentContainer.Add(conditionsBox);
+    }
 
         var chatScrollView = new ScrollView(ScrollViewMode.Vertical)
         {
@@ -585,6 +764,31 @@ public class DialogCreator : EditorWindow
 
         // Track data updates
         contentContainer.RegisterCallback<SerializedPropertyChangeEvent>(ApplyPropertiesCallback);
+        
+        //new bottom buttons
+        buttonPanel.Clear();
+        var backToStart = new Button(() =>
+        {
+            contentContainer.Clear();
+            contentContainer.Add(ActorText());
+        })
+        {
+            text = "Back to Actor",
+            style =
+            {
+                flexGrow = 1,
+                marginRight = 5,
+                paddingBottom = 8,
+                paddingTop = 8,
+                paddingLeft = 8,
+                paddingRight = 8,
+                backgroundColor = new Color(0.4f, 0.2f, 0.2f)
+            }
+        };
+
+        buttonPanel.Add(backToStart);
+        
+        
         return;
 
         // Local function to draw the list of sentences

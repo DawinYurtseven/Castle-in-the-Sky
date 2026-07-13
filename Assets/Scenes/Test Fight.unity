@@ -417,6 +417,7 @@ MonoBehaviour:
   selected: {fileID: 0}
   hudImage: {fileID: 0}
   hudValues: {fileID: 0}
+  Actor: {fileID: 0}
   playerCombatUiController: {fileID: 0}
   references:
     version: 2
@@ -1510,6 +1511,10 @@ PrefabInstance:
     - target: {fileID: 6729700271422929566, guid: ba9165f4c3df0b2428f78bf071a7e339, type: 3}
       propertyPath: m_Name
       value: StorySystem
+      objectReference: {fileID: 0}
+    - target: {fileID: 6729700271422929566, guid: ba9165f4c3df0b2428f78bf071a7e339, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6993003844818492830, guid: ba9165f4c3df0b2428f78bf071a7e339, type: 3}
       propertyPath: m_AnchorMax.x

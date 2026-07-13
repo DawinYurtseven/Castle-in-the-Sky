@@ -12,7 +12,7 @@ using Random = UnityEngine.Random;
 
 public class BattleSystem : MonoBehaviour
 {
-    public static BattleSystem system;
+    public static BattleSystem Manager;
     private static readonly int Exit = Animator.StringToHash("Exit");
 
     private readonly List<Unit>
@@ -50,7 +50,7 @@ public class BattleSystem : MonoBehaviour
 
     private void Awake()
     {
-        if (!system) system = this;
+        if (!Manager) Manager = this;
         else Destroy(gameObject);
 
 

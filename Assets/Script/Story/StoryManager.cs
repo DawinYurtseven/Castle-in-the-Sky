@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class StoryManager : MonoBehaviour
 {
-    public static StoryManager System;
+    public static StoryManager Manager;
 
     [SerializeField] private Image actorOne, actorTwo, continueButton;
     [SerializeField] private TMP_Text bubbleText, actorNameText;
@@ -14,11 +15,18 @@ public class StoryManager : MonoBehaviour
     [SerializeField] private Color active, nonActive;
     private Button currentSelectButton;
     
-    private List<Actor> actors;
+    [SerializeField] private List<Actor> actors;
+    [SerializeField] private Actor main;
     
     private List<Sentence> currentStoryPart;
     private Sentence currentSentence;
     private bool multipleChoiceActive;
+    
+    private void Awake()
+    {
+        if (!Manager) Manager = this;
+        else Destroy(this);
+    }
 
     /// <summary>
     /// This class is meant to be loaded when entering a story node.
@@ -33,7 +41,10 @@ public class StoryManager : MonoBehaviour
             Debug.Log("No more story parts for this actor");
             return;
         }
-        currentStoryPart = actor.scenes[actor.currentProgress].sentences;
+        InputSystemWrapper.Instance.SetState(InputSystemWrapper.State.Dialogue);
+        currentStoryPart = actor.scenes[actor.currentProgress].conditions.All(condition => condition.IsMet(condition.variableKey.currentProgress)) ?
+                           actor.scenes[actor.currentProgress].sentences : 
+                           actor.fillerScenes[Random.Range(0, actor.fillerScenes.Count)].sentences;
         currentSentence = currentStoryPart[0];
         var sprite  = currentSentence.actorSprite ? currentSentence.actorSprite : actor.defaultSprite;
         if (currentSentence.leftImage) {
@@ -47,6 +58,22 @@ public class StoryManager : MonoBehaviour
         }
         bubbleText.text = currentSentence.text;
         actorNameText.text = currentSentence.actor.actorName;
+        
+    }
+
+    public Actor GetPossibleActor()
+    {
+        
+        var results = from actor in actors 
+            where actor.scenes[actor.currentProgress].conditions.Count == 0 || actor.scenes[actor.currentProgress].conditions.All(condition => condition.IsMet(condition.variableKey.currentProgress))
+            select actor;
+
+        var resultsFiller = from actor in actors
+            where actor.currentProgress > 0
+            select actor;
+        var seriousList = results.ToList();
+        var verySeriousList = resultsFiller.ToList();
+        return seriousList.Count == 0 ? verySeriousList.Count == 0 ? null : verySeriousList.ToList()[Random.Range(0, verySeriousList.ToList().Count)] : seriousList[Random.Range(0, seriousList.Count)];   
     }
 
 
@@ -56,6 +83,9 @@ public class StoryManager : MonoBehaviour
         {
             case 0:
                 Debug.Log("No more lines");
+                currentSelectButton = null;
+                Manager.gameObject.SetActive(false);
+                Map.Manager.ReturnToMap();
                 return;
             case 1:
                 currentSentence = currentStoryPart[currentSentence.choiceBranchIDs[0]];
@@ -89,6 +119,7 @@ public class StoryManager : MonoBehaviour
                         currentSentence = currentStoryPart[currentSentence.choiceBranchIDs[index]];
                         multipleChoiceActive = false;
                         choicesPanel.SetActive(false);
+                        currentSelectButton = null;
                         GoToNextLine();
                         //timer.SetActive(false);
                     });

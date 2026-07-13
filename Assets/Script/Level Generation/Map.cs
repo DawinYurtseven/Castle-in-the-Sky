@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,7 +8,7 @@ using Random = UnityEngine.Random;
 
 public class Map : MonoBehaviour
 {
-    public static Map system;
+    public static Map Manager;
     public List<EnemyUnit> enemyUnitAssetList = new();
     public List<PlayerUnit> playerUnitAssetList;
 
@@ -32,7 +33,7 @@ public class Map : MonoBehaviour
 
     private void Awake()
     {
-        if (!system) system = this;
+        if (!Manager) Manager = this;
         else Destroy(this);
         mainCamera = Camera.main;
         if (!mainCamera) return;
@@ -105,6 +106,106 @@ public class Map : MonoBehaviour
                 });
                 newNode.CreateNode();
             }
+        }
+        
+        var targetNodes = Random.Range(3, 5); // Decides on exactly 3 or 4 nodes
+        var placedNodes = 0;
+
+
+        var candidateNodes = new List<Node>();
+        for (var i = 1; i < levelDepth - 1; i++) // Skip index 0 (start) and index levelDepth - 1 (boss)
+        {
+            candidateNodes.AddRange(layers[i]);
+        }
+
+        var actor = StoryManager.Manager.GetPossibleActor();
+        
+        while (placedNodes < targetNodes && candidateNodes.Count > 0)
+        {
+            var randomIndex = Random.Range(0, candidateNodes.Count);
+            var potentialStoryNode = candidateNodes[randomIndex];
+            candidateNodes.RemoveAt(randomIndex); // Remove so we don't pick it twice
+
+            // CONDITION CHECK: Ensure no immediately adjacent node in the *same* layer is already a story node
+            var isAdjacentToStoryNode = false;
+            var currentLayerIndex = potentialStoryNode.level - 1; 
+            var currentLayer = layers[currentLayerIndex];
+
+            var nodeIndexInLayer = currentLayer.IndexOf(potentialStoryNode);
+
+            // Check left neighbor
+            if (nodeIndexInLayer > 0 && currentLayer[nodeIndexInLayer - 1].type == Node.NodeType.Story)
+                isAdjacentToStoryNode = true;
+
+            // Check right neighbor
+            if (nodeIndexInLayer < currentLayer.Count - 1 && currentLayer[nodeIndexInLayer + 1].type == Node.NodeType.Story)
+                isAdjacentToStoryNode = true;
+
+            // Optional Check: If your layers are small, you might also want to prevent story nodes in back-to-back layers
+            // Check previous layer
+            if (currentLayerIndex > 1) 
+            {
+                if (layers[currentLayerIndex - 1].Exists(n => n.type == Node.NodeType.Story)) 
+                    isAdjacentToStoryNode = true;
+            }
+
+            // If all rules pass, successfully convert it!
+            if (isAdjacentToStoryNode) continue;
+            potentialStoryNode.type = Node.NodeType.Story;
+            placedNodes++;
+        
+            // Visual cue debugging (Change its button color or text so you can visually see it worked)
+            potentialStoryNode.GetComponentInChildren<Image>().color = Color.red;
+            potentialStoryNode.SetActor(actor);
+            potentialStoryNode.CreateNode();
+        }
+        
+        candidateNodes.Clear();
+        for (var i = 2; i < levelDepth - 1; i++) // Skip index 0 and 1 (start) and index levelDepth - 1 (boss)
+        {
+            var excludedList = from node in layers[i] where node.type != Node.NodeType.Story select node;
+            candidateNodes.AddRange(excludedList);
+        }
+        placedNodes = 0;
+        targetNodes = Random.Range(1, 3); // Decides on exactly 3 or 4 nodes
+        
+        while (placedNodes < targetNodes && candidateNodes.Count > 0)
+        {
+            var randomIndex = Random.Range(0, candidateNodes.Count);
+            var potentialStoryNode = candidateNodes[randomIndex];
+            candidateNodes.RemoveAt(randomIndex); // Remove so we don't pick it twice
+
+            // CONDITION CHECK: Ensure no immediately adjacent node in the *same* layer is already a story node
+            var isAdjacentToStoryNode = false;
+            var currentLayerIndex = potentialStoryNode.level - 1; 
+            var currentLayer = layers[currentLayerIndex];
+
+            var nodeIndexInLayer = currentLayer.IndexOf(potentialStoryNode);
+
+            // Check left neighbor
+            if (nodeIndexInLayer > 0 && currentLayer[nodeIndexInLayer - 1].type == Node.NodeType.Merchant)
+                isAdjacentToStoryNode = true;
+
+            // Check right neighbor
+            if (nodeIndexInLayer < currentLayer.Count - 1 && currentLayer[nodeIndexInLayer + 1].type == Node.NodeType.Merchant)
+                isAdjacentToStoryNode = true;
+
+            // Optional Check: If your layers are small, you might also want to prevent story nodes in back-to-back layers
+            // Check previous layer
+            if (currentLayerIndex > 1) 
+            {
+                if (layers[currentLayerIndex - 1].Exists(n => n.type == Node.NodeType.Merchant)) 
+                    isAdjacentToStoryNode = true;
+            }
+
+            // If all rules pass, successfully convert it!
+            if (isAdjacentToStoryNode) continue;
+            potentialStoryNode.type = Node.NodeType.Merchant;
+            placedNodes++;
+        
+            // Visual cue debugging (Change its button color or text so you can visually see it worked)
+            potentialStoryNode.GetComponentInChildren<Image>().color = Color.burlywood;
+            potentialStoryNode.CreateNode();
         }
 
         // 2. Connect the layers together

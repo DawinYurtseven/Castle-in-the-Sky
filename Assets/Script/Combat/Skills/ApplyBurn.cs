@@ -16,7 +16,7 @@ public class ApplyBurn : Skill
         skillCost = 4;
         timeValue = 0.6f;
         target = SkillTarget.Enemy;
-        affectValue = 0.1f;
+        affectValue = 0.3f;
         animationName = "applyBurn_Animation";
         turnEffect = 3;
         additionalCritChance = 20;
@@ -26,9 +26,9 @@ public class ApplyBurn : Skill
     public override bool Execute(Unit unit)
     {
         var validAction = false;
-        var baseDamage = (unit.Strength + unit.damageAddition) * unit.damageMultiplier;
+        var baseDamage = (unit.Strength + unit.damageAddition) * (1+unit.damageMultiplier);
         var totalDamage = Random.Range(0, 100) < unit.critChance + additionalCritChance
-            ? baseDamage * ((unit.critAmount + additionalCritAddition) / 100)
+            ? baseDamage * (1+ (unit.critAmount + additionalCritAddition) / 100)
             : baseDamage;
         
         Debug.Log("Never had a choice, never let the opps win" +
@@ -50,7 +50,7 @@ public class ApplyBurn : Skill
                 Debug.Log("EVERYTHING BURNS!!!\nLight it up, let's go, light it up, let's go");
                 baseDamage *= affectValue;
                 totalDamage = Random.Range(0, 100) < unit.critChance + additionalCritChance
-                    ? baseDamage * ((unit.critAmount + additionalCritAddition) / 100)
+                    ? baseDamage * (1+ (unit.critAmount + additionalCritAddition) / 100)
                     : baseDamage;
                 targetUnit.TakeDamage(totalDamage);
                 turnsRemaining--;

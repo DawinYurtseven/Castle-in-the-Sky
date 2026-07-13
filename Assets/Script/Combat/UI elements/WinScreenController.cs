@@ -34,9 +34,9 @@ public class WinScreenController : MonoBehaviour
         //TODO: make also for currency count
 
         
-        for (var i = 0; i < Map.system.currentPlayerUnits.Count; i++)
+        for (var i = 0; i < Map.Manager.currentPlayerUnits.Count; i++)
         {
-            var curPlayer = Map.system.currentPlayerUnits[i];
+            var curPlayer = Map.Manager.currentPlayerUnits[i];
             var tempStats = new int[]
             {
                 curPlayer.Strength,
@@ -58,7 +58,7 @@ public class WinScreenController : MonoBehaviour
             charGrowth[i].SetActive(true);
         }
         
-        var anim = charGrowth[Map.system.currentPlayerUnits.Count-1].GetComponent<Animator>();
+        var anim = charGrowth[Map.Manager.currentPlayerUnits.Count-1].GetComponent<Animator>();
         yield return null;
         yield return new WaitUntil(() => anim.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !anim.IsInTransition(0));
  
@@ -199,7 +199,7 @@ public class WinScreenController : MonoBehaviour
         {
             if (allocatable == 0) 
             {
-                Map.system.ReturnToMap();
+                Map.Manager.ReturnToMap();
                 gameObject.SetActive(false);
             }
            
@@ -260,7 +260,7 @@ public class WinScreenController : MonoBehaviour
                     mainCharacter.AddSkill(skills[i1]);
                     StartCoroutine(OnTimeClickEvent( skillButtons[i1], others, animator, otherAnimators, () =>
                     {
-                        Map.system.ReturnToMap();
+                        Map.Manager.ReturnToMap();
                         gameObject.SetActive(false);
                     }));
                 }
@@ -343,7 +343,7 @@ public class WinScreenController : MonoBehaviour
         }
         yield return new WaitForSeconds(0.5f);
         //TODO: exit something something
-        Map.system.ReturnToMap();
+        Map.Manager.ReturnToMap();
         gameObject.SetActive(false);
     }
 
@@ -400,11 +400,11 @@ public class WinScreenController : MonoBehaviour
                     mainCharacter.Items.Add(items[i1]);
                 }
 
-                var unit = new List<Unit>(Map.system.currentPlayerUnits);
+                var unit = new List<Unit>(Map.Manager.currentPlayerUnits);
                 item.Acquire(unit);
                 StartCoroutine(OnTimeClickEvent(itemButtons[i1], others, animator, otherAnimators, () =>
                 {
-                    Map.system.ReturnToMap();
+                    Map.Manager.ReturnToMap();
                     gameObject.SetActive(false);
                 }));
 
