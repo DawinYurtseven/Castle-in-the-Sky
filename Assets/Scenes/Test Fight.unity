@@ -259,7 +259,7 @@ MonoBehaviour:
   currentNode: {fileID: 0}
   systems:
   - {fileID: 332834709}
-  - {fileID: 5291717218311688413}
+  - {fileID: 71020873}
   mapGameObject: {fileID: 33229705}
   nodePrefab: {fileID: 576747265433828519, guid: da75ed85505a90249b46cd910b3204ab, type: 3}
   startPos: {x: 0, y: 0, z: -45}
@@ -283,6 +283,22 @@ Transform:
   - {fileID: 33229706}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &71020873 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6729700271422929566, guid: ba9165f4c3df0b2428f78bf071a7e339, type: 3}
+  m_PrefabInstance: {fileID: 5291717218311688412}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &71020874 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3893841281676144598, guid: ba9165f4c3df0b2428f78bf071a7e339, type: 3}
+  m_PrefabInstance: {fileID: 5291717218311688412}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 71020873}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc8cf9700d5cf60458e01e029772b336, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StoryManager
 --- !u!1 &144317751 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5840605047919079977, guid: ac3d10b27af5b644cbd443039b29aa7b, type: 3}
@@ -980,7 +996,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InputSystemWrapper
   battleSystem: {fileID: 271161166}
   map: {fileID: 40551818}
-  storyManager: {fileID: 5291717218311688414}
+  storyManager: {fileID: 71020874}
 --- !u!1001 &657222546890148984
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1505,9 +1521,17 @@ PrefabInstance:
       propertyPath: m_AnchorMin.x
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3893841281676144598, guid: ba9165f4c3df0b2428f78bf071a7e339, type: 3}
+      propertyPath: actors.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3893841281676144598, guid: ba9165f4c3df0b2428f78bf071a7e339, type: 3}
+      propertyPath: 'actors.Array.data[0]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 0bee594481cb8f249b24d7d44506ff79, type: 2}
     - target: {fileID: 5076640447143920822, guid: ba9165f4c3df0b2428f78bf071a7e339, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6729700271422929566, guid: ba9165f4c3df0b2428f78bf071a7e339, type: 3}
       propertyPath: m_Name
@@ -1515,7 +1539,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6729700271422929566, guid: ba9165f4c3df0b2428f78bf071a7e339, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6993003844818492830, guid: ba9165f4c3df0b2428f78bf071a7e339, type: 3}
       propertyPath: m_AnchorMax.x

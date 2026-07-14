@@ -1,0 +1,272 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 843e26ab636f0e343ab5caf370b9b5f6, type: 3}
+  m_Name: Pekros
+  m_EditorClassIdentifier: Assembly-CSharp::Actor
+  scenes:
+  - dialogueName: Introduction
+    replacedByAnimation: 0
+    conditions: []
+    sentences:
+    - id: 0
+      actor: {fileID: 11400000, guid: 860305b1e70a65c42982c7b0e2182a3e, type: 2}
+      audio: {fileID: 0}
+      text: I told you, I don't need you here
+      actorSprite: {fileID: 0}
+      leftImage: 0
+      bonus: 0
+      choiceBranchIDs: 01000000
+    - id: 1
+      actor: {fileID: 11400000, guid: 860305b1e70a65c42982c7b0e2182a3e, type: 2}
+      audio: {fileID: 0}
+      text: I swear, this time! This time it works! I just tested it! if you can
+        just give me a chance to-
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 02000000
+    - id: 2
+      actor: {fileID: 11400000, guid: 860305b1e70a65c42982c7b0e2182a3e, type: 2}
+      audio: {fileID: 0}
+      text: Boy, I had enough of you and your little trinkets! This is the last time!
+        If I see you in my shop again, by the towers and above, I will cut you finer
+        than my ground meat! Now, Out!
+      actorSprite: {fileID: 0}
+      leftImage: 0
+      bonus: 0
+      choiceBranchIDs: 03000000
+    - id: 3
+      actor: {fileID: 11400000}
+      audio: {fileID: 0}
+      text: UGH!... Hey! You didn't have to throw me ou-
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 04000000
+    - id: 4
+      actor: {fileID: 11400000}
+      audio: {fileID: 0}
+      text: Ha... Just my luck... The knife had to catch fire at just the RIGHT time!
+        DAMN IT!
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 050000000600000007000000
+    - id: 4
+      actor: {fileID: 11400000}
+      audio: {fileID: 0}
+      text: Are you okay?
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 08000000
+    - id: 5
+      actor: {fileID: 11400000}
+      audio: {fileID: 0}
+      text: The man always this loud?
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 0c000000
+    - id: 6
+      actor: {fileID: 11400000}
+      audio: {fileID: 0}
+      text: A knife caught fire?
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 11000000
+    - id: 8
+      actor: {fileID: 11400000, guid: fc0b1664b3651974a832ec5f50116a4f, type: 2}
+      audio: {fileID: 0}
+      text: Are you okay? That fall must have hurt badly.
+      actorSprite: {fileID: 0}
+      leftImage: 0
+      bonus: 0
+      choiceBranchIDs: 09000000
+    - id: 9
+      actor: {fileID: 11400000}
+      audio: {fileID: 0}
+      text: Wha- me? Nah, I'm good. Physically
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 0a000000
+    - id: 10
+      actor: {fileID: 11400000}
+      audio: {fileID: 0}
+      text: Don't worry, it is not my first time going through something like this.
+        At this point, I might call it physical training. Hahaha...
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 0b000000
+    - id: 11
+      actor: {fileID: 11400000}
+      audio: {fileID: 0}
+      text: But thank you. Seems to me at least one person is KIND ENOUGH TO CARE!!
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 18000000
+    - id: 12
+      actor: {fileID: 11400000, guid: fc0b1664b3651974a832ec5f50116a4f, type: 2}
+      audio: {fileID: 0}
+      text: Ugh, was he loud... is he always screaming?
+      actorSprite: {fileID: 0}
+      leftImage: 0
+      bonus: 0
+      choiceBranchIDs: 0d000000
+    - id: 13
+      actor: {fileID: 11400000}
+      audio: {fileID: 0}
+      text: Hah! If only you knew! He thinks the only way to sell his roasted beef
+        is by screaming louder than a sirene. It is impressive that he can still
+        scream this much when he does it daily.
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 0e000000
+    - id: 14
+      actor: {fileID: 11400000}
+      audio: {fileID: 0}
+      text: But sadly, he has it out for me specifically.
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 0f000000
+    - id: 15
+      actor: {fileID: 11400000, guid: fc0b1664b3651974a832ec5f50116a4f, type: 2}
+      audio: {fileID: 0}
+      text: Hahaha! Can't believe you haven't gone deaf.
+      actorSprite: {fileID: 0}
+      leftImage: 0
+      bonus: 0
+      choiceBranchIDs: 10000000
+    - id: 16
+      actor: {fileID: 11400000}
+      audio: {fileID: 0}
+      text: Oh, I did! I just got so used to it at this point
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 18000000
+    - id: 17
+      actor: {fileID: 11400000, guid: fc0b1664b3651974a832ec5f50116a4f, type: 2}
+      audio: {fileID: 0}
+      text: A knife caught on fire exactly how?
+      actorSprite: {fileID: 0}
+      leftImage: 0
+      bonus: 0
+      choiceBranchIDs: 12000000
+    - id: 18
+      actor: {fileID: 11400000}
+      audio: {fileID: 0}
+      text: You! Are you mocking me?
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 13000000
+    - id: 19
+      actor: {fileID: 11400000, guid: fc0b1664b3651974a832ec5f50116a4f, type: 2}
+      audio: {fileID: 0}
+      text: What? No! I'm curious how a knife catches fire! It would be helpful inside
+        the tower
+      actorSprite: {fileID: 0}
+      leftImage: 0
+      bonus: 0
+      choiceBranchIDs: 14000000
+    - id: 20
+      actor: {fileID: 11400000}
+      audio: {fileID: 0}
+      text: 'The tower? You a Climber?  '
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 15000000
+    - id: 21
+      actor: {fileID: 11400000, guid: fc0b1664b3651974a832ec5f50116a4f, type: 2}
+      audio: {fileID: 0}
+      text: What? I don't look the part?
+      actorSprite: {fileID: 0}
+      leftImage: 0
+      bonus: 0
+      choiceBranchIDs: 16000000
+    - id: 22
+      actor: {fileID: 11400000}
+      audio: {fileID: 0}
+      text: 'Climbers aren''t exactly interested in my inventions... They say it
+        just isn''t suited for it. '
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 17000000
+    - id: 23
+      actor: {fileID: 11400000, guid: fc0b1664b3651974a832ec5f50116a4f, type: 2}
+      audio: {fileID: 0}
+      text: That just means they haven't seen its usecase yet.
+      actorSprite: {fileID: 0}
+      leftImage: 0
+      bonus: 0
+      choiceBranchIDs: 18000000
+    - id: 24
+      actor: {fileID: 11400000}
+      audio: {fileID: 0}
+      text: Huh... You seem alright. What is your name?
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 19000000
+    - id: 25
+      actor: {fileID: 11400000, guid: fc0b1664b3651974a832ec5f50116a4f, type: 2}
+      audio: {fileID: 0}
+      text: Myne, and you?
+      actorSprite: {fileID: 0}
+      leftImage: 0
+      bonus: 0
+      choiceBranchIDs: 1a000000
+    - id: 26
+      actor: {fileID: 11400000}
+      audio: {fileID: 0}
+      text: I am Pekros! Pekros, the Artificer!
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 1b000000
+    - id: 27
+      actor: {fileID: 11400000, guid: fc0b1664b3651974a832ec5f50116a4f, type: 2}
+      audio: {fileID: 0}
+      text: Oh we are using our dream title? I am Myne, the Spire-Top Seeker.
+      actorSprite: {fileID: 0}
+      leftImage: 0
+      bonus: 0
+      choiceBranchIDs: 1c000000
+    - id: 28
+      actor: {fileID: 11400000}
+      audio: {fileID: 0}
+      text: Dream ti-ugh... But aren't you too young to be a Climber?
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 1d000000
+    - id: 29
+      actor: {fileID: 11400000, guid: fc0b1664b3651974a832ec5f50116a4f, type: 2}
+      audio: {fileID: 0}
+      text: Aren't you too young to be an artificer?
+      actorSprite: {fileID: 0}
+      leftImage: 0
+      bonus: 0
+      choiceBranchIDs: 
+  fillerScenes: []
+  actorName: Pekros
+  currentProgress: 0
+  defaultSprite: {fileID: 0}

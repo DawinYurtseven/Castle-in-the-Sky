@@ -128,12 +128,12 @@ public class PlayerUnit : Unit
 
     protected override IEnumerator SkillUsage()
     {
-        yield return BattleSystem.system.MoveCamera(null, BattleSystem.CameraTargets.Empty);
-        BattleSystem.system.ClearSelection(true);
+        yield return BattleSystem.Manager.MoveCamera(null, BattleSystem.CameraTargets.Empty);
+        BattleSystem.Manager.ClearSelection(true);
         switch (SelectedSkill.target)
         {
             case SkillTarget.EnemyAll:
-                yield return transform.DOMove(BattleSystem.system.inFrontOfEnemies.position, 0.2f).SetEase(Ease.OutExpo)
+                yield return transform.DOMove(BattleSystem.Manager.inFrontOfEnemies.position, 0.2f).SetEase(Ease.OutExpo)
                     .WaitForCompletion();
                 break;
             case SkillTarget.Enemy:
@@ -145,7 +145,7 @@ public class PlayerUnit : Unit
         //call animation with selectedSkill.animationName here but IDK
         yield return new WaitForSeconds(0.3f);
         yield return base.SkillUsage();
-        BattleSystem.system.UpdatePlayerValues(this);
+        BattleSystem.Manager.UpdatePlayerValues(this);
     }
 
     protected override IEnumerator EndTurn()
@@ -157,16 +157,16 @@ public class PlayerUnit : Unit
     public override void TakeDamage(float damage)
     {
         base.TakeDamage(damage);
-        BattleSystem.system.UpdatePlayerValues(this);
+        BattleSystem.Manager.UpdatePlayerValues(this);
     }
 
 
     public override IEnumerator BeginningOfTurn()
     {
         yield return base.BeginningOfTurn();
-        BattleSystem.system.UpdatePlayerValues(this);
+        BattleSystem.Manager.UpdatePlayerValues(this);
         stateStack.Push(CombatState.Root);
-        yield return BattleSystem.system.MoveCamera(cameraTargets[1], BattleSystem.CameraTargets.Base);
+        yield return BattleSystem.Manager.MoveCamera(cameraTargets[1], BattleSystem.CameraTargets.Base);
         cameraPosition = 1;
         playerCombatUiController.SetVisibility(true);
         isTurn = true;
@@ -210,9 +210,9 @@ public class PlayerUnit : Unit
         {
             case CombatState.Root:
                 stateStack.Push(CombatState.TargetEnemy);
-                BattleSystem.system.ShowNewQueuePosition(this, CalculateTimeValue(1f));
+                BattleSystem.Manager.ShowNewQueuePosition(this, CalculateTimeValue(1f));
                 playerCombatUiController.SetVisibility(false);
-                yield return BattleSystem.system.MoveCamera(cameraTargets[4], BattleSystem.CameraTargets.EnemyView);
+                yield return BattleSystem.Manager.MoveCamera(cameraTargets[4], BattleSystem.CameraTargets.EnemyView);
                 cameraPosition = 4;
                 break;
             case CombatState.Skill:
@@ -227,33 +227,33 @@ public class PlayerUnit : Unit
                 {
                     case SkillTarget.Enemy:
                         stateStack.Push(CombatState.TargetEnemy);
-                        yield return BattleSystem.system.MoveCamera(cameraTargets[4],
+                        yield return BattleSystem.Manager.MoveCamera(cameraTargets[4],
                             BattleSystem.CameraTargets.EnemyView);
                         cameraPosition = 4;
                         break;
                     case SkillTarget.Ally:
                         stateStack.Push(CombatState.TargetAlly);
-                        yield return BattleSystem.system.MoveCamera(cameraTargets[4],
+                        yield return BattleSystem.Manager.MoveCamera(cameraTargets[4],
                             BattleSystem.CameraTargets.PlayerView);
                         cameraPosition = 4;
                         break;
                     case SkillTarget.EnemyAll:
                         stateStack.Push(CombatState.TargetEnemy);
                         list = new List<Unit>();
-                        list.AddRange(BattleSystem.system.enemyUnits);
+                        list.AddRange(BattleSystem.Manager.enemyUnits);
                         SetCurrentTarget(list);
-                        BattleSystem.system.ClearSelection();
-                        yield return BattleSystem.system.MoveCamera(cameraTargets[4],
+                        BattleSystem.Manager.ClearSelection();
+                        yield return BattleSystem.Manager.MoveCamera(cameraTargets[4],
                             BattleSystem.CameraTargets.EnemyView, true);
                         cameraPosition = 4;
                         break;
                     case SkillTarget.AllyAll:
                         stateStack.Push(CombatState.TargetAlly);
                         list = new List<Unit>();
-                        list.AddRange(BattleSystem.system.playerUnits);
+                        list.AddRange(BattleSystem.Manager.playerUnits);
                         SetCurrentTarget(list);
-                        yield return BattleSystem.system.MoveCamera(null, BattleSystem.CameraTargets.PlayerView, true);
-                        BattleSystem.system.ClearSelection();
+                        yield return BattleSystem.Manager.MoveCamera(null, BattleSystem.CameraTargets.PlayerView, true);
+                        BattleSystem.Manager.ClearSelection();
 
                         break;
                     default:
@@ -262,7 +262,7 @@ public class PlayerUnit : Unit
 
                 playerCombatUiController.SetVisibility(false);
 
-                BattleSystem.system.ShowNewQueuePosition(this, CalculateTimeValue(SelectedSkill.timeValue));
+                BattleSystem.Manager.ShowNewQueuePosition(this, CalculateTimeValue(SelectedSkill.timeValue));
                 break;
             case CombatState.Inspect:
                 break;
@@ -316,24 +316,24 @@ public class PlayerUnit : Unit
         switch (stateStack.Peek())
         {
             case CombatState.Root:
-                BattleSystem.system.ClearSelection();
-                BattleSystem.system.FreeNewQueuePosition();
+                BattleSystem.Manager.ClearSelection();
+                BattleSystem.Manager.FreeNewQueuePosition();
                 playerCombatUiController.SkillTabVisibility(false);
                 SelectedSkill = null;
-                yield return BattleSystem.system.MoveCamera(cameraTargets[1], BattleSystem.CameraTargets.Base);
+                yield return BattleSystem.Manager.MoveCamera(cameraTargets[1], BattleSystem.CameraTargets.Base);
                 cameraPosition = 1;
                 playerCombatUiController.SetVisibility(true);
                 break;
             case CombatState.Skill:
-                BattleSystem.system.ClearSelection(
+                BattleSystem.Manager.ClearSelection(
                     SelectedSkill.target is not (SkillTarget.EnemyAll or SkillTarget.AllyAll));
-                BattleSystem.system.FreeNewQueuePosition();
+                BattleSystem.Manager.FreeNewQueuePosition();
                 stateStack.Pop();
                 yield return SkillTab();
                 break;
             case CombatState.Inspect:
-                BattleSystem.system.ClearSelection(true);
-                yield return BattleSystem.system.MoveCamera(cameraTargets[1], BattleSystem.CameraTargets.Base);
+                BattleSystem.Manager.ClearSelection(true);
+                yield return BattleSystem.Manager.MoveCamera(cameraTargets[1], BattleSystem.CameraTargets.Base);
                 cameraPosition = 1;
                 playerCombatUiController.SetVisibility(true);
                 stateStack.Pop();
@@ -352,11 +352,11 @@ public class PlayerUnit : Unit
         if (inAnim || !isTurn || stateStack.Peek() != CombatState.Root) yield break;
         inAnim = true;
         playerCombatUiController.SetVisibility(false);
-        yield return BattleSystem.system.MoveCamera(cameraTargets[2], BattleSystem.CameraTargets.Base);
+        yield return BattleSystem.Manager.MoveCamera(cameraTargets[2], BattleSystem.CameraTargets.Base);
         cameraPosition = 2;
         playerCombatUiController.SkillTabVisibility(true, cameraTargets[2], this);
         playerCombatUiController.SetVisibility(true);
-        BattleSystem.system.SetCurrentSelectButton(playerCombatUiController.PeekFirstButton());
+        BattleSystem.Manager.SetCurrentSelectButton(playerCombatUiController.PeekFirstButton());
         stateStack.Push(CombatState.Skill);
         inAnim = false;
     }
@@ -371,12 +371,12 @@ public class PlayerUnit : Unit
             stateStack.Push(CombatState.Inspect);
             stateStack.Push(CombatState.TargetEnemy);
             playerCombatUiController.SetVisibility(false);
-            yield return BattleSystem.system.MoveCamera(cameraTargets[5], BattleSystem.CameraTargets.FullView);
+            yield return BattleSystem.Manager.MoveCamera(cameraTargets[5], BattleSystem.CameraTargets.FullView);
             cameraPosition = 5;
         }
         else if (state == CombatState.Skill)
         {
-            BattleSystem.system.TriggerSpecificButtonAction();
+            BattleSystem.Manager.TriggerSpecificButtonAction();
         }
 
         inAnim = false;
@@ -392,7 +392,7 @@ public class PlayerUnit : Unit
         {
             // do some change camera position and enable other skill tab.
             bool left = cameraPosition == 2;
-            yield return BattleSystem.system.MoveCamera(cameraTargets[left ? 3 : 2], BattleSystem.CameraTargets.Base);
+            yield return BattleSystem.Manager.MoveCamera(cameraTargets[left ? 3 : 2], BattleSystem.CameraTargets.Base);
             playerCombatUiController.SwitchSkillSide(left, cameraTargets[left ? 3 : 2], this);
             cameraPosition = left ? 3 : 2;
         }

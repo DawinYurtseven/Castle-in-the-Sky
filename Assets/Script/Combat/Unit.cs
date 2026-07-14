@@ -188,7 +188,7 @@ public class Unit : MonoBehaviour
     {
         selected.GetComponent<GameButton>().OnSelectEvent = () =>
         {
-            BattleSystem.system.SetSelection(this);
+            BattleSystem.Manager.SetSelection(this);
         };
     }
 
@@ -200,7 +200,7 @@ public class Unit : MonoBehaviour
             target.transform.rotation.eulerAngles.y +180f,
             0
         );
-        BattleSystem.system.SetSelection(this);
+        BattleSystem.Manager.SetSelection(this);
     }
 
     private void CalculateStats(bool reset = false)
@@ -250,7 +250,7 @@ public class Unit : MonoBehaviour
     protected virtual IEnumerator BasicAttack()
     {
         QueueTimeValue += CalculateTimeValue(1f);
-        BattleSystem.system.AcceptNewQueuePosition(this, QueueTimeValue);
+        BattleSystem.Manager.AcceptNewQueuePosition(this, QueueTimeValue);
         
         do
         {
@@ -261,7 +261,7 @@ public class Unit : MonoBehaviour
             BasicAttackTrigger?.Invoke(this);
 
             //move object towards target
-            yield return BattleSystem.system.MoveCamera(null, BattleSystem.CameraTargets.Empty);
+            yield return BattleSystem.Manager.MoveCamera(null, BattleSystem.CameraTargets.Empty);
             yield return transform.DOMove(currentTarget[0].positionTargets[0].position, 0.2f).SetEase(Ease.InExpo)
                 .WaitForCompletion();
             //TODO: Do some anime shit 
@@ -270,11 +270,11 @@ public class Unit : MonoBehaviour
             yield return null;
             while(!(animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator.IsInTransition(0)))
             {
-                BattleSystem.system.battleCamera.transform.position = cameraTargets[0].position;
-                BattleSystem.system.battleCamera.transform.rotation = cameraTargets[0].rotation;
+                BattleSystem.Manager.battleCamera.transform.position = cameraTargets[0].position;
+                BattleSystem.Manager.battleCamera.transform.rotation = cameraTargets[0].rotation;
                 yield return null;
             }
-            yield return BattleSystem.system.MoveCamera(null, BattleSystem.CameraTargets.Empty);
+            yield return BattleSystem.Manager.MoveCamera(null, BattleSystem.CameraTargets.Empty);
             yield return transform.DOMove(startPosition, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
         } while (repeated && currentTarget[0].currentHP > 0);
 
@@ -289,8 +289,8 @@ public class Unit : MonoBehaviour
     /// This function should also have the damage calculation for the attack, so crits are individually calculated and not from one action
     public void DealDamage(float split)
     {
-        var baseDamage = (strength + damageAddition) * damageMultiplier * split;
-        var totalDamage = Random.Range(0, 100) < critChance ? baseDamage * (1f + (critAmount/100)) : baseDamage;
+        var baseDamage = (strength + damageAddition) * (1+damageMultiplier) * split;
+        var totalDamage = Random.Range(0, 100) < critChance ? baseDamage * (1 + critAmount / 100) : baseDamage;
 
         foreach (var t in currentTarget)
         {
@@ -341,7 +341,7 @@ public class Unit : MonoBehaviour
     {
         yield return transform.DOMove(startPosition, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
         EndOfTurnTrigger?.Invoke(this);
-        BattleSystem.system.EndOfTurnTrigger.Invoke(this, QueueTimeValue);
+        BattleSystem.Manager.EndOfTurnTrigger.Invoke(this, QueueTimeValue);
     }
 
     public virtual void TakeDamage(float damage)
@@ -362,11 +362,11 @@ public class Unit : MonoBehaviour
         //TODO: maybe an event here as well?
         if (currentHP <= 0)
         {
-            BattleSystem.system.DeathOfUnit(this);
+            BattleSystem.Manager.DeathOfUnit(this);
         }
         else
         {
-            StartCoroutine(BattleSystem.system.DisplayDamageNumber((int)Mathf.Ceil(damage)));
+            StartCoroutine(BattleSystem.Manager.DisplayDamageNumber((int)Mathf.Ceil(damage)));
         }
     }
 
@@ -391,7 +391,7 @@ public class Unit : MonoBehaviour
     public void CalculateHUDValues(Button left = null, Button right = null)
     {
         hudValues.text = $"{name}\nHP: {currentHP}/{maxHP}\nSP: {currentSP}/{maxSP}";
-        hudCanvas.gameObject.transform.LookAt(BattleSystem.system.battleCamera.gameObject.transform.position);
+        hudCanvas.gameObject.transform.LookAt(BattleSystem.Manager.battleCamera.gameObject.transform.position);
         var navigation = new Navigation();
         if (left != null)
         {

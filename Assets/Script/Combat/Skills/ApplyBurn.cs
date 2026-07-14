@@ -13,7 +13,7 @@ public class ApplyBurn : Skill
         skillCost = 4;
         timeValue = 0.6f;
         target = SkillTarget.Enemy;
-        affectValue = 0.1f;
+        affectValue = 0.3f;
         animationName = "applyBurn_Animation";
         turnEffect = 3;
         additionalCritChance = 20;
@@ -25,7 +25,7 @@ public class ApplyBurn : Skill
         var validAction = false;
         var baseDamage = (1+boost/10f) * (unit.Strength + unit.damageAddition) * unit.damageMultiplier;
         var totalDamage = Random.Range(0, 100) < unit.critChance + additionalCritChance
-            ? baseDamage * ((unit.critAmount + additionalCritAddition) / 100)
+            ? baseDamage * (1+ (unit.critAmount + additionalCritAddition) / 100)
             : baseDamage;
         
         Debug.Log("Never had a choice, never let the opps win" +

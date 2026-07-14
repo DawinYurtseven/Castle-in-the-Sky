@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class StoryManager : MonoBehaviour
 {
-    public static StoryManager System;
+    public static StoryManager Manager;
 
     [SerializeField] private Image actorOne, actorTwo, continueButton;
     [SerializeField] private TMP_Text bubbleText, actorNameText;
@@ -14,11 +15,20 @@ public class StoryManager : MonoBehaviour
     [SerializeField] private Color active, nonActive;
     private Button currentSelectButton;
     
-    private List<Actor> actors;
+    [SerializeField] private List<Actor> actors;
+    [SerializeField] private Actor main;
     
-    private List<Sentence> currentStoryPart;
+    private Dialogue currentStoryPart;
     private Sentence currentSentence;
     private bool multipleChoiceActive;
+
+    private Actor currentTargetActor;
+    
+    private void Awake()
+    {
+        if (!Manager) Manager = this;
+        else Destroy(this);
+    }
 
     /// <summary>
     /// This class is meant to be loaded when entering a story node.
@@ -28,14 +38,19 @@ public class StoryManager : MonoBehaviour
     /// <param name="actor"></param>
     public void GetNextStoryPart(Actor actor)
     {
-        if (actor.Scenes.Count == 0)
+        if (actor.scenes.Count == 0)
         {
             Debug.Log("No more story parts for this actor");
             return;
         }
-        currentStoryPart = actor.Scenes[actor.currentProgress].sentences;
-        currentSentence = currentStoryPart[0];
-        var sprite  = currentSentence.actorSprite ? currentSentence.actorSprite : actor.defaultImage.sprite;
+
+        currentTargetActor = actor;
+        InputSystemWrapper.Instance.SetState(InputSystemWrapper.State.Dialogue);
+        currentStoryPart = actor.scenes[actor.currentProgress].conditions.All(condition => condition.IsMet(condition.variableKey.currentProgress)) ?
+                           actor.scenes[actor.currentProgress] : 
+                           actor.fillerScenes[Random.Range(0, actor.fillerScenes.Count)];
+        currentSentence = currentStoryPart.sentences[0];
+        var sprite  = currentSentence.actorSprite ? currentSentence.actorSprite : actor.defaultSprite;
         if (currentSentence.leftImage) {
             actorOne.GetComponent<Image>().sprite = sprite;
             actorOne.GetComponent<Image>().color = active;
@@ -47,6 +62,22 @@ public class StoryManager : MonoBehaviour
         }
         bubbleText.text = currentSentence.text;
         actorNameText.text = currentSentence.actor.actorName;
+        
+    }
+
+    public Actor GetPossibleActor()
+    {
+        
+        var results = from actor in actors 
+            where actor.scenes[actor.currentProgress].conditions.Count == 0 || actor.scenes[actor.currentProgress].conditions.All(condition => condition.IsMet(condition.variableKey.currentProgress))
+            select actor;
+
+        var resultsFiller = from actor in actors
+            where actor.currentProgress > 0
+            select actor;
+        var seriousList = results.ToList();
+        var verySeriousList = resultsFiller.ToList();
+        return seriousList.Count == 0 ? verySeriousList.Count == 0 ? null : verySeriousList.ToList()[Random.Range(0, verySeriousList.ToList().Count)] : seriousList[Random.Range(0, seriousList.Count)];   
     }
 
 
@@ -56,10 +87,21 @@ public class StoryManager : MonoBehaviour
         {
             case 0:
                 Debug.Log("No more lines");
+                currentSelectButton = null;
+                Manager.gameObject.SetActive(false);
+                var playerUnit = Map.Manager.playerUnitAssetList.Find(unit => unit.GetComponent<PlayerUnit>().Actor == currentTargetActor).GetComponent<PlayerUnit>();
+                //later make a window to change unit if more than 4 units
+                if(!Map.Manager.currentPlayerUnits.Contains(playerUnit)) {
+                    Map.Manager.currentPlayerUnits.Add(playerUnit);
+                }
+                if(currentTargetActor.scenes.Contains(currentStoryPart)) {
+                    currentTargetActor.currentProgress++;
+                }
+                Map.Manager.ReturnToMap();
                 return;
             case 1:
-                currentSentence = currentStoryPart[currentSentence.choiceBranchIDs[0]];
-                var sprite = currentSentence.actorSprite ? currentSentence.actorSprite : currentSentence.actor.defaultImage.sprite;
+                currentSentence = currentStoryPart.sentences[currentSentence.choiceBranchIDs[0]];
+                var sprite = currentSentence.actorSprite ? currentSentence.actorSprite : currentSentence.actor.defaultSprite;
                 if (currentSentence.leftImage) {
                     actorOne.GetComponent<Image>().sprite = sprite;
                     actorOne.GetComponent<Image>().color = active;
@@ -81,14 +123,15 @@ public class StoryManager : MonoBehaviour
                     if (i >= currentSentence.choiceBranchIDs.Count) continue;
                     multipleChoiceButtons[i].gameObject.SetActive(true);
                     multipleChoiceButtons[i].GetComponentInChildren<TMP_Text>().text =
-                        currentStoryPart[currentSentence.choiceBranchIDs[i]].text;
+                        currentStoryPart.sentences[currentSentence.choiceBranchIDs[i]].text;
                     multipleChoiceButtons[i].onClick.RemoveAllListeners();
                     var index = i;
                     multipleChoiceButtons[i].onClick.AddListener(() =>
                     {
-                        currentSentence = currentStoryPart[currentSentence.choiceBranchIDs[index]];
+                        currentSentence = currentStoryPart.sentences[currentSentence.choiceBranchIDs[index]];
                         multipleChoiceActive = false;
                         choicesPanel.SetActive(false);
+                        currentSelectButton = null;
                         GoToNextLine();
                         //timer.SetActive(false);
                     });
@@ -164,6 +207,8 @@ public struct Sentence
     [TextArea(3, 5)] public string text;
     public Sprite actorSprite;
     public bool leftImage;
+    public float bonus;
+    
     
     // Instead of storing the actual Sentence objects, 
     // store the IDs of the sentences this choice leads to.
