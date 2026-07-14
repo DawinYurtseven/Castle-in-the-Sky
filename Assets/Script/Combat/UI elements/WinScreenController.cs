@@ -147,7 +147,12 @@ public class WinScreenController : MonoBehaviour
         yield return new WaitUntil(() => anim.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !anim.IsInTransition(0));
 
         var statlist = mainCharacter.GetStats();
-        int allocatable = 10;
+        int allocatable;
+        if (Map.system.currentNode.boost != 1)
+            allocatable = 10 + 5 * (Map.system.currentNode.boost - 1);
+        else
+            allocatable = 10;
+        
         stats.transform.GetChild(5).gameObject.SetActive(true);
         for (int i = 0; i < 5; i++)
         {
@@ -227,6 +232,7 @@ public class WinScreenController : MonoBehaviour
         {
             skills.Add(Skill.GetRandomSkill(skills));
             skillButtonAnims.Add(skillButtons[i].GetComponent<Animator>());
+            if(Map.system.currentNode.boost != 1) skills[i].boost = Map.system.currentNode.boost;
         }
 
         for (int i = 0; i < 3; i++)

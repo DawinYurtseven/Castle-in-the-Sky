@@ -1602,6 +1602,22 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ba9165f4c3df0b2428f78bf071a7e339, type: 3}
+--- !u!1 &5291717218311688413 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6729700271422929566, guid: ba9165f4c3df0b2428f78bf071a7e339, type: 3}
+  m_PrefabInstance: {fileID: 5291717218311688412}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &5291717218311688414 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3893841281676144598, guid: ba9165f4c3df0b2428f78bf071a7e339, type: 3}
+  m_PrefabInstance: {fileID: 5291717218311688412}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5291717218311688413}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc8cf9700d5cf60458e01e029772b336, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StoryManager
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

@@ -338,7 +338,7 @@ public class BattleSystem : MonoBehaviour
                 }
                 else
                 {
-                    for (int i = 0; i < enemyUnits.Count; i++)
+                    for (var i = 0; i < enemyUnits.Count; i++)
                     {
                         Button left = null, right = null;
                         if (i != 0)
@@ -351,6 +351,18 @@ public class BattleSystem : MonoBehaviour
                         }
                     
                         enemyUnits[i].CalculateHUDValues(left, right);
+                        var i1 = i;
+                        enemyUnits[i].selected.GetComponent<GameButton>().OnSelectEvent = () =>
+                        {
+                            SetSelection(enemyUnits[i1]);
+                            zAxis = target.eulerAngles.z;
+                            var interpolatedPosition = Vector3.Lerp(enemyUnits[0].transform.position,
+                                enemyUnits[^1].transform.position, i1+ 1 / ((float)enemyUnits.Count + 1));
+                            target.LookAt(interpolatedPosition);
+                            target.eulerAngles =  new Vector3(target.eulerAngles.x, target.eulerAngles.y, zAxis);
+                            battleCamera.transform.DOKill();
+                            battleCamera.transform.DORotate(target.rotation.eulerAngles, 0.2f).SetEase(Ease.OutExpo);
+                        };
                     }
                     
                     var index = enemyUnits.IndexOf((EnemyUnit)targetUnit) + 1;
@@ -358,7 +370,8 @@ public class BattleSystem : MonoBehaviour
                     var interpolatedPosition = Vector3.Lerp(enemyUnits[0].transform.position,
                         enemyUnits[^1].transform.position, index / ((float)enemyUnits.Count + 1));
                     target.LookAt(interpolatedPosition);
-                    target.eulerAngles =  new Vector3(target.eulerAngles.x, target.eulerAngles.y, zAxis);if (!targetUnit || targetUnit is not EnemyUnit)
+                    target.eulerAngles =  new Vector3(target.eulerAngles.x, target.eulerAngles.y, zAxis);
+                    if (!targetUnit || targetUnit is not EnemyUnit)
                     {
                         foreach (var t in enemyUnits.Where(t => t.HP > 0))
                         {
@@ -393,9 +406,9 @@ public class BattleSystem : MonoBehaviour
                     {
                         MoveValuesForInspectView(playerUnits[ip].cameraTargets[5], playerUnits[ip]);
                     };
-                    var left = i != 0 ? playerUnits[i - 1].selected : enemyUnits[i].selected;
+                    var right = i != 0 ? playerUnits[i - 1].selected : enemyUnits[i].selected;
 
-                    var right = i != playerUnits.Count - 1 ? playerUnits[i + 1].selected : enemyUnits[^1].selected;
+                    var left = i != playerUnits.Count - 1 ? playerUnits[i + 1].selected : enemyUnits[^1].selected;
                     
                     playerUnits[i].CalculateHUDValues(left, right);
                 }
@@ -595,6 +608,7 @@ public class BattleSystem : MonoBehaviour
     {
         if (queue.Contains(unit))
         {
+            queueImageInUse.Find( e => e.Item1 == unit).Item2.SetActive(false);
             queue.Remove(unit);
             OrderQueue(true);
         }
@@ -634,16 +648,10 @@ public class BattleSystem : MonoBehaviour
         yield return null;
         yield return new WaitUntil(() =>
             animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && animator.IsInTransition(0));
-        spawnedObjects.Remove(temp.GetComponent<RectTransform>());
         Destroy(temp);
         activeDisplayCount--;
     }
     
-    private readonly List<RectTransform> spawnedObjects = new List<RectTransform>();
-
-    /// <summary>
-    /// Call this method whenever you want to spawn a new object.
-    /// </summary>
     private GameObject TrySpawnDamageDisplay()
     {
         var spawnArea = damageDisplayAreas[displayIndex].GetComponent<RectTransform>();
@@ -670,13 +678,9 @@ public class BattleSystem : MonoBehaviour
         maxX -= prefabWidth / 2f;
         minY += prefabHeight / 2f;
         maxY -= prefabHeight / 2f;
-
-        // 2. Try to find a valid, non-overlapping position
        
         var randomX = Random.Range(minX, maxX);
         var randomY = Random.Range(minY, maxY);
-
-        // Create a temporary Rect representing where the new object would be
 
         var newSpawn = Instantiate(damageDisplay, spawnArea);
         var spawnRect = newSpawn.GetComponent<RectTransform>();
@@ -684,10 +688,8 @@ public class BattleSystem : MonoBehaviour
         // Force anchors to center to make localPosition placement predictable
         spawnRect.anchorMin = new Vector2(0.5f, 0.5f);
         spawnRect.anchorMax = new Vector2(0.5f, 0.5f);
-        spawnRect.anchoredPosition = new Vector3(randomX, randomY, 0f);;
-
-        // Add to our tracking list
-        spawnedObjects.Add(spawnRect);
+        spawnRect.anchoredPosition = new Vector3(randomX, randomY, 0f);
+        
         return newSpawn; 
     }
 

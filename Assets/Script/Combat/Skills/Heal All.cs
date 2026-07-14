@@ -21,7 +21,7 @@ public class HealAll : Skill
     public override bool Execute(Unit unit)
     {
         bool validAction = false;
-        var baseHeal = affectValue * unit.Intelligence;
+        var baseHeal = (1+boost/10f) * affectValue * unit.Intelligence;
         var totalHeal = Random.Range(0, 100) < unit.critChance + additionalCritChance
             ? baseHeal * ((unit.critAmount + additionalCritAddition) / 100)
             : baseHeal;

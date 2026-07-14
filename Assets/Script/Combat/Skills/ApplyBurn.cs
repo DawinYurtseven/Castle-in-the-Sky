@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.Events;
 using Random = UnityEngine.Random;
 
 [Serializable]
@@ -26,7 +23,7 @@ public class ApplyBurn : Skill
     public override bool Execute(Unit unit)
     {
         var validAction = false;
-        var baseDamage = (unit.Strength + unit.damageAddition) * (1+unit.damageMultiplier);
+        var baseDamage = (1+boost/10f) * (unit.Strength + unit.damageAddition) * unit.damageMultiplier;
         var totalDamage = Random.Range(0, 100) < unit.critChance + additionalCritChance
             ? baseDamage * (1+ (unit.critAmount + additionalCritAddition) / 100)
             : baseDamage;
@@ -42,24 +39,13 @@ public class ApplyBurn : Skill
             t.TakeDamage(totalDamage);
             if (t.currentHP <= 0) continue;
             validAction = true;
-            var turnsRemaining = turnEffect;
-            UnityAction<Unit> burn = null; 
-                
-            burn = targetUnit =>
+            totalDamage *= (1+boost/10f) * affectValue;
+            var burn = new Burn
             {
-                Debug.Log("EVERYTHING BURNS!!!\nLight it up, let's go, light it up, let's go");
-                baseDamage *= affectValue;
-                totalDamage = Random.Range(0, 100) < unit.critChance + additionalCritChance
-                    ? baseDamage * (1+ (unit.critAmount + additionalCritAddition) / 100)
-                    : baseDamage;
-                targetUnit.TakeDamage(totalDamage);
-                turnsRemaining--;
-                if (turnsRemaining <= 0)
-                {
-                    t.EndOfTurnTrigger -= burn;
-                }
+                turnsRemaining = turnEffect,
+                baseValue = totalDamage
             };
-            t.EndOfTurnTrigger += burn;
+            burn.Subscribe(ref t.EndOfTurnTrigger, t);
         }
         
         
