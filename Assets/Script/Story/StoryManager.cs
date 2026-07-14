@@ -89,9 +89,9 @@ public class StoryManager : MonoBehaviour
                 Debug.Log("No more lines");
                 currentSelectButton = null;
                 Manager.gameObject.SetActive(false);
-                var playerUnit = Map.Manager.playerUnitAssetList.Find(unit => unit.GetComponent<PlayerUnit>().Actor == currentTargetActor).GetComponent<PlayerUnit>();
+                var playerUnit = Map.Manager.playerUnitAssetList.Find(unit => unit.GetComponent<PlayerUnit>().Actor == currentTargetActor)?.GetComponent<PlayerUnit>();
                 //later make a window to change unit if more than 4 units
-                if(!Map.Manager.currentPlayerUnits.Contains(playerUnit)) {
+                if(playerUnit && !Map.Manager.currentPlayerUnits.Contains(playerUnit)) {
                     Map.Manager.currentPlayerUnits.Add(playerUnit);
                 }
                 if(currentTargetActor.scenes.Contains(currentStoryPart)) {
