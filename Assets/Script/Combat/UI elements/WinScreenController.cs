@@ -148,8 +148,8 @@ public class WinScreenController : MonoBehaviour
 
         var statlist = mainCharacter.GetStats();
         int allocatable;
-        if (Map.system.currentNode.boost != 1)
-            allocatable = 10 + 5 * (Map.system.currentNode.boost - 1);
+        if (Map.Manager.currentNode.boost != 1)
+            allocatable = 10 + 5 * (Map.Manager.currentNode.boost - 1);
         else
             allocatable = 10;
         
@@ -232,7 +232,7 @@ public class WinScreenController : MonoBehaviour
         {
             skills.Add(Skill.GetRandomSkill(skills));
             skillButtonAnims.Add(skillButtons[i].GetComponent<Animator>());
-            if(Map.system.currentNode.boost != 1) skills[i].boost = Map.system.currentNode.boost;
+            if(Map.Manager.currentNode.boost != 1) skills[i].boost = Map.Manager.currentNode.boost;
         }
 
         for (int i = 0; i < 3; i++)
