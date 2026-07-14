@@ -7,18 +7,33 @@ public class Actor : ScriptableObject
     public List<Dialogue> scenes, fillerScenes;
     public string actorName;
 
-    public int currentProgress = 0;
+    public int currentProgress;
     public Sprite defaultSprite;
 
 }
 [Serializable]
-public struct Dialogue
+public struct Dialogue : IEquatable<Dialogue>
 {
     // Helpful for organizing in the Inspector
     public string dialogueName;
     public bool replacedByAnimation; // this is a Mouseketeer tool for later replacing the dialogue with an animation if needed.
     public List<DialogueCondition> conditions;
     public List<Sentence> sentences;
+
+    public bool Equals(Dialogue other)
+    {
+        return dialogueName == other.dialogueName && replacedByAnimation == other.replacedByAnimation && Equals(conditions, other.conditions) && Equals(sentences, other.sentences);
+    }
+
+    public override bool Equals(object obj)
+    {
+        return obj is Dialogue other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(dialogueName, replacedByAnimation, conditions, sentences);
+    }
 }
 
 public enum ConditionOperator

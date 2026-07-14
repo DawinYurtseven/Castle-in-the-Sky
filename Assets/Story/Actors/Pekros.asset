@@ -229,7 +229,39 @@ MonoBehaviour:
     - id: 25
       actor: {fileID: 11400000, guid: fc0b1664b3651974a832ec5f50116a4f, type: 2}
       audio: {fileID: 0}
-      text: Myne
+      text: Myne, and you?
+      actorSprite: {fileID: 0}
+      leftImage: 0
+      bonus: 0
+      choiceBranchIDs: 1a000000
+    - id: 26
+      actor: {fileID: 11400000}
+      audio: {fileID: 0}
+      text: I am Pekros! Pekros, the Artificer!
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 1b000000
+    - id: 27
+      actor: {fileID: 11400000, guid: fc0b1664b3651974a832ec5f50116a4f, type: 2}
+      audio: {fileID: 0}
+      text: Oh we are using our dream title? I am Myne, the Spire-Top Seeker.
+      actorSprite: {fileID: 0}
+      leftImage: 0
+      bonus: 0
+      choiceBranchIDs: 1c000000
+    - id: 28
+      actor: {fileID: 11400000}
+      audio: {fileID: 0}
+      text: Dream ti-ugh... But aren't you too young to be a Climber?
+      actorSprite: {fileID: 0}
+      leftImage: 1
+      bonus: 0
+      choiceBranchIDs: 1d000000
+    - id: 29
+      actor: {fileID: 11400000, guid: fc0b1664b3651974a832ec5f50116a4f, type: 2}
+      audio: {fileID: 0}
+      text: Aren't you too young to be an artificer?
       actorSprite: {fileID: 0}
       leftImage: 0
       bonus: 0
