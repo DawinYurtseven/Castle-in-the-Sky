@@ -84,7 +84,7 @@ MonoBehaviour:
         startingChance: 0
         stackChance: 0
         baseValue: 0
-        stackingIncrease: 10
+        stackingIncrease: 5
     - rid: 2678518542141489220
       type: {class: Gluttony, ns: , asm: Assembly-CSharp}
       data:
@@ -119,7 +119,7 @@ MonoBehaviour:
         startingChance: 0
         stackChance: 0
         baseValue: 0
-        stackingIncrease: 10
+        stackingIncrease: 5
     - rid: 2678518542141489223
       type: {class: SpeedPendant, ns: , asm: Assembly-CSharp}
       data:
@@ -130,7 +130,7 @@ MonoBehaviour:
         startingChance: 0
         stackChance: 0
         baseValue: 0
-        stackingIncrease: 10
+        stackingIncrease: 5
     - rid: 2678518542141489224
       type: {class: LuckPendant, ns: , asm: Assembly-CSharp}
       data:
@@ -141,7 +141,7 @@ MonoBehaviour:
         startingChance: 0
         stackChance: 0
         baseValue: 0
-        stackingIncrease: 10
+        stackingIncrease: 5
     - rid: 2678518542141489225
       type: {class: StrengthPendant, ns: , asm: Assembly-CSharp}
       data:
@@ -152,4 +152,4 @@ MonoBehaviour:
         startingChance: 0
         stackChance: 0
         baseValue: 0
-        stackingIncrease: 10
+        stackingIncrease: 5
