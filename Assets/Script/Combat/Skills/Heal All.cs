@@ -4,19 +4,6 @@ using UnityEngine;
 [System.Serializable]
 public class HealAll : Skill
 {
-    public HealAll()
-    {
-        skillName = "Heal All";
-        skillDescription = "Heal all allies with a flat increase"; //TODO: physical damage?
-        skillCost = 5;
-        timeValue = 2f;
-        target = SkillTarget.AllyAll;
-        affectValue = 2f;
-        animationName = "HealAll_Animation";
-        turnEffect = 0;
-        additionalCritChance = 10;
-        additionalCritAddition = 4;
-    }
 
     public override bool Execute(Unit unit)
     {

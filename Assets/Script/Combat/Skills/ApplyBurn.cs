@@ -5,20 +5,6 @@ using Random = UnityEngine.Random;
 [Serializable]
 public class ApplyBurn : Skill
 {
-
-    public ApplyBurn()
-    {
-        skillName = "Apply Burn";
-        skillDescription = "deal a small amount of damage that burns the target for 3 turns at the end of your end step";
-        skillCost = 4;
-        timeValue = 0.6f;
-        target = SkillTarget.Enemy;
-        affectValue = 0.3f;
-        animationName = "applyBurn_Animation";
-        turnEffect = 3;
-        additionalCritChance = 20;
-        additionalCritAddition = 10;
-    }
     
     public override bool Execute(Unit unit)
     {
