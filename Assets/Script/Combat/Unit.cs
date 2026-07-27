@@ -131,7 +131,8 @@ public class Unit : MonoBehaviour
 
     #region Components
 
-    public List<Unit> currentTarget;
+    public List<Unit> currentTargets;
+    public Unit currentTarget;
 
     /// <summary>
     /// 0- base target for other units to go to when performing a 1-1 action
@@ -162,15 +163,15 @@ public class Unit : MonoBehaviour
 
     #region Combat
 
-    [Header("Combat")]
-    public UnityAction<Unit> BasicAttackTrigger,
+    [Header("Combat")] public UnityAction<Unit> BasicAttackTrigger,
         BeginningOfCombatTrigger,
         BeginningOfTurnTrigger,
         EndOfTurnTrigger,
         EndOfCombatTrigger,
         ActionTakenTrigger,
         ReactionDoneTrigger,
-        CriticalTrigger;
+        CriticalTrigger,
+        DamageDealtTrigger;
 
     public UnityAction<Unit,object> SkillUsageTrigger;
 
@@ -254,7 +255,7 @@ public class Unit : MonoBehaviour
         
         do
         {
-            yield return transform.DOMove(currentTarget[0].positionTargets[0].position, 0.2f).SetEase(Ease.InExpo)
+            yield return transform.DOMove(currentTargets[0].positionTargets[0].position, 0.2f).SetEase(Ease.InExpo)
                      .WaitForCompletion();
             
             ActionTakenTrigger?.Invoke(this);
@@ -262,7 +263,7 @@ public class Unit : MonoBehaviour
 
             //move object towards target
             yield return BattleSystem.Manager.MoveCamera(null, BattleSystem.CameraTargets.Empty);
-            yield return transform.DOMove(currentTarget[0].positionTargets[0].position, 0.2f).SetEase(Ease.InExpo)
+            yield return transform.DOMove(currentTargets[0].positionTargets[0].position, 0.2f).SetEase(Ease.InExpo)
                 .WaitForCompletion();
             //TODO: Do some anime shit 
             yield return new WaitForSeconds(0.3f);
@@ -276,7 +277,7 @@ public class Unit : MonoBehaviour
             }
             yield return BattleSystem.Manager.MoveCamera(null, BattleSystem.CameraTargets.Empty);
             yield return transform.DOMove(startPosition, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
-        } while (repeated && currentTarget[0].currentHP > 0);
+        } while (repeated && currentTargets[0].currentHP > 0);
 
         yield return EndTurn();
     }
@@ -287,16 +288,24 @@ public class Unit : MonoBehaviour
     /// if there are 3 hits, the split can be 0.5, 0.3 and 0.2 and so on as example.
     ///
     /// This function should also have the damage calculation for the attack, so crits are individually calculated and not from one action
+    public float CurrentTotalDamage
+    {
+        get;
+        set;
+    }
+    
     public void DealDamage(float split)
     {
         var baseDamage = (strength + damageAddition) * (1+damageMultiplier) * split;
         var totalDamage = Random.Range(0, 100) < critChance ? baseDamage * (1 + critAmount / 100) : baseDamage;
-
-        foreach (var t in currentTarget)
+        CurrentTotalDamage = totalDamage;
+        
+        foreach (var t in currentTargets)
         {
             t?.TakeDamage(totalDamage);
+            currentTarget = t;
+            DamageDealtTrigger?.Invoke(this);
         }
-        
     }
 
     protected virtual IEnumerator SkillUsage() //change this later
@@ -370,6 +379,13 @@ public class Unit : MonoBehaviour
         }
     }
 
+    public virtual void Death()
+    {
+        currentHP = 0;
+        BattleSystem.Manager.DeathOfUnit(this);
+        //TODO: Don't forget an event here
+    }
+
     public void SelectHUD(bool active, Transform toLookAt = null)
     {
         if (toLookAt)
@@ -385,7 +401,8 @@ public class Unit : MonoBehaviour
 
     protected void SetCurrentTarget(List<Unit> units)
     {
-        currentTarget = units;
+        currentTargets = units;
+        if (units.Count == 1) currentTarget = units[0];
     }
     
     public void CalculateHUDValues(Button left = null, Button right = null)

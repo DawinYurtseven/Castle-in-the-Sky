@@ -13,7 +13,7 @@ public class GrandSlash : Skill
             ? baseDamage * ((unit.critAmount + additionalCritAddition) / 100)
             : baseDamage;
                     
-        foreach (var targetUnit in unit.currentTarget)
+        foreach (var targetUnit in unit.currentTargets)
         {
             targetUnit.TakeDamage(totalDamage);
             if (targetUnit.currentHP > 0)

@@ -5,15 +5,9 @@ using UnityEngine;
 [System.Serializable]
 public abstract class Items
 {
-    protected enum ItemTypes
-    {
-        specialType,
-        StatBoost,
-    }
 
     protected enum ItemTriggerPosition
     {
-        None,
         BasicAttack,
         BeginningOfCombat,
         BeginningOfTurn,
@@ -21,7 +15,8 @@ public abstract class Items
         EndOfTurn,
         ActionTaken,
         ReactionDone,
-        CriticalTrigger
+        CriticalTrigger,
+        DamageDealt
     }
 
     public string ItemName;

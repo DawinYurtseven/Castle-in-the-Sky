@@ -14,7 +14,7 @@ public class HealAll : Skill
             : baseHeal;
         
         //TODO: maybe not take damage call for healing?
-        foreach (var units in unit.currentTarget)
+        foreach (var units in unit.currentTargets)
         {
             units.TakeDamage(-totalHeal);
             validAction = units.currentHP == units.maxHP || validAction;
