@@ -1,4 +1,6 @@
+using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,11 +8,16 @@ using UnityEngine.UI;
 public class MerchantSystem : MonoBehaviour
 {
     public static MerchantSystem Manager;
+    private static readonly int Enter = Animator.StringToHash("Enter");
+    private static readonly int Entered = Animator.StringToHash("Entered");
 
-    [SerializeField] private List<Button> itemSlots, skillSots;
+    [SerializeField] private List<Button> itemSlots, skillSlots;
     [SerializeField] private Button reroll;
 
-    [SerializeField] private TMP_Text title, description;
+    [SerializeField] private TMP_Text title, description, moneyText;
+
+    [SerializeField] private GameObject skillExchangeTab, skillName;
+    [SerializeField] private List<Button> skillButtons;
 
     public int rerolls, level;
 
@@ -30,6 +37,7 @@ public class MerchantSystem : MonoBehaviour
         if (rerolls != 0)
             Map.Manager.money -= rerolls * 100 * level / 3;
         rerolls++;
+        moneyText.text = $"Money: {Map.Manager.money}";
         //Add cost text to the slots?
         
         var currentBatch = new List<Items>();
@@ -50,11 +58,13 @@ public class MerchantSystem : MonoBehaviour
             {
                 gift.Acquire(new List<Unit>(Map.Manager.currentPlayerUnits));
                 Map.Manager.money -= 10 * level;
+                moneyText.text = $"Money: {Map.Manager.money}";
+                CheckAllButtons();
             });
         }
 
-        var nextBatch = new List<Skill>();
-        foreach (var skill in skillSots)
+        var nextBatch = new List<Skill>(Map.Manager.currentPlayerUnits[0].skills);
+        foreach (var skill in skillSlots)
         {
             var gift = Skill.GetRandomSkill(nextBatch);
             nextBatch.Add(gift);
@@ -67,12 +77,86 @@ public class MerchantSystem : MonoBehaviour
             if(gift.skillImage)
                 skill.image.sprite = gift.skillImage;
             
-            //replace skill window needed for this one
+            skill.onClick.RemoveAllListeners();
+            skill.onClick.AddListener(() =>
+            {
+                if (Map.Manager.currentPlayerUnits[0].skills.Count == 6)
+                {
+                    StartCoroutine(SkillButtonPress(gift));
+                    Map.Manager.money -= 10 * level;
+                    moneyText.text = $"Money: {Map.Manager.money}";
+                    CheckAllButtons();
+                }
+                else
+                {
+                    Map.Manager.currentPlayerUnits[0].AddSkill(gift);
+                    Map.Manager.money -= 10 * level;
+                    moneyText.text = $"Money: {Map.Manager.money}";
+                    CheckAllButtons();
+                }
+            });
         }
 
         SetCurrentSelectButton(itemSlots[0]);
         reroll.transform.Find("reroll cost").GetComponent<TMP_Text>().text = $"{ rerolls * 100 + 100 * level / 3}";
         CheckAllButtons();
+    }
+
+    private IEnumerator SkillButtonPress(Skill skill)
+    {
+        skillExchangeTab.SetActive(true);
+        skillName.SetActive(true);
+        skillName.transform.GetChild(0).GetComponentInChildren<TMP_Text>().text =  skill.skillDescription;
+        skillName.transform.GetChild(0).GetComponentInChildren<TMP_Text>().text =  skill.skillName;
+        skillName.transform.GetChild(0).GetComponentInChildren<TMP_Text>().text =  skill.skillCost.ToString();
+        
+        for (int i = 0; i < skillButtons.Count; i++)
+        {
+            skillButtons[i].transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = Map.Manager.currentPlayerUnits[0].GetSkill(i).skillCost.ToString();
+            skillButtons[i].transform.GetChild(1).GetComponent<TMP_Text>().text = Map.Manager.currentPlayerUnits[0].GetSkill(i).skillName;
+            skillButtons[i].transform.GetChild(2).GetComponent<TMP_Text>().text = Map.Manager.currentPlayerUnits[0].GetSkill(i).skillDescription;
+            skillButtons[i].gameObject.SetActive(true);
+            skillButtons[i].GetComponent<Animator>().SetTrigger(Enter);
+            yield return new WaitForSeconds(0.25f);
+            skillButtons[i].GetComponent<Animator>().SetBool("Entered", true);
+            //Set onClick as well
+            skillButtons[i].GetComponent<Button>().onClick.RemoveAllListeners();
+            int i1 = i;
+            skillButtons[i].GetComponent<Button>().onClick.AddListener(() =>
+            {
+                Map.Manager.currentPlayerUnits[0].AddSkill(skill, i1);
+                skillButtons[i1].transform.DOLocalRotate(new Vector3(1800, 0, 0), 0.5f).SetEase(Ease.Linear).OnComplete(() =>
+                {
+                    skillButtons[i1].transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = skill.skillCost.ToString();
+                    skillButtons[i1].transform.GetChild(1).GetComponent<TMP_Text>().text = skill.skillName;
+                    skillButtons[i1].transform.GetChild(2).GetComponent<TMP_Text>().text = skill.skillDescription;
+                    StartCoroutine(ClearAllSelectSkillButtons());
+                });
+            });
+            skillButtons[i].GetComponent<GameButton>().OnSpecificAction = () =>
+            {
+                var active = skillButtons[i1].transform.Find("Description").gameObject.activeSelf;
+                skillButtons[i1].transform.DOLocalRotate(new Vector3(1800, 0, 0), 0.025f).SetEase(Ease.Linear).OnComplete(() =>
+                {
+                    skillButtons[i1].transform.Find("Description").gameObject.SetActive(!active);
+                    skillButtons[i1].transform.Find("Title").gameObject.SetActive(active);
+                });
+            };
+        }
+    }
+    
+    private IEnumerator ClearAllSelectSkillButtons()
+    {
+        yield return new WaitForSeconds(1f);
+        foreach (var t in skillButtons)
+        {
+            t.GetComponent<Animator>().SetBool(Entered, false);
+            yield return new WaitForSeconds(0.1f);
+        }
+        yield return new WaitForSeconds(0.5f);
+        //TODO: exit something something
+        Map.Manager.ReturnToMap();
+        gameObject.SetActive(false);
     }
 
 
@@ -83,7 +167,7 @@ public class MerchantSystem : MonoBehaviour
             item.interactable = Map.Manager.money >= level * 10;
         }
 
-        foreach (var skill in skillSots)
+        foreach (var skill in skillSlots)
         {
             skill.interactable = Map.Manager.money >= level * 10;
         }
@@ -98,7 +182,7 @@ public class MerchantSystem : MonoBehaviour
     public void Submit()
     {
         if (!currentButton) return;
-        if(itemSlots.Contains(currentButton) || skillSots.Contains(currentButton))
+        if(itemSlots.Contains(currentButton) || skillSlots.Contains(currentButton))
             currentButton.interactable = false;
         currentButton.onClick.Invoke();
     }
