@@ -5,6 +5,7 @@ using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class WinScreenController : MonoBehaviour
 {
@@ -62,6 +63,9 @@ public class WinScreenController : MonoBehaviour
         yield return null;
         yield return new WaitUntil(() => anim.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !anim.IsInTransition(0));
  
+        
+        //TODO: Add animations to it here
+        Map.Manager.money += Map.Manager.currentNode.level * Random.Range(1200, 1400); 
         
         
         rootButtons[0].transform.localPosition = new Vector3(screenWidth * 1.5f, screenHeight * 0.25f, 0);

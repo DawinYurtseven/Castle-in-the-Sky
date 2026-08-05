@@ -10,12 +10,22 @@ public class InputSystemWrapper : MonoBehaviour
     {
         Instance = this;
     }
+
+    private void Start()
+    {
+        battleSystem = BattleSystem.Manager;
+        map = Map.Manager;
+        storyManager = StoryManager.Manager;
+        merchant = MerchantSystem.Manager;
+    }
+
     public enum State
     {
         Combat,
         Map,
         Menu,
-        Dialogue
+        Dialogue,
+        Merchant
     }
 
     private State state;
@@ -28,6 +38,7 @@ public class InputSystemWrapper : MonoBehaviour
     [SerializeField] private BattleSystem battleSystem;
     [SerializeField] private Map map;
     [SerializeField] private StoryManager storyManager;
+    [SerializeField] private MerchantSystem merchant;
 
     public void Submit(InputAction.CallbackContext context)
     {
@@ -44,6 +55,9 @@ public class InputSystemWrapper : MonoBehaviour
                 break;
             case State.Dialogue:
                 storyManager.Submit();
+                break;
+            case State.Merchant:
+                merchant.Submit();
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
@@ -63,6 +77,9 @@ public class InputSystemWrapper : MonoBehaviour
                 break;
             case State.Menu:
             case State.Dialogue:
+                break;
+            case State.Merchant:
+                merchant.Cancel();
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
@@ -147,6 +164,7 @@ public class InputSystemWrapper : MonoBehaviour
                 temp = dir.x > 0 ? Vector2.right : Vector2.left;
             }
             if(same) return;
+            //maybe add a clear so that you can continue in a direction if held?
             previousDirection = temp;
         }
         switch (state)
@@ -161,6 +179,9 @@ public class InputSystemWrapper : MonoBehaviour
                 storyManager.Navigate(dir);
                 break;
             case State.Menu:
+                break;
+            case State.Merchant:
+                merchant.Navigate(dir);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();

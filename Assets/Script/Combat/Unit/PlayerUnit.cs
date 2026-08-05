@@ -137,7 +137,7 @@ public class PlayerUnit : Unit
                     .WaitForCompletion();
                 break;
             case SkillTarget.Enemy:
-                yield return transform.DOMove(currentTarget[0].positionTargets[0].position, 0.2f).SetEase(Ease.OutExpo)
+                yield return transform.DOMove(currentTarget.positionTargets[0].position, 0.2f).SetEase(Ease.OutExpo)
                     .WaitForCompletion();
                 break;
         }

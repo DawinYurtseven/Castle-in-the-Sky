@@ -66,17 +66,25 @@ public class Node : MonoBehaviour
                     }
                     BattleSystem.Manager.playerUnits.AddRange(Map.Manager.currentPlayerUnits);
                     BattleSystem.Manager.enemyUnits.AddRange(range);
-                    
+                    InputSystemWrapper.Instance.SetState(InputSystemWrapper.State.Combat);
                     BattleSystem.Manager.StartOfCombat();
                 });
                 break;
             case NodeType.Merchant:
+                button.onClick.AddListener(() =>
+                {
+                    Map.Manager.gameObject.SetActive(false);
+                    MerchantSystem.Manager.gameObject.SetActive(true);
+                    InputSystemWrapper.Instance.SetState(InputSystemWrapper.State.Merchant);
+                    MerchantSystem.Manager.Reroll();
+                });
                 //bombs? you want them? 
                 break;
             case NodeType.Story:
                 //make a story manager that fatches story progression of each type depending on story progression.
                 button.onClick.AddListener(() =>
                 {
+                    InputSystemWrapper.Instance.SetState(InputSystemWrapper.State.Dialogue);
                     Map.Manager.gameObject.SetActive(false);
                     StoryManager.Manager.gameObject.SetActive(true);
                     StoryManager.Manager.GetNextStoryPart(actor);;

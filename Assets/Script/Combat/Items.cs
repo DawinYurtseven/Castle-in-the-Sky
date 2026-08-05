@@ -1,39 +1,30 @@
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
-
+[System.Serializable]
 public abstract class Items
 {
-    protected enum ItemTypes
-    {
-        specialType,
-        StatBoost,
-    }
 
     protected enum ItemTriggerPosition
     {
         BasicAttack,
         BeginningOfCombat,
-        BeginningOfTrun,
-        EndofCombat,
-        EndOfTrun,
+        BeginningOfTurn,
+        EndOfCombat,
+        EndOfTurn,
         ActionTaken,
         ReactionDone,
-        criticalTrigger
+        CriticalTrigger,
+        DamageDealt
     }
 
-    public abstract string ItemName
-    {
-        get;
-    }
-
-    public abstract string ItemDescription
-    {
-        get;
-    }
+    public string ItemName;
+    public string ItemDescription;
+    public Sprite ItemImage;
+    [SerializeField] protected ItemTriggerPosition triggerPosition;
+    [SerializeField] protected float startingChance, stackChance, baseValue, stackingIncrease;
     
-    
-    protected ItemTriggerPosition triggerPosition;
 
     protected int stacks;
     public void SubscribeToTeamEvents(Unit unit)
@@ -48,13 +39,13 @@ public abstract class Items
                 case ItemTriggerPosition.BeginningOfCombat:
                     unit.BeginningOfCombatTrigger += TriggeredEvent;
                     break;
-                case ItemTriggerPosition.BeginningOfTrun:
+                case ItemTriggerPosition.BeginningOfTurn:
                     unit.BeginningOfTurnTrigger += TriggeredEvent;
                     break;
-                case ItemTriggerPosition.EndofCombat:
+                case ItemTriggerPosition.EndOfCombat:
                     unit.EndOfCombatTrigger += TriggeredEvent;
                     break;
-                case ItemTriggerPosition.EndOfTrun:
+                case ItemTriggerPosition.EndOfTurn:
                     unit.EndOfTurnTrigger += TriggeredEvent;
                     break;
                 case ItemTriggerPosition.ActionTaken:
@@ -63,7 +54,7 @@ public abstract class Items
                 case ItemTriggerPosition.ReactionDone:
                     unit.ReactionDoneTrigger += TriggeredEvent;
                     break;
-                case ItemTriggerPosition.criticalTrigger:
+                case ItemTriggerPosition.CriticalTrigger:
                     unit.CriticalTrigger += TriggeredEvent;
                     break;
             }
@@ -88,16 +79,8 @@ public abstract class Items
 
     public static Items GetRandomItem(List<Items> exclude = null)
     {
-        List<Items> items = new List<Items>()
-        {
-            new ConstitutionPendant(),
-            new Gluttony(),
-            new IntelligencePendant(),
-            new LuckPendant(),
-            new Medallionofecho(),
-            new SpeedPendant(),
-            new StrengthPendant()
-        };
+        var data = FindDatabaseAsset();
+        var items = new List<Items>(data.allItems);
         if (exclude != null)
         {
             foreach (var item in exclude)
@@ -108,6 +91,29 @@ public abstract class Items
         }
         var index = Random.Range(0, items.Count);
         return items[index];
+    }
+    
+    private static GameDatabase FindDatabaseAsset()
+    {
+        var database = Resources.Load<GameDatabase>("Values");
+        if (database != null)
+        {
+            Debug.Log($"Successfully loaded database! Found {database.allItems.Count} items.");
+        }
+        else
+        {
+            Debug.LogError("Could not find GameDatabase asset in any Resources folder!");
+        }
+
+        return database;
+    }
+
+    protected bool getChance()
+    {
+        var randomChance = Random.Range(0, 100);
+        //hyperbolik stacks
+        var threshold = 100 / (1 + startingChance + stackChance * stacks);
+        return randomChance >= threshold;
     }
     
 }

@@ -45,7 +45,7 @@ public class StoryManager : MonoBehaviour
         }
 
         currentTargetActor = actor;
-        InputSystemWrapper.Instance.SetState(InputSystemWrapper.State.Dialogue);
+        
         currentStoryPart = actor.scenes[actor.currentProgress].conditions.All(condition => condition.IsMet(condition.variableKey.currentProgress)) ?
                            actor.scenes[actor.currentProgress] : 
                            actor.fillerScenes[Random.Range(0, actor.fillerScenes.Count)];
