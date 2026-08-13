@@ -14,7 +14,7 @@ public class DialogCreator : EditorWindow
     private VisualElement buttonPanel;
     private int selectedDialogueIndex = -1;
 
-    [MenuItem("Story/Dialog Creator")]
+    [MenuItem("Tools/Story/Dialog Creator")]
     public static void ShowWindow()
     {
         DialogCreator dc = GetWindow<DialogCreator>("Dialog Creator");
@@ -130,7 +130,7 @@ public class DialogCreator : EditorWindow
         buttonPanel.Add(createActorButton);
     }
     
-    private bool filler = false;
+    private bool filler;
     private VisualElement ActorText()
     {
         // Update the serialized object data representation

@@ -656,7 +656,7 @@ MonoBehaviour:
   blocked: 0
   bufferedDamage: 0
   skills:
-  - rid: 585577263829352554
+  - rid: 2678518542141489234
   currentTarget: []
   positionTargets:
   - {fileID: 1402062872345055723}
@@ -677,16 +677,17 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 585577263829352554
+    - rid: 2678518542141489234
       type: {class: ApplyBurn, ns: , asm: Assembly-CSharp}
       data:
         skillName: Apply Burn
         skillDescription: deal a small amount of damage that burns the target for
           3 turns at the end of your end step
         skillCost: 4
+        skillImage: {fileID: 21300000, guid: d22d7be100b874c47ac26f65dc5c590d, type: 3}
         timeValue: 0.6
         target: 0
-        affectValue: 0.1
+        affectValue: 0.3
         animationName: applyBurn_Animation
         turnEffect: 3
         additionalCritChance: 20
