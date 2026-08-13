@@ -344,7 +344,7 @@ public class Unit : MonoBehaviour
         BattleSystem.Manager.EndOfTurnTrigger.Invoke(this, QueueTimeValue);
     }
 
-    public virtual void TakeDamage(float damage)
+    public virtual void TakeDamage(float damage, Unit unit)
     {
         if(currentHP<= 0) return;
         bufferedDamage = damage;
@@ -368,6 +368,66 @@ public class Unit : MonoBehaviour
         {
             StartCoroutine(BattleSystem.Manager.DisplayDamageNumber((int)Mathf.Ceil(damage)));
         }
+    }
+
+    private IEnumerator DisplayDamageNumber()
+    {
+        
+        var temp = TrySpawnDamageDisplay();
+        if (!temp) yield break;
+        temp.GetComponentInChildren<TMP_Text>().text = damage.ToString();
+        var animator = temp.GetComponent<Animator>();
+        yield return null;
+        yield return new WaitUntil(() =>
+            animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator.IsInTransition(0));
+        yield return new WaitForSeconds(0.2f);
+        animator.SetTrigger(Exit);
+        yield return null;
+        yield return new WaitUntil(() =>
+            animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && animator.IsInTransition(0));
+        Destroy(temp);
+        
+    }
+    
+    private GameObject TrySpawnDamageDisplay()
+    {
+        var spawnArea = damageDisplayAreas[displayIndex].GetComponent<RectTransform>();
+        displayIndex = (displayIndex + 1) % damageDisplayAreas.Count;
+
+        // 1. Get the local boundaries of the spawn area
+        var corners = new Vector3[4];
+        spawnArea.GetLocalCorners(corners);
+        
+        // corners[0] is bottom-left, corners[2] is top-right
+        var minX = corners[0].x;
+        var maxX = corners[2].x;
+        var minY = corners[0].y;
+        var maxY = corners[2].y;
+
+        // Get the size of the prefab's RectTransform to handle edge padding and overlap logic
+        RectTransform prefabRect = damageDisplay.GetComponent<RectTransform>();
+
+        var prefabWidth = prefabRect.rect.width;
+        var prefabHeight = prefabRect.rect.height;
+
+        // Pad the boundaries so the spawned object doesn't bleed past the edges of the panel
+        minX += prefabWidth / 2f;
+        maxX -= prefabWidth / 2f;
+        minY += prefabHeight / 2f;
+        maxY -= prefabHeight / 2f;
+       
+        var randomX = Random.Range(minX, maxX);
+        var randomY = Random.Range(minY, maxY);
+
+        var newSpawn = Instantiate(damageDisplay, spawnArea);
+        var spawnRect = newSpawn.GetComponent<RectTransform>();
+                
+        // Force anchors to center to make localPosition placement predictable
+        spawnRect.anchorMin = new Vector2(0.5f, 0.5f);
+        spawnRect.anchorMax = new Vector2(0.5f, 0.5f);
+        spawnRect.anchoredPosition = new Vector3(randomX, randomY, 0f);
+        
+        return newSpawn; 
     }
 
     public void SelectHUD(bool active, Transform toLookAt = null)
