@@ -154,9 +154,9 @@ public class PlayerUnit : Unit
         return base.EndTurn();
     }
 
-    public override void TakeDamage(float damage)
+    public override void TakeDamage(float damage, Unit unit)
     {
-        base.TakeDamage(damage);
+        base.TakeDamage(damage, unit);
         BattleSystem.Manager.UpdatePlayerValues(this);
     }
 

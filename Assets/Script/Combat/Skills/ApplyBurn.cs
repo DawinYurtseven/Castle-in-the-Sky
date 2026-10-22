@@ -19,7 +19,7 @@ public class ApplyBurn : Skill
                   "\nGot one option" +
                   "\nLight it up");
 
-        unit.currentTarget.TakeDamage(totalDamage);
+        unit.currentTarget.TakeDamage(totalDamage, unit);
         if (unit.currentTarget.currentHP <= 0) return validAction;
         validAction = true;
         totalDamage *= (1 + boost / 10f) * affectValue;

@@ -19,7 +19,7 @@ public class ThunderPiece : Items
         for (int i = 0; i < stacks; i++)
         {
             var index = Random.Range(0, list.Count);
-            list[index]?.TakeDamage(partialDamage);
+            list[index]?.TakeDamage(partialDamage, unit);
         }
     }
 }

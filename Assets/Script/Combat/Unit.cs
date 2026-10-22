@@ -12,6 +12,9 @@ using Random = UnityEngine.Random;
 
 public class Unit : MonoBehaviour
 {
+    #region misc
+    private static readonly int Exit = Animator.StringToHash("Exit");
+    #endregion
 
     #region Stats
 
@@ -147,6 +150,7 @@ public class Unit : MonoBehaviour
 
     [SerializeField] internal Animator animator;
     [SerializeField] internal Canvas hudCanvas;
+    [SerializeField] internal GameObject damageDisplay, damageValue;
 
     public Button selected;
 
@@ -302,7 +306,7 @@ public class Unit : MonoBehaviour
         
         foreach (var t in currentTargets)
         {
-            t?.TakeDamage(totalDamage);
+            t?.TakeDamage(totalDamage, this);
             currentTarget = t;
             DamageDealtTrigger?.Invoke(this);
         }
@@ -348,6 +352,7 @@ public class Unit : MonoBehaviour
 
     protected virtual IEnumerator EndTurn()
     {
+        ClearObjects();
         yield return transform.DOMove(startPosition, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
         EndOfTurnTrigger?.Invoke(this);
         BattleSystem.Manager.EndOfTurnTrigger.Invoke(this, QueueTimeValue);
@@ -375,7 +380,18 @@ public class Unit : MonoBehaviour
         }
         else
         {
-            StartCoroutine(BattleSystem.Manager.DisplayDamageNumber((int)Mathf.Ceil(damage)));
+            StartCoroutine(unit.DisplayDamageNumber((int)Mathf.Ceil(damage)));
+        }
+    }
+
+    public virtual void ClearObjects()
+    {
+        var count = objectsToClearOnEnd.Count;
+        for (var i = 0; i < count; i++)
+        {
+            var obj = objectsToClearOnEnd[i];
+            objectsToClearOnEnd.Remove(obj);
+            Destroy(obj);
         }
     }
 
@@ -386,29 +402,25 @@ public class Unit : MonoBehaviour
         //TODO: Don't forget an event here
     }
 
-    private IEnumerator DisplayDamageNumber()
+    private List<GameObject> objectsToClearOnEnd = new();
+
+    private IEnumerator DisplayDamageNumber(int damage)
     {
         
         var temp = TrySpawnDamageDisplay();
+        objectsToClearOnEnd.Add(temp);
         if (!temp) yield break;
         temp.GetComponentInChildren<TMP_Text>().text = damage.ToString();
-        var animator = temp.GetComponent<Animator>();
-        yield return null;
-        yield return new WaitUntil(() =>
-            animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && !animator.IsInTransition(0));
-        yield return new WaitForSeconds(0.2f);
-        animator.SetTrigger(Exit);
-        yield return null;
-        yield return new WaitUntil(() =>
-            animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 1 && animator.IsInTransition(0));
+        //TODO: change to an animation trigger that removes it instead so that it is all handled inside animation instead
+        yield return new WaitForSeconds(0.7f);
+        objectsToClearOnEnd.Remove(temp);
         Destroy(temp);
         
     }
     
     private GameObject TrySpawnDamageDisplay()
     {
-        var spawnArea = damageDisplayAreas[displayIndex].GetComponent<RectTransform>();
-        displayIndex = (displayIndex + 1) % damageDisplayAreas.Count;
+        var spawnArea = damageDisplay.GetComponent<RectTransform>();
 
         // 1. Get the local boundaries of the spawn area
         var corners = new Vector3[4];
@@ -421,7 +433,7 @@ public class Unit : MonoBehaviour
         var maxY = corners[2].y;
 
         // Get the size of the prefab's RectTransform to handle edge padding and overlap logic
-        RectTransform prefabRect = damageDisplay.GetComponent<RectTransform>();
+        RectTransform prefabRect = damageValue.GetComponent<RectTransform>();
 
         var prefabWidth = prefabRect.rect.width;
         var prefabHeight = prefabRect.rect.height;
@@ -435,7 +447,7 @@ public class Unit : MonoBehaviour
         var randomX = Random.Range(minX, maxX);
         var randomY = Random.Range(minY, maxY);
 
-        var newSpawn = Instantiate(damageDisplay, spawnArea);
+        var newSpawn = Instantiate(damageValue, spawnArea);
         var spawnRect = newSpawn.GetComponent<RectTransform>();
                 
         // Force anchors to center to make localPosition placement predictable

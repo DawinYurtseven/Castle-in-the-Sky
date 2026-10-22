@@ -69,7 +69,7 @@ public class StoryManager : MonoBehaviour
     {
         
         var results = from actor in actors 
-            where actor.scenes[actor.currentProgress].conditions.Count == 0 || actor.scenes[actor.currentProgress].conditions.All(condition => condition.IsMet(condition.variableKey.currentProgress))
+            where actor.scenes.Count > actor.currentProgress &&(actor.scenes[actor.currentProgress].conditions.Count == 0 || actor.scenes[actor.currentProgress].conditions.All(condition => condition.IsMet(condition.variableKey.currentProgress)))
             select actor;
 
         var resultsFiller = from actor in actors

@@ -657,7 +657,8 @@ MonoBehaviour:
   bufferedDamage: 0
   skills:
   - rid: 2678518542141489234
-  currentTarget: []
+  currentTargets: []
+  currentTarget: {fileID: 0}
   positionTargets:
   - {fileID: 1402062872345055723}
   cameraTargets:
@@ -669,6 +670,8 @@ MonoBehaviour:
   - {fileID: 5472534484539483798}
   animator: {fileID: 0}
   hudCanvas: {fileID: 3177632962379265972}
+  damageDisplay: {fileID: 2748463595275688294}
+  damageValue: {fileID: 1052857879867638905, guid: 1a354aee6620d874aa8cae71620634da, type: 3}
   selected: {fileID: 6925353253600159198}
   hudImage: {fileID: 21300000, guid: 52fe3477a9855174f858732f340dcbd2, type: 3}
   hudValues: {fileID: 2575812287367121644}

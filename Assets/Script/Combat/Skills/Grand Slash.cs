@@ -15,7 +15,7 @@ public class GrandSlash : Skill
                     
         foreach (var targetUnit in unit.currentTargets)
         {
-            targetUnit.TakeDamage(totalDamage);
+            targetUnit.TakeDamage(totalDamage, unit);
             if (targetUnit.currentHP > 0)
             {
                 validAction = true;

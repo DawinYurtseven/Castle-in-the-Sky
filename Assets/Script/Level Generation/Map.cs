@@ -156,7 +156,6 @@ public class Map : MonoBehaviour
             // Visual cue debugging (Change its button color or text so you can visually see it worked)
             potentialStoryNode.GetComponentInChildren<Image>().color = Color.red;
             potentialStoryNode.SetActor(actor);
-            potentialStoryNode.CreateNode();
         }
         
         candidateNodes.Clear();
@@ -204,7 +203,6 @@ public class Map : MonoBehaviour
         
             // Visual cue debugging (Change its button color or text so you can visually see it worked)
             potentialStoryNode.GetComponentInChildren<Image>().color = Color.burlywood;
-            potentialStoryNode.CreateNode();
         }
 
         // 2. Connect the layers together
@@ -265,7 +263,6 @@ public class Map : MonoBehaviour
                 
                 var initialIndex = nextLayerIndexPointer;
                 var connectNode = currentLayer[j];
-                connectNode.CreateNode();
                 
  
                 // Enforce at least one connection forward

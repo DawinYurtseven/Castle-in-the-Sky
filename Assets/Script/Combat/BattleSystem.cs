@@ -189,6 +189,14 @@ public class BattleSystem : MonoBehaviour
     {
         //return control to UI element type I guess...
         ResetQueue();
+        foreach (var u in playerUnits)
+        {
+            u.ClearObjects();
+        }
+        foreach (var u in enemyUnits)
+        {
+            u.ClearObjects();
+        }
         combatIsOver = true;
         gameGUI.SetActive(false);
         if (playerWon)
