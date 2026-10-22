@@ -352,7 +352,6 @@ public class Unit : MonoBehaviour
 
     protected virtual IEnumerator EndTurn()
     {
-        ClearObjects();
         yield return transform.DOMove(startPosition, 0.2f).SetEase(Ease.OutExpo).WaitForCompletion();
         EndOfTurnTrigger?.Invoke(this);
         BattleSystem.Manager.EndOfTurnTrigger.Invoke(this, QueueTimeValue);
@@ -386,9 +385,10 @@ public class Unit : MonoBehaviour
 
     public virtual void ClearObjects()
     {
-        var count = objectsToClearOnEnd.Count;
-        for (var i = 0; i < count; i++)
+        
+        while(objectsToClearOnEnd.Count != 0)
         {
+            var i = objectsToClearOnEnd.Count - 1;
             var obj = objectsToClearOnEnd[i];
             objectsToClearOnEnd.Remove(obj);
             Destroy(obj);
