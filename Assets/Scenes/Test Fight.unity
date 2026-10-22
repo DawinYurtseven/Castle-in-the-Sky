@@ -1483,6 +1483,8 @@ MonoBehaviour:
   cameraTargets: []
   animator: {fileID: 0}
   hudCanvas: {fileID: 0}
+  damageDisplay: {fileID: 0}
+  damageValue: {fileID: 0}
   selected: {fileID: 0}
   hudImage: {fileID: 0}
   hudValues: {fileID: 0}
